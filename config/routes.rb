@@ -11,6 +11,11 @@ Rails.application.routes.draw do
     post "twilio/status", to: "twilio_status#create"
   end
 
+  # Public document access (for Twilio MMS media URLs)
+  namespace :public do
+    get "documents/:signed_id", to: "documents#show", as: :document
+  end
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker

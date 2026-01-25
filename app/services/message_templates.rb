@@ -31,4 +31,20 @@ module MessageTemplates
   IN_FLOW_MENU_GUIDANCE = <<~TEXT.strip
     Reply MENU to return to the main menu.
   TEXT
+
+  CARD_VEHICLE_MENU = <<~TEXT.strip
+    Select which vehicle's insurance card you need:
+
+    %{options}
+
+    Reply with the number, or MENU to go back.
+  TEXT
+
+  CARD_DELIVERY = <<~TEXT.strip
+    Attached is your insurance card for your %{label}. Reply MENU for more options.
+  TEXT
+
+  INVALID_SELECTION = <<~TEXT.strip
+    Invalid selection. Please reply with a valid number or MENU to return to the main menu.
+  TEXT
 end

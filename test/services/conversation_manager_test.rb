@@ -152,6 +152,26 @@ class ConversationManagerTest < ActiveSupport::TestCase
   # Phase 3: Intent routing tests
 
   test "routes 'insurance card' to awaiting_vehicle_selection state" do
+    # Create contact and policy for test phone number
+    contact = Contact.create!(
+      agency: @agency,
+      first_name: "Test",
+      last_name: "User",
+      mobile_phone_e164: @from_phone
+    )
+    policy = Policy.create!(
+      contact: contact,
+      label: "2022 Test Vehicle",
+      policy_type: "auto",
+      expires_on: 6.months.from_now
+    )
+    doc = Document.create!(policy: policy, kind: "auto_id_card")
+    doc.file.attach(
+      io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+      filename: "insurance_card.pdf",
+      content_type: "application/pdf"
+    )
+
     inbound_log = create_inbound_message(@from_phone, "I need my insurance card")
 
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
@@ -160,8 +180,8 @@ class ConversationManagerTest < ActiveSupport::TestCase
     assert_equal "awaiting_vehicle_selection", session.state
 
     outbound = MessageLog.where(direction: "outbound").last
-    assert_includes outbound.body, "Insurance card request received"
-    assert_includes outbound.body, "Reply MENU"
+    assert_includes outbound.body, "2022 Test Vehicle"
+    assert_includes outbound.body, "MENU to go back"
   end
 
   test "routes 'policy expire' to awaiting_policy_selection state" do
@@ -178,6 +198,26 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "numeric shortcut '1' routes to card flow" do
+    # Create contact and policy for test phone number
+    contact = Contact.create!(
+      agency: @agency,
+      first_name: "Test",
+      last_name: "User",
+      mobile_phone_e164: @from_phone
+    )
+    policy = Policy.create!(
+      contact: contact,
+      label: "2022 Test Vehicle",
+      policy_type: "auto",
+      expires_on: 6.months.from_now
+    )
+    doc = Document.create!(policy: policy, kind: "auto_id_card")
+    doc.file.attach(
+      io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+      filename: "insurance_card.pdf",
+      content_type: "application/pdf"
+    )
+
     inbound_log = create_inbound_message(@from_phone, "1")
 
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
@@ -224,15 +264,16 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "creates intent_routed audit event" do
-    inbound_log = create_inbound_message(@from_phone, "send me my card")
+    # Use a phrase that triggers help_or_other which sends unsupported + menu (creates intent_routed + menu_sent)
+    inbound_log = create_inbound_message(@from_phone, "talk to an agent")
 
-    # Creates 1 event: intent_routed (no menu_sent because we're in card flow now)
-    assert_difference "AuditEvent.count", 1 do
+    # Creates 2 events: intent_routed + menu_sent
+    assert_difference "AuditEvent.count", 2 do
       ConversationManager.process_inbound!(message_log_id: inbound_log.id)
     end
 
     audit = AuditEvent.where(event_type: "conversation.intent_routed").order(:created_at).last
-    assert_equal "insurance_card", audit.metadata["intent"]
+    assert_equal "help_or_other", audit.metadata["intent"]
     assert audit.metadata["confidence"] > 0
     assert_not_nil audit.metadata["normalized_body"]
   end
@@ -253,7 +294,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
 
     outbound = MessageLog.where(direction: "outbound").last
-    assert_equal "Reply MENU to return to the main menu.", outbound.body
+    assert_includes outbound.body, "Invalid selection"
 
     session.reload
     assert_equal "awaiting_vehicle_selection", session.state # Still in same state
@@ -296,6 +337,219 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
     session.reload
     assert_equal "awaiting_intent_selection", session.state
+  end
+
+  # Phase 4: Insurance card fulfillment tests
+
+  test "card flow: resolves contact and lists auto policies" do
+    contact = contacts(:alice)
+
+    # Ensure documents have files attached
+    contact.policies.each do |policy|
+      doc = policy.documents.find_by(kind: "auto_id_card")
+      next if doc.nil? || doc.file.attached?
+
+      doc.file.attach(
+        io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+        filename: "insurance_card.pdf",
+        content_type: "application/pdf"
+      )
+    end
+
+    inbound_log = create_inbound_message(contact.mobile_phone_e164, "I need my insurance card")
+
+    ConversationManager.process_inbound!(message_log_id: inbound_log.id)
+
+    session = ConversationSession.last
+    assert_equal "awaiting_vehicle_selection", session.state
+    assert_equal "insurance_card", session.context["intent"]
+    assert_equal 2, session.context["options"].length
+
+    outbound = MessageLog.where(direction: "outbound").last
+    assert_includes outbound.body, "2018 Honda Accord"
+    assert_includes outbound.body, "2020 Toyota Camry"
+    assert_includes outbound.body, "Select which vehicle"
+  end
+
+  test "card flow: handles contact with no policies" do
+    contact = Contact.create!(
+      agency: @agency,
+      first_name: "NoPolicy",
+      last_name: "User",
+      mobile_phone_e164: "+15559990001"
+    )
+
+    inbound_log = create_inbound_message(contact.mobile_phone_e164, "card")
+    ConversationManager.process_inbound!(message_log_id: inbound_log.id)
+
+    session = ConversationSession.last
+    assert_equal "awaiting_intent_selection", session.state # Reset to menu
+
+    outbound = MessageLog.where(direction: "outbound").order(:created_at).last(2)
+    assert_includes outbound[0].body, "No auto policies found"
+    assert_includes outbound[1].body, "Welcome to CoverText" # Menu
+  end
+
+  test "card flow: handles unknown contact" do
+    unknown_phone = "+15559999999"
+    inbound_log = create_inbound_message(unknown_phone, "insurance card")
+
+    ConversationManager.process_inbound!(message_log_id: inbound_log.id)
+
+    session = ConversationSession.last
+    assert_equal "awaiting_intent_selection", session.state # Reset to menu
+
+    outbound = MessageLog.where(direction: "outbound").order(:created_at).last(2)
+    assert_includes outbound[0].body, "couldn't find your account"
+    assert_includes outbound[1].body, "Welcome to CoverText" # Menu
+  end
+
+  test "card fulfillment: valid selection creates Request and Delivery" do
+    contact = contacts(:alice)
+
+    # Ensure documents have files attached
+    contact.policies.each do |policy|
+      doc = policy.documents.find_by(kind: "auto_id_card")
+      next if doc.nil? || doc.file.attached?
+
+      doc.file.attach(
+        io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+        filename: "insurance_card.pdf",
+        content_type: "application/pdf"
+      )
+    end
+
+    # Start card flow
+    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    ConversationManager.process_inbound!(message_log_id: inbound1.id)
+
+    session = ConversationSession.last
+    assert_equal "awaiting_vehicle_selection", session.state
+
+    # Select first vehicle
+    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+
+    assert_difference [ "Request.count", "Delivery.count", "MessageLog.where(media_count: 1).count" ], 1 do
+      ConversationManager.process_inbound!(message_log_id: inbound2.id)
+    end
+
+    # Verify Request
+    request = Request.last
+    assert_equal "auto_id_card", request.request_type
+    assert_equal "fulfilled", request.status
+    assert_equal contact.id, request.contact_id
+    assert_not_nil request.fulfilled_at
+    assert_not_nil request.selected_ref
+
+    # Verify Delivery
+    delivery = Delivery.last
+    assert_equal "mms", delivery.method
+    assert_equal "queued", delivery.status
+    assert_equal request.id, delivery.request_id
+
+    # Verify MMS message
+    mms = MessageLog.where(direction: "outbound", media_count: 1).last
+    assert_includes mms.body, "2018 Honda Accord"
+    assert_equal request.id, mms.request_id
+
+    # Verify session state
+    session.reload
+    assert_equal "complete", session.state
+  end
+
+  test "card fulfillment: creates card.request_fulfilled audit event" do
+    contact = contacts(:alice)
+
+    # Ensure documents have files attached
+    contact.policies.each do |policy|
+      doc = policy.documents.find_by(kind: "auto_id_card")
+      next if doc.nil? || doc.file.attached?
+
+      doc.file.attach(
+        io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+        filename: "insurance_card.pdf",
+        content_type: "application/pdf"
+      )
+    end
+
+    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    ConversationManager.process_inbound!(message_log_id: inbound1.id)
+
+    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+
+    assert_difference "AuditEvent.where(event_type: 'card.request_fulfilled').count", 1 do
+      ConversationManager.process_inbound!(message_log_id: inbound2.id)
+    end
+
+    audit = AuditEvent.where(event_type: "card.request_fulfilled").last
+    assert_not_nil audit.metadata["policy_id"]
+    assert_not_nil audit.metadata["document_id"]
+    assert_equal contact.id, audit.metadata["contact_id"]
+  end
+
+  test "card fulfillment: invalid selection sends error message" do
+    contact = contacts(:alice)
+
+    # Ensure documents have files attached
+    contact.policies.each do |policy|
+      doc = policy.documents.find_by(kind: "auto_id_card")
+      next if doc.nil? || doc.file.attached?
+
+      doc.file.attach(
+        io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+        filename: "insurance_card.pdf",
+        content_type: "application/pdf"
+      )
+    end
+
+    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    ConversationManager.process_inbound!(message_log_id: inbound1.id)
+
+    # Invalid selection
+    inbound2 = create_inbound_message(contact.mobile_phone_e164, "99")
+
+    assert_no_difference [ "Request.count", "Delivery.count" ] do
+      ConversationManager.process_inbound!(message_log_id: inbound2.id)
+    end
+
+    session = ConversationSession.last
+    assert_equal "awaiting_vehicle_selection", session.state # Still in same state
+
+    outbound = MessageLog.where(direction: "outbound").last
+    assert_includes outbound.body, "Invalid selection"
+  end
+
+  test "card flow: menu command returns to main menu" do
+    contact = contacts(:alice)
+
+    # Ensure documents have files attached
+    contact.policies.each do |policy|
+      doc = policy.documents.find_by(kind: "auto_id_card")
+      next if doc.nil? || doc.file.attached?
+
+      doc.file.attach(
+        io: File.open(Rails.root.join("test", "fixtures", "files", "sample_insurance_card.pdf")),
+        filename: "insurance_card.pdf",
+        content_type: "application/pdf"
+      )
+    end
+
+    # Start card flow
+    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    ConversationManager.process_inbound!(message_log_id: inbound1.id)
+
+    session = ConversationSession.last
+    assert_equal "awaiting_vehicle_selection", session.state
+
+    # Send MENU command
+    inbound2 = create_inbound_message(contact.mobile_phone_e164, "menu")
+    ConversationManager.process_inbound!(message_log_id: inbound2.id)
+
+    session.reload
+    assert_equal "awaiting_intent_selection", session.state
+
+    outbound = MessageLog.where(direction: "outbound").last
+    assert_includes outbound.body, "Welcome to CoverText"
   end
 
   private

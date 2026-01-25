@@ -1,7 +1,7 @@
 active_session:
   agency: reliable
   from_phone_e164: "+15552001001"
-  state: active
+  state: awaiting_intent_selection
   context: {}
   last_activity_at: <%= 5.minutes.ago %>
   expires_at: <%= 30.minutes.from_now %>

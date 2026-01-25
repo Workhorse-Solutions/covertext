@@ -113,15 +113,130 @@ class ConversationManager
     # Check for menu/cancel commands
     if body == "menu" || body == "cancel" || body == "restart"
       reset_to_menu
+      return
+    end
+
+    # Route based on current state
+    case session.state
+    when "awaiting_vehicle_selection"
+      handle_vehicle_selection(body)
+    when "awaiting_policy_selection"
+      # Phase 5: policy expiration selection handling
+      send_simple_message(MessageTemplates::IN_FLOW_MENU_GUIDANCE)
     else
-      # Phase 3: no selections accepted yet
       send_simple_message(MessageTemplates::IN_FLOW_MENU_GUIDANCE)
     end
   end
 
+  def handle_vehicle_selection(body)
+    options = session.context["options"] || []
+    selected = options.find { |opt| opt["key"] == body }
+
+    if selected
+      fulfill_insurance_card_request(selected["ref"])
+    else
+      send_simple_message(MessageTemplates::INVALID_SELECTION)
+    end
+  end
+
+  def fulfill_insurance_card_request(policy_id)
+    contact = Contact.find_by(
+      agency_id: message_log.agency_id,
+      mobile_phone_e164: message_log.from_phone
+    )
+
+    policy = Policy.find(policy_id)
+
+    # Create Request record
+    request = Request.create!(
+      agency_id: message_log.agency_id,
+      contact: contact,
+      request_type: "auto_id_card",
+      status: "fulfilled",
+      fulfilled_at: Time.current,
+      selected_ref: policy_id.to_s
+    )
+
+    # Find the document with insurance card
+    document = policy.documents.find_by(kind: "auto_id_card")
+    raise "No insurance card document found for policy #{policy_id}" unless document&.file&.attached?
+
+    # Build media URL
+    blob = document.file.blob
+    media_url = Rails.application.routes.url_helpers.public_document_url(
+      blob.signed_id,
+      host: Rails.application.config.action_mailer.default_url_options[:host] || "example.com"
+    )
+
+    # Send MMS
+    body = MessageTemplates::CARD_DELIVERY % { label: policy.label }
+    OutboundMessenger.send_mms!(
+      agency: message_log.agency,
+      to_phone: message_log.from_phone,
+      body: body,
+      media_url: media_url,
+      request: request
+    )
+
+    # Create audit event
+    AuditEvent.create!(
+      agency_id: message_log.agency_id,
+      request: request,
+      event_type: "card.request_fulfilled",
+      metadata: {
+        policy_id: policy_id,
+        document_id: document.id,
+        contact_id: contact&.id,
+        session_id: session.id
+      }
+    )
+
+    # Transition to complete state
+    session.update!(state: "complete", context: {})
+  end
+
   def transition_to_card_flow
+    # Resolve Contact
+    contact = Contact.find_by(
+      agency_id: message_log.agency_id,
+      mobile_phone_e164: message_log.from_phone
+    )
+
+    unless contact
+      # No contact found - send error and return to menu
+      send_simple_message("We couldn't find your account. Please contact your agency.")
+      reset_to_menu
+      return
+    end
+
+    # Query auto policies
+    policies = contact.policies.where(policy_type: "auto")
+
+    if policies.empty?
+      # No policies found
+      send_simple_message("No auto policies found on your account. Please contact your agency.")
+      reset_to_menu
+      return
+    end
+
+    # Build options list
+    options = policies.map.with_index(1) do |policy, index|
+      {
+        "key" => index.to_s,
+        "ref" => policy.id.to_s,
+        "label" => policy.label
+      }
+    end
+
+    # Update session context
+    session.context["options"] = options
+    session.context["intent"] = "insurance_card"
     session.update!(state: "awaiting_vehicle_selection")
-    send_simple_message(MessageTemplates::CARD_PLACEHOLDER_PROMPT)
+
+    # Build and send vehicle menu
+    options_text = options.map { |opt| "#{opt['key']}. #{opt['label']}" }.join("\n")
+    menu_text = MessageTemplates::CARD_VEHICLE_MENU % { options: options_text }
+    send_simple_message(menu_text)
   end
 
   def transition_to_expiration_flow
