@@ -1,6 +1,7 @@
 module Webhooks
   class TwilioInboundController < ApplicationController
     skip_before_action :verify_authenticity_token
+    skip_before_action :require_authentication
 
     def create
       # Verify Twilio signature in non-test environments

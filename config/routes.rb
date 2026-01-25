@@ -16,6 +16,19 @@ Rails.application.routes.draw do
     get "documents/:signed_id", to: "documents#show", as: :document
   end
 
+  # Admin dashboard
+  namespace :admin do
+    resources :requests, only: [ :index, :show ]
+  end
+
+  # Authentication
+  get "login", to: "sessions#new"
+  post "login", to: "sessions#create"
+  delete "logout", to: "sessions#destroy"
+
+  # Root path
+  root "admin/requests#index"
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker

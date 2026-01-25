@@ -1,0 +1,102 @@
+<div class="mb-6">
+  <h1 class="text-3xl font-bold">Requests</h1>
+</div>
+
+<!-- Filters -->
+<div class="card bg-base-100 shadow-sm mb-6">
+  <div class="card-body">
+    <%= form_with url: admin_requests_path, method: :get, class: "flex gap-4 items-end" do %>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Request Type</span>
+        </label>
+        <%= select_tag :request_type, 
+            options_for_select([["All", ""], ["Auto ID Card", "auto_id_card"], ["Policy Expiration", "policy_expiration"]], params[:request_type]),
+            class: "select select-bordered" %>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Status</span>
+        </label>
+        <%= select_tag :status,
+            options_for_select([["All", ""], ["Fulfilled", "fulfilled"], ["Pending", "pending"]], params[:status]),
+            class: "select select-bordered" %>
+      </div>
+
+      <div class="form-control">
+        <%= submit_tag "Filter", class: "btn btn-primary" %>
+        <%= link_to "Clear", admin_requests_path, class: "btn btn-ghost" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Requests table -->
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <% if @requests.any? %>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Created</th>
+              <th>Type</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Fulfilled</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @requests.each do |request| %>
+              <tr>
+                <td>
+                  <div class="text-sm">
+                    <%= request.created_at.strftime("%b %d, %Y") %>
+                    <div class="text-xs text-gray-500"><%= request.created_at.strftime("%I:%M %p") %></div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge <%= request.request_type == 'auto_id_card' ? 'badge-primary' : 'badge-secondary' %>">
+                    <%= request.request_type.humanize %>
+                  </span>
+                </td>
+                <td>
+                  <% if request.contact %>
+                    <div class="font-medium"><%= request.contact.first_name %> <%= request.contact.last_name %></div>
+                    <div class="text-sm text-gray-500"><%= request.contact.mobile_phone_e164 %></div>
+                  <% else %>
+                    <span class="text-gray-400">Unknown</span>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="badge <%= request.status == 'fulfilled' ? 'badge-success' : 'badge-warning' %>">
+                    <%= request.status.humanize %>
+                  </span>
+                </td>
+                <td>
+                  <% if request.fulfilled_at %>
+                    <div class="text-sm">
+                      <%= request.fulfilled_at.strftime("%b %d, %Y") %>
+                      <div class="text-xs text-gray-500"><%= request.fulfilled_at.strftime("%I:%M %p") %></div>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+                <td>
+                  <%= link_to "View", admin_request_path(request), class: "btn btn-sm btn-ghost" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-8 text-gray-500">
+        No requests found.
+      </div>
+    <% end %>
+  </div>
+</div>

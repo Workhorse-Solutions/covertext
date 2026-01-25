@@ -1,0 +1,142 @@
+<div class="mb-6">
+  <%= link_to "← Back to Requests", admin_requests_path, class: "btn btn-ghost btn-sm" %>
+</div>
+
+<!-- Request Summary -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <h2 class="card-title">Request #<%= @request.id %></h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div>
+        <div class="text-sm text-gray-500">Type</div>
+        <div class="font-medium"><%= @request.request_type.humanize %></div>
+      </div>
+      
+      <div>
+        <div class="text-sm text-gray-500">Status</div>
+        <div>
+          <span class="badge <%= @request.status == 'fulfilled' ? 'badge-success' : 'badge-warning' %>">
+            <%= @request.status.humanize %>
+          </span>
+        </div>
+      </div>
+      
+      <div>
+        <div class="text-sm text-gray-500">Contact</div>
+        <div class="font-medium">
+          <% if @contact %>
+            <%= @contact.first_name %> <%= @contact.last_name %>
+            <div class="text-sm text-gray-500"><%= @contact.mobile_phone_e164 %></div>
+          <% else %>
+            <span class="text-gray-400">Unknown</span>
+          <% end %>
+        </div>
+      </div>
+      
+      <div>
+        <div class="text-sm text-gray-500">Selected Reference</div>
+        <div class="font-mono text-sm"><%= @request.selected_ref || "—" %></div>
+      </div>
+      
+      <div>
+        <div class="text-sm text-gray-500">Created At</div>
+        <div><%= @request.created_at.strftime("%B %d, %Y at %I:%M %p") %></div>
+      </div>
+      
+      <div>
+        <div class="text-sm text-gray-500">Fulfilled At</div>
+        <div><%= @request.fulfilled_at ? @request.fulfilled_at.strftime("%B %d, %Y at %I:%M %p") : "—" %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transcript -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <h3 class="card-title">Message Transcript</h3>
+    
+    <% if @messages.any? %>
+      <div class="space-y-2 mt-4">
+        <% @messages.each do |message| %>
+          <div class="chat <%= message.direction == 'inbound' ? 'chat-start' : 'chat-end' %>">
+            <div class="chat-header">
+              <%= message.direction == 'inbound' ? 'Client' : 'Agency' %>
+              <time class="text-xs opacity-50 ml-2"><%= message.created_at.strftime("%I:%M %p") %></time>
+            </div>
+            <div class="chat-bubble <%= message.direction == 'inbound' ? 'chat-bubble-primary' : '' %>">
+              <%= simple_format(message.body) %>
+              <% if message.media_count > 0 %>
+                <div class="text-xs mt-2 opacity-75">📎 <%= message.media_count %> attachment(s)</div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-4 text-gray-500">
+        No messages found for this request.
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Deliveries -->
+<% if @deliveries.any? %>
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <h3 class="card-title">Deliveries</h3>
+      
+      <div class="overflow-x-auto mt-4">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Provider Message ID</th>
+              <th>Last Status At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @deliveries.each do |delivery| %>
+              <tr>
+                <td><span class="badge"><%= delivery.method.upcase %></span></td>
+                <td><span class="badge badge-outline"><%= delivery.status.humanize %></span></td>
+                <td><span class="font-mono text-xs"><%= delivery.provider_message_id || "—" %></span></td>
+                <td><%= delivery.last_status_at ? delivery.last_status_at.strftime("%b %d, %Y %I:%M %p") : "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Audit Events -->
+<% if @audit_events.any? %>
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h3 class="card-title">Audit Events</h3>
+      
+      <div class="space-y-4 mt-4">
+        <% @audit_events.each do |event| %>
+          <div class="border border-base-300 rounded-lg p-4">
+            <div class="flex justify-between items-start mb-2">
+              <span class="badge badge-info"><%= event.event_type %></span>
+              <span class="text-xs text-gray-500"><%= event.created_at.strftime("%b %d, %Y %I:%M %p") %></span>
+            </div>
+            
+            <% if event.metadata.present? %>
+              <details class="mt-2">
+                <summary class="cursor-pointer text-sm font-medium">Metadata</summary>
+                <pre class="text-xs mt-2 p-2 bg-base-200 rounded overflow-x-auto"><%= JSON.pretty_generate(event.metadata) %></pre>
+              </details>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
