@@ -50,9 +50,22 @@ module Webhooks
     private
 
     def verify_twilio_signature!
-      # TODO: Phase 1 - Implement Twilio signature verification
-      # For now, accept all requests in development/production
-      # In real implementation, verify X-Twilio-Signature header
+      # Get the signature from the header
+      signature = request.headers["X-Twilio-Signature"]
+      url = request.original_url
+
+      # Build params hash for validation (Twilio expects form params)
+      post_params = request.POST
+
+      # Verify the signature
+      validator = Twilio::Security::RequestValidator.new(ENV.fetch("TWILIO_AUTH_TOKEN"))
+
+      unless validator.validate(url, post_params, signature)
+        Rails.logger.warn "[TwilioInbound] Invalid signature from #{request.remote_ip}"
+        head :forbidden
+        return false
+      end
+
       true
     end
   end

@@ -6,13 +6,13 @@
 <div class="card bg-base-100 shadow-xl mb-6">
   <div class="card-body">
     <h2 class="card-title">Request #<%= @request.id %></h2>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
       <div>
         <div class="text-sm text-gray-500">Type</div>
         <div class="font-medium"><%= @request.request_type.humanize %></div>
       </div>
-      
+
       <div>
         <div class="text-sm text-gray-500">Status</div>
         <div>
@@ -21,7 +21,7 @@
           </span>
         </div>
       </div>
-      
+
       <div>
         <div class="text-sm text-gray-500">Contact</div>
         <div class="font-medium">
@@ -33,17 +33,17 @@
           <% end %>
         </div>
       </div>
-      
+
       <div>
         <div class="text-sm text-gray-500">Selected Reference</div>
         <div class="font-mono text-sm"><%= @request.selected_ref || "—" %></div>
       </div>
-      
+
       <div>
         <div class="text-sm text-gray-500">Created At</div>
         <div><%= @request.created_at.strftime("%B %d, %Y at %I:%M %p") %></div>
       </div>
-      
+
       <div>
         <div class="text-sm text-gray-500">Fulfilled At</div>
         <div><%= @request.fulfilled_at ? @request.fulfilled_at.strftime("%B %d, %Y at %I:%M %p") : "—" %></div>
@@ -56,7 +56,7 @@
 <div class="card bg-base-100 shadow-xl mb-6">
   <div class="card-body">
     <h3 class="card-title">Message Transcript</h3>
-    
+
     <% if @messages.any? %>
       <div class="space-y-2 mt-4">
         <% @messages.each do |message| %>
@@ -87,7 +87,7 @@
   <div class="card bg-base-100 shadow-xl mb-6">
     <div class="card-body">
       <h3 class="card-title">Deliveries</h3>
-      
+
       <div class="overflow-x-auto mt-4">
         <table class="table">
           <thead>
@@ -119,7 +119,7 @@
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <h3 class="card-title">Audit Events</h3>
-      
+
       <div class="space-y-4 mt-4">
         <% @audit_events.each do |event| %>
           <div class="border border-base-300 rounded-lg p-4">
@@ -127,7 +127,7 @@
               <span class="badge badge-info"><%= event.event_type %></span>
               <span class="text-xs text-gray-500"><%= event.created_at.strftime("%b %d, %Y %I:%M %p") %></span>
             </div>
-            
+
             <% if event.metadata.present? %>
               <details class="mt-2">
                 <summary class="cursor-pointer text-sm font-medium">Metadata</summary>

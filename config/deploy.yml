@@ -3,13 +3,13 @@ service: covertext
 
 # Name of the container image (use your-user/app-name on external registries).
 # Replace <GITHUB_OWNER> with your GitHub username or organization
-image: ghcr.io/<GITHUB_OWNER>/covertext
+image: ghcr.io/jrmyward/covertext
 
 # Deploy to these servers.
 servers:
   web:
     # Replace with your actual staging server IP
-    - 1.2.3.4
+    - 167.172.127.31
 
 # Enable SSL auto certification via Let's Encrypt (HTTP → HTTPS redirect automatic)
 proxy:
@@ -20,7 +20,7 @@ proxy:
 registry:
   server: ghcr.io
   # Replace <GITHUB_USERNAME> with your GitHub username
-  username: <GITHUB_USERNAME>
+  username: jrmyward
   password:
     - KAMAL_REGISTRY_PASSWORD
 
@@ -28,6 +28,7 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - TWILIO_ACCOUNT_SID
     - TWILIO_AUTH_TOKEN
   clear:
     RAILS_ENV: production

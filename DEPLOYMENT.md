@@ -9,7 +9,7 @@ This guide covers deploying CoverText to a staging environment using Kamal and G
   - SSH access via public key
   - Port 80 and 443 open to internet
   - At least 2GB RAM, 20GB disk
-  
+
 - GitHub account with:
   - Write access to the covertext repository
   - Personal Access Token (PAT) with `write:packages` scope

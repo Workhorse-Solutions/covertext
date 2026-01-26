@@ -10,7 +10,7 @@
         <label class="label">
           <span class="label-text">Request Type</span>
         </label>
-        <%= select_tag :request_type, 
+        <%= select_tag :request_type,
             options_for_select([["All", ""], ["Auto ID Card", "auto_id_card"], ["Policy Expiration", "policy_expiration"]], params[:request_type]),
             class: "select select-bordered" %>
       </div>

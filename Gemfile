@@ -22,6 +22,9 @@ gem "jbuilder"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
+# Twilio SDK for SMS/MMS
+gem "twilio-ruby", "~> 7.3"
+
 gem "heroicon"
 gem "view_component"
 
