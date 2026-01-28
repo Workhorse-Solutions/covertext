@@ -5,8 +5,9 @@ This guide explains what credentials need to be configured and where.
 ## Overview
 
 CoverText uses Rails encrypted credentials for sensitive configuration. You'll need to set up credentials for:
-- **Development**: Local development and testing
-- **Production**: Live deployment
+- **Development**: Local development and testing (uses test mode)
+- **Staging**: Production-like environment for testing (uses test mode)
+- **Production**: Live deployment (uses live mode)
 
 ## What You Need
 
@@ -76,17 +77,55 @@ EDITOR="code --wait" bin/rails credentials:edit --environment production
 
 Use the same YAML structure but with `sk_live_` keys and live Price IDs.
 
+### Staging Credentials
+
+```bash
+# Edit staging credentials
+EDITOR="code --wait" bin/rails credentials:edit --environment staging
+```
+
+**Important**: Staging uses **test mode** keys, not live keys.
+
+```yaml
+stripe:
+  secret_key: sk_test_YOUR_KEY_HERE  # Use test keys!
+  publishable_key: pk_test_YOUR_KEY_HERE
+  pilot_price_id: price_1ABC123_YOUR_PILOT_PRICE_ID  # Can reuse dev products or create separate
+  growth_price_id: price_1DEF456_YOUR_GROWTH_PRICE_ID
+  webhook_secret: whsec_YOUR_STAGING_WEBHOOK_SECRET  # From Stripe Dashboard webhook endpoint
+```
+
+**Why test mode for staging?**
+- No risk of charging real customers
+- Test the full signup/billing flow safely
+- Use test credit cards (4242 4242 4242 4242)
+- Can reset data without consequences
+
+**Staging webhook setup:**
+Configure a webhook endpoint in Stripe Dashboard (test mode):
+- Endpoint URL: `https://staging.yourdomain.com/webhooks/stripe`
+- Use the same events as production
+- Copy the signing secret to staging credentials
+
 ### Webhook Setup in Stripe Dashboard
 
-For production, configure webhooks at https://dashboard.stripe.com/webhooks
+**For Staging and Production**, configure webhooks at https://dashboard.stripe.com/webhooks
 
-1. **Endpoint URL**: `https://yourdomain.com/webhooks/stripe`
-2. **Events to send**:
+**Staging** (test mode):
+1. Switch to Test mode in Stripe Dashboard
+2. **Endpoint URL**: `https://staging.yourdomain.com/webhooks/stripe`
+3. **Events to send**: (same as production)
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
    - `invoice.payment_succeeded`
    - `invoice.payment_failed`
-3. Copy the **Signing Secret** to your production credentials
+4. Copy the **Signing Secret** to staging credentials
+
+**Production** (live mode):
+1. Switch to Live mode in Stripe Dashboard
+2. **Endpoint URL**: `https://yourdomain.com/webhooks/stripe`
+3. **Events to send**: (same as above)
+4. Copy the **Signing Secret** to production credentials
 
 ## Verifying Setup
 
