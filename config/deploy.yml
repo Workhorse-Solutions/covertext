@@ -6,12 +6,65 @@ service: covertext
 image: ghcr.io/jrmyward/covertext
 
 # Deploy to these servers.
+# Use destinations to separate staging and production deployments
 servers:
   web:
-    # Replace with your actual staging server IP
-    - 167.172.127.31
+    hosts:
+      - 1.2.3.4  # Will be overridden by destination configs
+
+# Destination-specific configurations
+destinations:
+  staging:
+    servers:
+      web:
+        hosts:
+          - 1.2.3.4  # Replace with staging server IP
+    env:
+      clear:
+        RAILS_ENV: production
+        APP_HOST: staging.covertext.app
+        APP_PROTOCOL: https
+        SOLID_QUEUE_IN_PUMA: true
+        # Postgres accessory runs on same server
+        DATABASE_URL: postgres://postgres:password@covertext-postgres-staging:5432/covertext_staging
+    proxy:
+      ssl: true
+      host: staging.covertext.app
+    accessories:
+      postgres:
+        service: covertext-postgres-staging
+        image: postgres:16
+        host: 1.2.3.4  # Same as web server
+        port: 127.0.0.1:5432:5432
+        env:
+          clear:
+            POSTGRES_USER: postgres
+            POSTGRES_DB: covertext_staging
+          secret:
+            - POSTGRES_PASSWORD
+        directories:
+          - data:/var/lib/postgresql/data
+
+  production:
+    servers:
+      web:
+        hosts:
+          - 5.6.7.8  # Replace with production server IP
+    env:
+      clear:
+        RAILS_ENV: production
+        APP_HOST: covertext.app
+        APP_PROTOCOL: https
+        SOLID_QUEUE_IN_PUMA: true
+        # External Digital Ocean managed Postgres
+      secret:
+        - DATABASE_URL  # Provided via .kamal/secrets
+    proxy:
+      ssl: true
+      host: covertext.app
 
 # Enable SSL auto certification via Let's Encrypt (HTTP → HTTPS redirect automatic)
+# This is overridden by destination-specific proxy configs above
 proxy:
   ssl: true
   host: staging.covertext.app
@@ -33,15 +86,9 @@ env:
     # - TWILIO_ACCOUNT_SID
     # - TWILIO_AUTH_TOKEN
   clear:
+    # Default environment variables (can be overridden by destinations)
     RAILS_ENV: production
-    APP_HOST: staging.covertext.app
-    APP_PROTOCOL: https
-
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     SOLID_QUEUE_IN_PUMA: true
-
-    # Database connection (points to postgres accessory)
-    DATABASE_URL: postgres://postgres:password@covertext-postgres:5432/covertext_production
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
@@ -79,19 +126,3 @@ builder:
 # ssh:
 #   user: app
 
-# Use accessory services (secrets come from .kamal/secrets).
-accessories:
-  postgres:
-    image: postgres:16
-    host: 1.2.3.4  # Same server as web
-    # Internal only - not exposed to internet
-    port: 127.0.0.1:5432:5432
-    env:
-      clear:
-        POSTGRES_USER: postgres
-        POSTGRES_DB: covertext_production
-      secret:
-        - POSTGRES_PASSWORD
-    directories:
-      # Persistent volume for database
-      - data:/var/lib/postgresql/data
