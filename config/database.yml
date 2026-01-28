@@ -19,6 +19,11 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
+sqlite: &sqlite
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
 
 development:
   <<: *default
@@ -82,15 +87,16 @@ production:
     database: covertext_production
     username: covertext
     password: <%= ENV["COVERTEXT_DATABASE_PASSWORD"] %>
+  # Use SQLite for Solid trifecta (faster, cheaper, simpler than Postgres)
   cache:
-    <<: *primary_production
-    database: covertext_production_cache
+    adapter: sqlite3
+    database: db/production_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
-    <<: *primary_production
-    database: covertext_production_queue
+    adapter: sqlite3
+    database: db/production_queue.sqlite3
     migrations_paths: db/queue_migrate
   cable:
-    <<: *primary_production
-    database: covertext_production_cable
+    adapter: sqlite3
+    database: db/production_cable.sqlite3
     migrations_paths: db/cable_migrate

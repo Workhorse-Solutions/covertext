@@ -179,6 +179,7 @@ kamal setup -d staging
 This will:
 - Install Docker on the server (if needed)
 - Create Docker network
+- Create host directories for SQLite and storage: `/var/lib/covertext/staging/`
 - Start Postgres accessory (covertext-postgres-staging)
 - Pull the image
 - Deploy the application
@@ -186,7 +187,7 @@ This will:
 
 Wait 10-20 seconds for Postgres to initialize.
 
-Run database migrations:
+Run database migrations (includes Solid Cache/Queue/Cable SQLite databases):
 
 ```bash
 kamal app exec -d staging 'bin/rails db:prepare'
@@ -209,11 +210,12 @@ kamal setup -d production
 This will:
 - Install Docker on the server (if needed)
 - Create Docker network
+- Create host directories for SQLite and storage: `/var/lib/covertext/production/`
 - Pull the image
 - Deploy the application
 - Start the Kamal proxy (Traefik) with SSL
 
-Run database migrations:
+Run database migrations (includes Solid Cache/Queue/Cable SQLite databases):
 
 ```bash
 kamal app exec -d production 'bin/rails db:prepare'
@@ -514,7 +516,68 @@ kamal app exec -d staging -i 'bin/rails console'
 # Then: Rails.application.credentials.twilio
 ```
 
-## 9. Digital Ocean Postgres Setup (Production Only)
+**SQLite Database Issues:**
+```bash
+# Check if volume is mounted correctly
+kamal app exec -d staging 'ls -la /rails/db'
+
+# Verify SQLite files exist
+kamal app exec -d staging 'ls -lh /rails/db/*.sqlite3'
+
+# Check SQLite file permissions
+kamal app exec -d staging 'stat /rails/db/production_queue.sqlite3'
+
+# If corrupted, delete and rebuild (safe - cache/queue data is ephemeral)
+kamal app exec -d staging 'rm /rails/db/production_cache.sqlite3'
+kamal app exec -d staging 'bin/rails db:prepare'
+```
+
+## 9. Architecture: SQLite for Solid Trifecta
+
+CoverText uses **SQLite for Solid Cache, Solid Queue, and Solid Cable** instead of Postgres for these features. This is Rails 8's recommended approach.
+
+### Why SQLite for Cache/Queue/Cable?
+
+✅ **Performance**: Faster than Postgres for simple read/write operations (no network overhead)  
+✅ **Cost**: Smaller managed Postgres needed (only app data, not cache/queue churn)  
+✅ **Simplicity**: No Redis, no connection pooling issues, no additional services  
+✅ **Rails 8 Native**: This is the default, battle-tested configuration  
+
+### Database Architecture
+
+**Primary (Postgres):**
+- Application data: agencies, clients, conversations, messages, etc.
+- Managed Digital Ocean Postgres in production
+- Postgres accessory in staging
+- Requires backups
+
+**Cache/Queue/Cable (SQLite):**
+- Ephemeral data: cached values, background jobs, WebSocket connections
+- Local files in `/var/lib/covertext/{env}/db/`
+- No backups needed (can be safely deleted and rebuilt)
+- Persisted via Docker volumes
+
+### File Locations
+
+**On Host:**
+- `/var/lib/covertext/staging/db/*.sqlite3`
+- `/var/lib/covertext/production/db/*.sqlite3`
+
+**In Container:**
+- `/rails/db/production_cache.sqlite3`
+- `/rails/db/production_queue.sqlite3`
+- `/rails/db/production_cable.sqlite3`
+
+### When to Switch to Postgres
+
+Only if you need:
+- Multiple app servers with shared queue/cache
+- Separate worker servers
+- Horizontal scaling beyond single droplet
+
+For CoverText's scale, SQLite is perfect.
+
+## 10. Digital Ocean Postgres Setup (Production Only)
 
 ### Create Database Cluster
 
@@ -549,7 +612,7 @@ After deploying, verify the connection:
 kamal app exec -d production 'bin/rails db:migrate:status'
 ```
 
-## 10. Security Checklist
+## 11. Security Checklist
 
 - [ ] `.kamal/secrets` is in `.gitignore` and NOT committed
 - [ ] `config/credentials/staging.key` is securely shared (1Password, etc.)
@@ -560,8 +623,9 @@ kamal app exec -d production 'bin/rails db:migrate:status'
 - [ ] DATABASE_URL uses `sslmode=require`
 - [ ] Server SSH keys are secured and backed up
 - [ ] DNS records are protected (registrar 2FA enabled)
+- [ ] Host directories for volumes have appropriate permissions (755 for `/var/lib/covertext/{env}/`)
 
-## 11. Maintenance
+## 12. Maintenance
 
 ### Updating Dependencies
 
@@ -579,26 +643,49 @@ kamal deploy -d production
 
 ### Database Backups
 
-**Staging:**
+**Staging (Postgres only - SQLite cache/queue doesn't need backups):**
 ```bash
-# Manual backup
+# Manual Postgres backup
 kamal accessory exec postgres -d staging "pg_dump -U postgres covertext_staging" > backup_staging.sql
 
 # Restore
+cat backup_staging.sql | kamal accessory exec postgres -d staging "psql -U postgres covertext_staging"
+
+# Note: SQLite files (/var/lib/covertext/staging/db/*.sqlite3) are ephemeral and don't need backups
+```
+
+**Production:**
+
+Postgres: Set up automated backups in Digital Ocean:
 cat backup_staging.sql | kamal accessory exec postgres -d staging "psql -U postgres covertext_staging"
 ```
 
 **Production:**
 
-Set up automated backups in Digital Ocean:
+Postgres: Set up automated backups in Digital Ocean:
 1. Navigate to your database cluster
 2. Enable "Automated Backups"
 3. Choose retention period (7 days recommended minimum)
 
-Manual backup:
+Manual Postgres backup:
 ```bash
 # Using pg_dump from local machine
 pg_dump "postgres://doadmin:password@host:25060/covertext_production?sslmode=require" > backup_production.sql
+```
+
+SQLite: No backups needed - cache/queue/cable data is ephemeral and can be safely deleted/rebuilt.
+
+### Storage Backups (ActiveStorage)
+
+**Important:** Back up ActiveStorage files (insurance cards, PDFs) separately:
+
+```bash
+# Backup storage volume from host
+ssh root@production-server "tar -czf /tmp/storage-backup.tar.gz /var/lib/covertext/production/storage"
+scp root@production-server:/tmp/storage-backup.tar.gz ./storage-backup-$(date +%Y%m%d).tar.gz
+
+# Or sync to S3/Spaces for continuous backups
+ssh root@production-server "rclone sync /var/lib/covertext/production/storage s3:bucket/covertext-storage"
 ```
 
 ### Secrets Management
@@ -629,7 +716,7 @@ git commit -am "Update production credentials"
 kamal deploy -d production
 ```
 
-## 12. SSL/TLS with Let's Encrypt
+## 13. SSL/TLS with Let's Encrypt
 
 Kamal proxy (Traefik) automatically handles:
 - SSL certificate provisioning via Let's Encrypt
@@ -641,7 +728,7 @@ Kamal proxy (Traefik) automatically handles:
 
 **Important**: Ensure DNS is configured BEFORE first deploy, or Let's Encrypt will fail.
 
-## 13. Monitoring and Logs
+## 14. Monitoring and Logs
 
 ### Log Aggregation
 
@@ -676,7 +763,7 @@ Monitor:
 - `https://staging.covertext.app/up`
 - `https://covertext.app/up`
 
-## 14. Disaster Recovery
+## 15. Disaster Recovery
 
 ### Staging Recovery
 
@@ -686,6 +773,9 @@ If staging needs complete rebuild:
 kamal accessory remove postgres -d staging
 kamal app remove -d staging
 kamal proxy remove -d staging
+
+# Clean up host volumes (optional - will lose all data)
+ssh root@staging-server "rm -rf /var/lib/covertext/staging"
 
 # Rebuild from scratch
 kamal setup -d staging
@@ -702,22 +792,45 @@ git checkout <commit-sha>
 kamal deploy -d production
 ```
 
-## 15. Cost Optimization
+**Storage:** Restore from backup:
+```bash
+# Restore ActiveStorage files
+scp storage-backup-20260128.tar.gz root@production-server:/tmp/
+ssh root@production-server "tar -xzf /tmp/storage-backup-20260128.tar.gz -C /"
+```
+
+**SQLite:** Rebuild (safe - ephemeral data):
+```bash
+kamal app exec -d production 'rm /rails/db/production_*.sqlite3'
+kamal app exec -d production 'bin/rails db:prepare'
+```
+
+## 16. Cost Optimization
 
 ### Staging
 - Single droplet: ~$6-12/month (1-2GB RAM)
 - Postgres runs as accessory (no additional cost)
+- SQLite for cache/queue/cable (no additional cost)
 - Domain/SSL: Free (Let's Encrypt)
+- **Total: ~$6-12/month**
 
 ### Production
 - Application droplet: ~$12-24/month (2-4GB RAM recommended)
 - Digital Ocean Postgres: ~$15/month (Basic 1GB) to ~$60/month (Production 4GB)
+- SQLite for cache/queue/cable (no additional cost)
 - Domain: ~$10-15/year
 - Monitoring: $0-50/month depending on service
+- **No block storage needed** (using droplet local volumes)
 
 **Total estimated cost:** $30-100/month for production-ready setup
 
-## 16. Promotion Workflow
+**Cost savings vs traditional stack:**
+- No Redis: -$15-50/month
+- No block storage: -$10/month
+- Smaller Postgres instance: -$15-30/month (since it's not handling cache/queue)
+- **Save $40-90/month** by using Rails 8's Solid trifecta with SQLite
+
+## 17. Promotion Workflow
 
 Typical workflow for deploying features:
 
@@ -755,7 +868,7 @@ Typical workflow for deploying features:
    # Watch for errors, performance issues
    ```
 
-## 17. Quick Reference
+## 18. Quick Reference
 
 ### Deployment Commands
 
@@ -769,6 +882,17 @@ Typical workflow for deploying features:
 | Restart app | `kamal app boot -d staging` | `kamal app boot -d production` |
 | Check status | `kamal app details -d staging` | `kamal app details -d production` |
 | Postgres details | `kamal accessory details postgres -d staging` | N/A (managed by Digital Ocean) |
+| Check volumes | `ssh root@staging 'ls -lh /var/lib/covertext/staging/db'` | `ssh root@production 'ls -lh /var/lib/covertext/production/db'` |
+
+### Database Architecture
+
+| Component | Type | Location | Backups Needed? |
+|-----------|------|----------|-----------------|
+| Application data | Postgres | DO managed (prod) / Accessory (staging) | ✅ Yes |
+| Solid Cache | SQLite | `/var/lib/covertext/{env}/db/` | ❌ No (ephemeral) |
+| Solid Queue | SQLite | `/var/lib/covertext/{env}/db/` | ❌ No (ephemeral) |
+| Solid Cable | SQLite | `/var/lib/covertext/{env}/db/` | ❌ No (ephemeral) |
+| ActiveStorage | Files | `/var/lib/covertext/{env}/storage/` | ✅ Yes |
 
 ### Important URLs
 

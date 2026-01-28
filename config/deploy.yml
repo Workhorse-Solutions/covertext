@@ -19,6 +19,9 @@ destinations:
       web:
         hosts:
           - 1.2.3.4  # Replace with staging server IP
+    volumes:
+      - "/var/lib/covertext/staging/db:/rails/db"
+      - "/var/lib/covertext/staging/storage:/rails/storage"
     env:
       clear:
         RAILS_ENV: production
@@ -50,6 +53,9 @@ destinations:
       web:
         hosts:
           - 5.6.7.8  # Replace with production server IP
+    volumes:
+      - "/var/lib/covertext/production/db:/rails/db"
+      - "/var/lib/covertext/production/storage:/rails/storage"
     env:
       clear:
         RAILS_ENV: production
