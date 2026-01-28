@@ -24,7 +24,7 @@ destinations:
       - "/var/lib/covertext/staging/storage:/rails/storage"
     env:
       clear:
-        RAILS_ENV: production
+        RAILS_ENV: staging
         APP_HOST: staging.covertext.app
         APP_PROTOCOL: https
         SOLID_QUEUE_IN_PUMA: true
