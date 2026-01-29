@@ -7,8 +7,12 @@ mkdir -p db
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
   # Ensure Solid Cache/Queue/Cable databases are set up
-  ./bin/rails db:create:cache db:create:queue db:create:cable
-  ./bin/rails db:schema:load:cache db:schema:load:queue db:schema:load:cable
+  ./bin/rails db:create:cache 2>/dev/null || true
+  ./bin/rails db:create:queue 2>/dev/null || true
+  ./bin/rails db:create:cable 2>/dev/null || true
+  ./bin/rails db:schema:load:cache
+  ./bin/rails db:schema:load:queue
+  ./bin/rails db:schema:load:cable
 fi
 
 exec "${@}"
