@@ -6,13 +6,19 @@ mkdir -p data
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
-  # Ensure Solid Cache/Queue/Cable databases are set up
-  ./bin/rails db:create:cache 2>/dev/null || true
-  ./bin/rails db:create:queue 2>/dev/null || true
-  ./bin/rails db:create:cable 2>/dev/null || true
-  ./bin/rails db:schema:load:cache
-  ./bin/rails db:schema:load:queue
-  ./bin/rails db:schema:load:cable
+  # Ensure Solid Cache/Queue/Cable databases are set up (only load schema if DB doesn't exist)
+  if [ ! -f "data/${RAILS_ENV}_cache.sqlite3" ]; then
+    ./bin/rails db:create:cache 2>/dev/null || true
+    ./bin/rails db:schema:load:cache
+  fi
+  if [ ! -f "data/${RAILS_ENV}_queue.sqlite3" ]; then
+    ./bin/rails db:create:queue 2>/dev/null || true
+    ./bin/rails db:schema:load:queue
+  fi
+  if [ ! -f "data/${RAILS_ENV}_cable.sqlite3" ]; then
+    ./bin/rails db:create:cable 2>/dev/null || true
+    ./bin/rails db:schema:load:cable
+  fi
 fi
 
 exec "${@}"
