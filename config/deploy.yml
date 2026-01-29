@@ -2,78 +2,21 @@
 service: covertext
 
 # Name of the container image (use your-user/app-name on external registries).
-# Replace <GITHUB_OWNER> with your GitHub username or organization
 image: ghcr.io/jrmyward/covertext
 
-# Deploy to these servers.
-# Use destinations to separate staging and production deployments
+# Deploy to these servers (use deploy.staging.yml or deploy.production.yml for specific environments)
 servers:
   web:
     hosts:
-      - 1.2.3.4  # Will be overridden by destination configs
+# Deploy to these servers (use deploy.staging.yml or deploy.production.yml for specific environments)
+servers:
+  web:
+    hosts:
+      - PLACEHOLDER  # Override with -d staging or -d production
 
-# Destination-specific configurations
-destinations:
-  staging:
-    servers:
-      web:
-        hosts:
-          - 159.65.70.168  # Staging droplet
-    volumes:
-      - "/var/lib/covertext/staging/db:/rails/db"
-      - "/var/lib/covertext/staging/storage:/rails/storage"
-    env:
-      clear:
-        RAILS_ENV: staging
-        APP_HOST: staging.covertext.app
-        APP_PROTOCOL: https
-        SOLID_QUEUE_IN_PUMA: true
-        # Postgres accessory runs on same server
-        DATABASE_URL: postgres://postgres:password@covertext-postgres-staging:5432/covertext_staging
-    proxy:
-      ssl: true
-      host: staging.covertext.app
-    accessories:
-      postgres:
-        service: covertext-postgres-staging
-        image: postgres:16
-        host: 159.65.70.168  # Same as web server
-        port: 127.0.0.1:5432:5432
-        env:
-          clear:
-            POSTGRES_USER: postgres
-            POSTGRES_DB: covertext_staging
-          secret:
-            - POSTGRES_PASSWORD
-        directories:
-          - data:/var/lib/postgresql/data
-
-  production:
-    servers:
-      web:
-        hosts:
-          - 5.6.7.8  # Replace with production server IP
-    volumes:
-      - "/var/lib/covertext/production/db:/rails/db"
-      - "/var/lib/covertext/production/storage:/rails/storage"
-    env:
-      clear:
-        RAILS_ENV: production
-        APP_HOST: covertext.app
-        APP_PROTOCOL: https
-        SOLID_QUEUE_IN_PUMA: true
-        # External Digital Ocean managed Postgres
-      secret:
-        - DATABASE_URL  # Provided via .kamal/secrets
-    proxy:
-      ssl: true
-      host: covertext.app
-
-# Enable SSL auto certification via Let's Encrypt (HTTP → HTTPS redirect automatic)
-# This is overridden by destination-specific proxy configs above
+# SSL configuration (overridden by environment-specific configs)
 proxy:
   ssl: true
-  host: staging.covertext.app
 
 # Where you keep your container images.
 registry:

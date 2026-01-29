@@ -1,0 +1,71 @@
+# Name of your application. Used to uniquely configure containers.
+service: covertext
+
+# Name of the container image (use your-user/app-name on external registries).
+image: ghcr.io/jrmyward/covertext
+
+# Deploy to staging server
+servers:
+  web:
+    hosts:
+      - 159.65.70.168
+
+volumes:
+  - "/var/lib/covertext/staging/db:/rails/db"
+  - "/var/lib/covertext/staging/storage:/rails/storage"
+
+env:
+  clear:
+    RAILS_ENV: staging
+    APP_HOST: staging.covertext.app
+    APP_PROTOCOL: https
+    SOLID_QUEUE_IN_PUMA: true
+    # Postgres accessory runs on same server
+    DATABASE_URL: postgres://postgres:password@covertext-postgres-staging:5432/covertext_staging
+
+# SSL configuration
+proxy:
+  ssl: true
+  host: staging.covertext.app
+
+# Postgres database accessory
+accessories:
+  postgres:
+    service: covertext-postgres-staging
+    image: postgres:16
+    host: 159.65.70.168
+    port: 127.0.0.1:5432:5432
+    env:
+      clear:
+        POSTGRES_USER: postgres
+        POSTGRES_DB: covertext_staging
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+
+# Enable SSL auto certification via Let's Encrypt (HTTP → HTTPS redirect automatic)
+
+# Where you keep your container images.
+registry:
+  server: ghcr.io
+  username: jrmyward
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+env:
+  secret:
+    - RAILS_MASTER_KEY
+
+# Aliases are triggered with "kamal <alias>"
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole"
+
+# Configure the image builder
+builder:
+  arch: amd64
+
