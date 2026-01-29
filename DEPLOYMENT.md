@@ -4,15 +4,22 @@
 
 This guide covers deploying CoverText to the staging environment using Kamal.
 
+> **📖 Deep Dive**: For detailed information about the two-container architecture, SQLite configuration, and troubleshooting, see [Worker Separation Architecture](docs/WORKER_SEPARATION.md).
+
 ### Architecture
 
 **Staging Environment:**
 - **Web Role**: Puma serving HTTP requests via kamal-proxy (with SSL)
-- **Worker Role**: Solid Queue processing background jobs
+- **Worker Role**: Solid Queue processing background jobs in async mode
 - **Database**: PostgreSQL 16 (Kamal accessory)
 - **Cache**: Solid Cache (SQLite, persisted in `/var/lib/covertext/staging/data`)
-- **Queue**: Solid Queue (SQLite, persisted in `/var/lib/covertext/staging/data`)
+- **Queue**: Solid Queue (SQLite with WAL mode, persisted in `/var/lib/covertext/staging/data`)
 - **Cable**: Solid Cable (SQLite, persisted in `/var/lib/covertext/staging/data`)
+
+**Key Configuration:**
+- Worker runs in `async` supervisor mode (required for SQLite)
+- Web container does not run Solid Queue (`SOLID_QUEUE_IN_PUMA=false`)
+- SQLite uses WAL mode for concurrent access
 
 ### Prerequisites
 
@@ -56,35 +63,44 @@ kamal db-prepare -d staging
 
 ### Verification
 
-**Check Web Container:**
+After deployment, verify the two-container architecture is working correctly:
+
+**1. Check Both Containers Running:**
 ```bash
-kamal app logs -d staging --roles web
-curl https://staging.covertext.app/up
+kamal app details -d staging
+# Should show both web and worker containers with "Up" status
 ```
 
-**Check Worker Container:**
+**2. Verify Web Container Isolation:**
 ```bash
-kamal worker-logs -d staging
+# Should return 0 (no Solid Queue activity in web container)
+kamal app logs -d staging --roles web --since 1m | grep -i solidqueue | wc -l
 ```
 
-**Verify Database Connectivity:**
+**3. Verify Worker is Running in Async Mode:**
 ```bash
-kamal app exec -d staging "bin/rails runner 'puts ActiveRecord::Base.connection.select_value(\"select 1\")'"
+# Should show "Started Supervisor(async)"
+kamal worker-logs -d staging --since 2m | grep "Supervisor"
 ```
 
-**Verify Solid Queue:**
+**4. Check for Database Locking Errors:**
 ```bash
-kamal app exec -d staging "bin/rails runner 'puts SolidQueue::Job.count'"
+# Should be 0 or very low (only during startup)
+kamal worker-logs -d staging --since 5m | grep -i "database is locked" | wc -l
 ```
 
-**Test Job Processing:**
+**5. Test Site is Responding:**
 ```bash
-# Queue a test job
-kamal app exec -d staging "bin/rails runner 'TestJob.perform_later'"
-
-# Check worker logs
-kamal worker-logs -d staging
+curl -I https://staging.covertext.app
+# Should return HTTP/2 200
 ```
+
+**6. Verify Database Connectivity:**
+```bash
+kamal app exec -d staging --roles web "bin/rails runner 'puts ActiveRecord::Base.connection.select_value(\"select 1\")'"
+```
+
+**See [Worker Separation Architecture](docs/WORKER_SEPARATION.md) for detailed troubleshooting.**
 
 ### Troubleshooting
 
