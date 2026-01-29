@@ -118,15 +118,15 @@ staging:
   # Use SQLite for Solid trifecta (faster, cheaper, simpler than Postgres)
   cache:
     adapter: sqlite3
-    database: db/staging_cache.sqlite3
+    database: data/staging_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
     adapter: sqlite3
-    database: db/staging_queue.sqlite3
+    database: data/staging_queue.sqlite3
     migrations_paths: db/queue_migrate
   cable:
     adapter: sqlite3
-    database: db/staging_cable.sqlite3
+    database: data/staging_cable.sqlite3
     migrations_paths: db/cable_migrate
 
 production:
@@ -140,13 +140,13 @@ production:
   # Use SQLite for Solid trifecta (faster, cheaper, simpler than Postgres)
   cache:
     adapter: sqlite3
-    database: db/production_cache.sqlite3
+    database: data/production_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
     adapter: sqlite3
-    database: db/production_queue.sqlite3
+    database: data/production_queue.sqlite3
     migrations_paths: db/queue_migrate
   cable:
     adapter: sqlite3
-    database: db/production_cable.sqlite3
+    database: data/production_cable.sqlite3
     migrations_paths: db/cable_migrate

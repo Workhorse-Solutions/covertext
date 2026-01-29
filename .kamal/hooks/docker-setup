@@ -6,11 +6,11 @@
 if [ "$KAMAL_DESTINATION" = "staging" ]; then
   for host in $(echo $KAMAL_HOSTS | tr ',' ' '); do
     echo "Creating staging volumes on $host..."
-    ssh root@$host "mkdir -p /var/lib/covertext/staging/db /var/lib/covertext/staging/storage && chown -R 1000:1000 /var/lib/covertext/staging"
+    ssh root@$host "mkdir -p /var/lib/covertext/staging/data /var/lib/covertext/staging/storage && chown -R 1000:1000 /var/lib/covertext/staging"
   done
 elif [ "$KAMAL_DESTINATION" = "production" ]; then
   for host in $(echo $KAMAL_HOSTS | tr ',' ' '); do
     echo "Creating production volumes on $host..."
-    ssh root@$host "mkdir -p /var/lib/covertext/production/db /var/lib/covertext/production/storage && chown -R 1000:1000 /var/lib/covertext/production"
+    ssh root@$host "mkdir -p /var/lib/covertext/production/data /var/lib/covertext/production/storage && chown -R 1000:1000 /var/lib/covertext/production"
   done
 fi

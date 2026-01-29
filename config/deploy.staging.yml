@@ -11,7 +11,7 @@ servers:
       - 159.65.70.168
 
 volumes:
-  - "/var/lib/covertext/staging/db:/rails/db"
+  - "/var/lib/covertext/staging/data:/rails/data"
   - "/var/lib/covertext/staging/storage:/rails/storage"
 
 env:
