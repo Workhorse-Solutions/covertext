@@ -22,6 +22,8 @@ env:
     SOLID_QUEUE_IN_PUMA: true
     # Postgres accessory runs on same server
     DATABASE_URL: postgres://postgres:password@covertext-postgres-staging:5432/covertext_staging
+  secret:
+    - RAILS_MASTER_KEY
 
 # SSL configuration
 proxy:
@@ -52,11 +54,6 @@ registry:
   username: jrmyward
   password:
     - KAMAL_REGISTRY_PASSWORD
-
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
-env:
-  secret:
-    - RAILS_MASTER_KEY
 
 # Aliases are triggered with "kamal <alias>"
 aliases:
