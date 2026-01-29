@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+# Ensure db directory exists and is writable for SQLite files
+mkdir -p db
+chmod 755 db
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
