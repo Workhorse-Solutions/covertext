@@ -6,6 +6,9 @@ mkdir -p db
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
+  # Ensure Solid Cache/Queue/Cable databases are set up
+  ./bin/rails db:create:cache db:create:queue db:create:cable
+  ./bin/rails db:schema:load:cache db:schema:load:queue db:schema:load:cable
 fi
 
 exec "${@}"
