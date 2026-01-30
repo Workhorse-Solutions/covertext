@@ -146,15 +146,15 @@ twilio:
 
 Save and exit. The encrypted files are committed to git, but you need to securely share `config/credentials/staging.key` and `config/credentials/production.key` with your team.
 
-**Alternative: Use Environment Variables**
+⚠️ **Important:** Twilio credentials MUST be in Rails encrypted credentials. The application will check credentials first, then fall back to ENV vars, but credentials are the recommended approach.
 
-If you prefer ENV vars, add to `.kamal/secrets`:
+**Fallback Only: Environment Variables**
+
+If you absolutely must use ENV vars (not recommended), add to `.kamal/secrets`:
 ```bash
 TWILIO_ACCOUNT_SID=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your_twilio_auth_token_or_api_key_secret
 ```
-
-The initializer checks Rails credentials first, then falls back to ENV vars.
 
 ## 3. Initial Setup
 

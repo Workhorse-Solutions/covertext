@@ -57,8 +57,17 @@ module Webhooks
       # Build params hash for validation (Twilio expects form params)
       post_params = request.POST
 
+      # Get auth token from Rails credentials or ENV (same as initializer)
+      auth_token = Rails.application.credentials.dig(:twilio, :auth_token) || ENV["TWILIO_AUTH_TOKEN"]
+
+      unless auth_token
+        Rails.logger.error "[TwilioInbound] TWILIO_AUTH_TOKEN not configured"
+        head :internal_server_error
+        return false
+      end
+
       # Verify the signature
-      validator = Twilio::Security::RequestValidator.new(ENV.fetch("TWILIO_AUTH_TOKEN"))
+      validator = Twilio::Security::RequestValidator.new(auth_token)
 
       unless validator.validate(url, post_params, signature)
         Rails.logger.warn "[TwilioInbound] Invalid signature from #{request.remote_ip}"

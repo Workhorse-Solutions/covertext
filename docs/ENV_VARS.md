@@ -14,20 +14,30 @@
   - Example: `postgres://postgres:password@covertext-postgres:5432/covertext_production`
 
 ### Twilio (Phase 1+)
-**Recommended: Use Rails Encrypted Credentials**
-- Edit: `bin/rails credentials:edit --environment production`
-- Add:
-  ```yaml
-  twilio:
-    account_sid: ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    auth_token: your_auth_token_here
-  ```
+**Primary Method: Rails Encrypted Credentials**
 
-**Alternative: Environment Variables**
-- `TWILIO_ACCOUNT_SID` - Your Twilio Account SID (from Twilio Console)
-- `TWILIO_AUTH_TOKEN` - Your Twilio Auth Token (secret, from Twilio Console)
+Twilio credentials MUST be configured in Rails encrypted credentials:
 
-The initializer checks Rails credentials first, then falls back to ENV vars.
+```bash
+# For production
+bin/rails credentials:edit --environment production
+
+# For staging
+bin/rails credentials:edit --environment staging
+```
+
+Add:
+```yaml
+twilio:
+  account_sid: ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  auth_token: your_auth_token_here
+```
+
+**Fallback: Environment Variables (Not Recommended)**
+- `TWILIO_ACCOUNT_SID` - Twilio Account SID (fallback only)
+- `TWILIO_AUTH_TOKEN` - Twilio Auth Token (fallback only)
+
+⚠️ **Note:** The application checks Rails credentials first, then falls back to ENV vars. Using credentials is strongly recommended for security.
 
 ### Background Jobs
 - `SOLID_QUEUE_IN_PUMA` - Set to "true" to run jobs in Puma process (default for single server)
@@ -54,7 +64,6 @@ The initializer checks Rails credentials first, then falls back to ENV vars.
 
 1. **Secrets** (from `.kamal/secrets`):
    - RAILS_MASTER_KEY
-   - TWILIO_AUTH_TOKEN
    - POSTGRES_PASSWORD (for Postgres accessory)
    - KAMAL_REGISTRY_PASSWORD (for GHCR login)
 
@@ -80,6 +89,6 @@ kamal app exec "env | sort | grep -E 'RAILS_ENV|APP_HOST|DATABASE_URL'"
 # Test database connection
 kamal app exec "bin/rails runner 'puts ActiveRecord::Base.connection.active?'"
 
-# Test Twilio credentials (if configured)
-kamal app exec "bin/rails runner 'puts ENV[\"TWILIO_AUTH_TOKEN\"].present?'"
+# Test Twilio credentials (checks credentials first, then ENV)
+kamal app exec "bin/rails runner 'auth_token = Rails.application.credentials.dig(:twilio, :auth_token) || ENV[\"TWILIO_AUTH_TOKEN\"]; puts auth_token.present? ? \"Twilio credentials configured\" : \"Twilio credentials MISSING\"'"
 ```
