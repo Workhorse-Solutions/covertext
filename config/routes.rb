@@ -33,6 +33,9 @@ Rails.application.routes.draw do
   get "login", to: "sessions#new"
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy"
+  get "password/reset", to: "password_resets#new", as: :new_password_reset
+  post "password/reset", to: "password_resets#create", as: :password_resets
+  get "password/reset/edit", to: "password_resets#edit", as: :edit_password_reset
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest

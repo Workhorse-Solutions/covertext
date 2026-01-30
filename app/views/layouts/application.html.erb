@@ -24,6 +24,18 @@
   </head>
 
   <body class="h-full bg-base-100">
+    <% if flash[:notice] %>
+      <div class="alert alert-success rounded-none">
+        <span><%= flash[:notice] %></span>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="alert alert-error rounded-none">
+        <span><%= flash[:alert] %></span>
+      </div>
+    <% end %>
+
     <%= yield %>
   </body>
 </html>
