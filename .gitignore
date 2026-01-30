@@ -31,6 +31,7 @@
 # Ignore SQLite database files
 *.sqlite3
 *.sqlite3-*
+db/*sqlite3_*
 
 /public/assets
 

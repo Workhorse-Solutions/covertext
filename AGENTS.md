@@ -41,6 +41,10 @@ bin/rails test:system
 bin/ci
 ```
 
+## CI Expectations
+- CI should be green before merging.
+- Keep security tools (Brakeman, bundler-audit, importmap audit) up to date.
+
 ## Deployment
 - Kamal (see docs/DEPLOYMENT.md).
 - Keep secrets out of git; use Rails credentials and .kamal/secrets.
