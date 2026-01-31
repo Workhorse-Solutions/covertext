@@ -61,6 +61,8 @@ jobs:
           tags: |
             ${{ steps.image.outputs.name }}:${{ steps.vars.outputs.version }}
             ${{ steps.image.outputs.name }}:main
+          labels: |
+            service=covertext
 
   deploy:
     needs: build-and-push
