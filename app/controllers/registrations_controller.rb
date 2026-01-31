@@ -81,7 +81,7 @@ class RegistrationsController < ApplicationController
   private
 
   def agency_params
-    params.require(:agency).permit(:name, :sms_phone_number)
+    params.require(:agency).permit(:name, :phone_sms)
   end
 
   def stripe_price_id_for_plan(plan)

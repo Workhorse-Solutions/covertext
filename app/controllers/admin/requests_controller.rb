@@ -14,7 +14,7 @@ module Admin
       @request = current_agency.requests.find_by(id: params[:id])
       return head :not_found unless @request
 
-      @contact = @request.contact
+      @client = @request.client
       @deliveries = @request.deliveries.order(created_at: :desc)
       @audit_events = @request.audit_events.order(created_at: :desc)
 
@@ -32,9 +32,9 @@ module Admin
       )
 
       # Fallback: Messages from same phone within time window if no direct messages
-      if direct_messages.empty? && @request.contact
+      if direct_messages.empty? && @request.client
         time_window = 10.minutes
-        phone = @request.contact.mobile_phone_e164
+        phone = @request.client.phone_mobile
 
         fallback_messages = MessageLog.where(
           agency_id: current_agency.id

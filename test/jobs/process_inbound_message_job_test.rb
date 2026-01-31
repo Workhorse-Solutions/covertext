@@ -6,7 +6,7 @@ class ProcessInboundMessageJobTest < ActiveJob::TestCase
       agency: agencies(:reliable),
       direction: "inbound",
       from_phone: "+15559876543",
-      to_phone: agencies(:reliable).sms_phone_number,
+      to_phone: agencies(:reliable).phone_sms,
       body: "Test message",
       provider_message_id: "SM#{SecureRandom.hex(16)}",
       media_count: 0

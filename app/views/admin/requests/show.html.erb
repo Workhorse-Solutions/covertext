@@ -25,9 +25,9 @@
       <div>
         <div class="text-sm text-gray-500">Contact</div>
         <div class="font-medium">
-          <% if @contact %>
-            <%= @contact.first_name %> <%= @contact.last_name %>
-            <div class="text-sm text-gray-500"><%= @contact.mobile_phone_e164 %></div>
+          <% if @client %>
+            <%= @client.first_name %> <%= @client.last_name %>
+            <div class="text-sm text-gray-500"><%= @client.phone_mobile %></div>
           <% else %>
             <span class="text-gray-400">Unknown</span>
           <% end %>

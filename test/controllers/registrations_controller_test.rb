@@ -9,7 +9,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
   test "signup form has required fields" do
     get signup_path
     assert_select "input[name=?]", "agency[name]"
-    assert_select "input[name=?]", "agency[sms_phone_number]"
+    assert_select "input[name=?]", "agency[phone_sms]"
     assert_select "input[name=?]", "user_first_name"
     assert_select "input[name=?]", "user_last_name"
     assert_select "input[name=?]", "user_email"
@@ -35,7 +35,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
         post signup_path, params: {
           agency: {
             name: "New Agency",
-            sms_phone_number: "+15551112222"
+            phone_sms: "+15551112222"
           },
           user_first_name: "John",
           user_last_name: "Doe",
@@ -64,7 +64,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       post signup_path, params: {
         agency: {
           name: "",
-          sms_phone_number: ""
+          phone_sms: ""
         },
         user_first_name: "Jane",
         user_last_name: "Doe",

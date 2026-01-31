@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,14 +46,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
     t.datetime "created_at", null: false
     t.boolean "live_enabled", default: false, null: false
     t.string "name", null: false
+    t.string "phone_sms", null: false
     t.string "plan_name"
     t.jsonb "settings", default: {}
-    t.string "sms_phone_number", null: false
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id"
     t.string "subscription_status"
     t.datetime "updated_at", null: false
-    t.index ["sms_phone_number"], name: "index_agencies_on_sms_phone_number", unique: true
+    t.index ["phone_sms"], name: "index_agencies_on_phone_sms", unique: true
     t.index ["stripe_customer_id"], name: "index_agencies_on_stripe_customer_id", unique: true
     t.index ["stripe_subscription_id"], name: "index_agencies_on_stripe_subscription_id", unique: true
   end
@@ -69,15 +69,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
     t.index ["request_id"], name: "index_audit_events_on_request_id"
   end
 
-  create_table "contacts", force: :cascade do |t|
+  create_table "clients", force: :cascade do |t|
     t.bigint "agency_id", null: false
     t.datetime "created_at", null: false
     t.string "first_name"
     t.string "last_name"
-    t.string "mobile_phone_e164", null: false
+    t.string "phone_mobile", null: false
     t.datetime "updated_at", null: false
-    t.index ["agency_id", "mobile_phone_e164"], name: "index_contacts_on_agency_id_and_mobile_phone_e164", unique: true
-    t.index ["agency_id"], name: "index_contacts_on_agency_id"
+    t.index ["agency_id", "phone_mobile"], name: "index_clients_on_agency_id_and_phone_mobile", unique: true
+    t.index ["agency_id"], name: "index_clients_on_agency_id"
   end
 
   create_table "conversation_sessions", force: :cascade do |t|
@@ -130,18 +130,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
   end
 
   create_table "policies", force: :cascade do |t|
-    t.bigint "contact_id", null: false
+    t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.date "expires_on", null: false
     t.string "label", null: false
     t.string "policy_type", null: false
     t.datetime "updated_at", null: false
-    t.index ["contact_id"], name: "index_policies_on_contact_id"
+    t.index ["client_id"], name: "index_policies_on_client_id"
   end
 
   create_table "requests", force: :cascade do |t|
     t.bigint "agency_id", null: false
-    t.bigint "contact_id"
+    t.bigint "client_id"
     t.datetime "created_at", null: false
     t.string "failure_reason"
     t.datetime "fulfilled_at"
@@ -151,7 +151,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
     t.string "status", null: false
     t.datetime "updated_at", null: false
     t.index ["agency_id"], name: "index_requests_on_agency_id"
-    t.index ["contact_id"], name: "index_requests_on_contact_id"
+    t.index ["client_id"], name: "index_requests_on_client_id"
   end
 
   create_table "sms_opt_outs", force: :cascade do |t|
@@ -185,15 +185,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_090000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_events", "agencies"
   add_foreign_key "audit_events", "requests"
-  add_foreign_key "contacts", "agencies"
+  add_foreign_key "clients", "agencies"
   add_foreign_key "conversation_sessions", "agencies"
   add_foreign_key "deliveries", "requests"
   add_foreign_key "documents", "policies"
   add_foreign_key "message_logs", "agencies"
   add_foreign_key "message_logs", "requests"
-  add_foreign_key "policies", "contacts"
+  add_foreign_key "policies", "clients"
   add_foreign_key "requests", "agencies"
-  add_foreign_key "requests", "contacts"
+  add_foreign_key "requests", "clients"
   add_foreign_key "sms_opt_outs", "agencies"
   add_foreign_key "users", "agencies"
 end

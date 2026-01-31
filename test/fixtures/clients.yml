@@ -2,16 +2,16 @@ alice:
   agency: reliable
   first_name: Alice
   last_name: Johnson
-  mobile_phone_e164: "+15552001001"
+  phone_mobile: "+15552001001"
 
 bob:
   agency: reliable
   first_name: Bob
   last_name: Smith
-  mobile_phone_e164: "+15552001002"
+  phone_mobile: "+15552001002"
 
 charlie:
   agency: acme
   first_name: Charlie
   last_name: Davis
-  mobile_phone_e164: "+15552001003"
+  phone_mobile: "+15552001003"

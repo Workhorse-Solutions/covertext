@@ -1,9 +1,9 @@
 reliable:
   name: Reliable Insurance Agency
-  sms_phone_number: "+15551234567"
+  phone_sms: "+15551234567"
   settings: {}
 
 acme:
   name: Acme Insurance Co
-  sms_phone_number: "+15559876543"
+  phone_sms: "+15559876543"
   settings: {}

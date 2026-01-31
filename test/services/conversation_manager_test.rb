@@ -30,7 +30,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
     outbound = MessageLog.where(direction: "outbound").last
     assert_equal @agency.id, outbound.agency_id
-    assert_equal @agency.sms_phone_number, outbound.from_phone
+    assert_equal @agency.phone_sms, outbound.from_phone
     assert_equal @from_phone, outbound.to_phone
     assert_includes outbound.body, "Welcome to CoverText"
     assert_includes outbound.body, "CARD"
@@ -153,14 +153,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   test "routes 'insurance card' to awaiting_vehicle_selection state" do
     # Create contact and policy for test phone number
-    contact = Contact.create!(
+    client = Client.create!(
       agency: @agency,
       first_name: "Test",
       last_name: "User",
-      mobile_phone_e164: @from_phone
+      phone_mobile: @from_phone
     )
     policy = Policy.create!(
-      contact: contact,
+      client: client,
       label: "2022 Test Vehicle",
       policy_type: "auto",
       expires_on: 6.months.from_now
@@ -186,14 +186,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   test "routes 'policy expire' to awaiting_policy_selection state" do
     # Create contact and policy for test phone number
-    contact = Contact.create!(
+    client = Client.create!(
       agency: @agency,
       first_name: "Test",
       last_name: "User",
-      mobile_phone_e164: @from_phone
+      phone_mobile: @from_phone
     )
     Policy.create!(
-      contact: contact,
+      client: client,
       label: "2022 Test Vehicle",
       policy_type: "auto",
       expires_on: 6.months.from_now
@@ -213,14 +213,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   test "numeric shortcut '1' routes to card flow" do
     # Create contact and policy for test phone number
-    contact = Contact.create!(
+    client = Client.create!(
       agency: @agency,
       first_name: "Test",
       last_name: "User",
-      mobile_phone_e164: @from_phone
+      phone_mobile: @from_phone
     )
     policy = Policy.create!(
-      contact: contact,
+      client: client,
       label: "2022 Test Vehicle",
       policy_type: "auto",
       expires_on: 6.months.from_now
@@ -242,14 +242,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   test "numeric shortcut '2' routes to expiration flow" do
     # Create contact and policy for test phone number
-    contact = Contact.create!(
+    client = Client.create!(
       agency: @agency,
       first_name: "Test",
       last_name: "User",
-      mobile_phone_e164: @from_phone
+      phone_mobile: @from_phone
     )
     Policy.create!(
-      contact: contact,
+      client: client,
       label: "2022 Test Vehicle",
       policy_type: "auto",
       expires_on: 6.months.from_now
@@ -369,11 +369,11 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   # Phase 4: Insurance card fulfillment tests
 
-  test "card flow: resolves contact and lists auto policies" do
-    contact = contacts(:alice)
+  test "card flow: resolves client and lists auto policies" do
+    client = clients(:alice)
 
     # Ensure documents have files attached
-    contact.policies.each do |policy|
+    client.policies.each do |policy|
       doc = policy.documents.find_by(kind: "auto_id_card")
       next if doc.nil? || doc.file.attached?
 
@@ -384,7 +384,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
       )
     end
 
-    inbound_log = create_inbound_message(contact.mobile_phone_e164, "I need my insurance card")
+    inbound_log = create_inbound_message(client.phone_mobile, "I need my insurance card")
 
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
 
@@ -399,15 +399,15 @@ class ConversationManagerTest < ActiveSupport::TestCase
     assert_includes outbound.body, "Select which vehicle"
   end
 
-  test "card flow: handles contact with no policies" do
-    contact = Contact.create!(
+  test "card flow: handles client with no policies" do
+    client = Client.create!(
       agency: @agency,
       first_name: "NoPolicy",
       last_name: "User",
-      mobile_phone_e164: "+15559990001"
+      phone_mobile: "+15559990001"
     )
 
-    inbound_log = create_inbound_message(contact.mobile_phone_e164, "card")
+    inbound_log = create_inbound_message(client.phone_mobile, "card")
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
 
     session = ConversationSession.last
@@ -418,7 +418,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
     assert_includes outbound[1].body, "Welcome to CoverText" # Menu
   end
 
-  test "card flow: handles unknown contact" do
+  test "card flow: handles unknown client" do
     unknown_phone = "+15559999999"
     inbound_log = create_inbound_message(unknown_phone, "insurance card")
 
@@ -433,10 +433,10 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "card fulfillment: valid selection creates Request and Delivery" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Ensure documents have files attached
-    contact.policies.each do |policy|
+    client.policies.each do |policy|
       doc = policy.documents.find_by(kind: "auto_id_card")
       next if doc.nil? || doc.file.attached?
 
@@ -448,14 +448,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
     end
 
     # Start card flow
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    inbound1 = create_inbound_message(client.phone_mobile, "card")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     session = ConversationSession.last
     assert_equal "awaiting_vehicle_selection", session.state
 
     # Select first vehicle
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+    inbound2 = create_inbound_message(client.phone_mobile, "1")
 
     assert_difference [ "Request.count", "Delivery.count", "MessageLog.where(media_count: 1).count" ], 1 do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -465,7 +465,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
     request = Request.last
     assert_equal "auto_id_card", request.request_type
     assert_equal "fulfilled", request.status
-    assert_equal contact.id, request.contact_id
+    assert_equal client.id, request.client_id
     assert_not_nil request.fulfilled_at
     assert_not_nil request.selected_ref
 
@@ -486,10 +486,10 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "card fulfillment: creates card.request_fulfilled audit event" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Ensure documents have files attached
-    contact.policies.each do |policy|
+    client.policies.each do |policy|
       doc = policy.documents.find_by(kind: "auto_id_card")
       next if doc.nil? || doc.file.attached?
 
@@ -500,10 +500,10 @@ class ConversationManagerTest < ActiveSupport::TestCase
       )
     end
 
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    inbound1 = create_inbound_message(client.phone_mobile, "card")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+    inbound2 = create_inbound_message(client.phone_mobile, "1")
 
     assert_difference "AuditEvent.where(event_type: 'card.request_fulfilled').count", 1 do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -512,14 +512,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
     audit = AuditEvent.where(event_type: "card.request_fulfilled").last
     assert_not_nil audit.metadata["policy_id"]
     assert_not_nil audit.metadata["document_id"]
-    assert_equal contact.id, audit.metadata["contact_id"]
+    assert_equal client.id, audit.metadata["client_id"]
   end
 
   test "card fulfillment: invalid selection sends error message" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Ensure documents have files attached
-    contact.policies.each do |policy|
+    client.policies.each do |policy|
       doc = policy.documents.find_by(kind: "auto_id_card")
       next if doc.nil? || doc.file.attached?
 
@@ -530,11 +530,11 @@ class ConversationManagerTest < ActiveSupport::TestCase
       )
     end
 
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    inbound1 = create_inbound_message(client.phone_mobile, "card")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     # Invalid selection
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "99")
+    inbound2 = create_inbound_message(client.phone_mobile, "99")
 
     assert_no_difference [ "Request.count", "Delivery.count" ] do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -548,10 +548,10 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "card flow: menu command returns to main menu" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Ensure documents have files attached
-    contact.policies.each do |policy|
+    client.policies.each do |policy|
       doc = policy.documents.find_by(kind: "auto_id_card")
       next if doc.nil? || doc.file.attached?
 
@@ -563,14 +563,14 @@ class ConversationManagerTest < ActiveSupport::TestCase
     end
 
     # Start card flow
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "card")
+    inbound1 = create_inbound_message(client.phone_mobile, "card")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     session = ConversationSession.last
     assert_equal "awaiting_vehicle_selection", session.state
 
     # Send MENU command
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "menu")
+    inbound2 = create_inbound_message(client.phone_mobile, "menu")
     ConversationManager.process_inbound!(message_log_id: inbound2.id)
 
     session.reload
@@ -582,10 +582,10 @@ class ConversationManagerTest < ActiveSupport::TestCase
 
   # Phase 5: Policy expiration fulfillment tests
 
-  test "expiration flow: resolves contact and lists policies" do
-    contact = contacts(:alice)
+  test "expiration flow: resolves client and lists policies" do
+    client = clients(:alice)
 
-    inbound_log = create_inbound_message(contact.mobile_phone_e164, "when does my policy expire")
+    inbound_log = create_inbound_message(client.phone_mobile, "when does my policy expire")
 
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
 
@@ -600,15 +600,15 @@ class ConversationManagerTest < ActiveSupport::TestCase
     assert_includes outbound.body, "Select which policy"
   end
 
-  test "expiration flow: handles contact with no policies" do
-    contact = Contact.create!(
+  test "expiration flow: handles client with no policies" do
+    client = Client.create!(
       agency: @agency,
       first_name: "NoPolicy",
       last_name: "User",
-      mobile_phone_e164: "+15559990002"
+      phone_mobile: "+15559990002"
     )
 
-    inbound_log = create_inbound_message(contact.mobile_phone_e164, "expiring")
+    inbound_log = create_inbound_message(client.phone_mobile, "expiring")
     ConversationManager.process_inbound!(message_log_id: inbound_log.id)
 
     session = ConversationSession.last
@@ -619,7 +619,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
     assert_includes outbound[1].body, "Welcome to CoverText" # Menu
   end
 
-  test "expiration flow: handles unknown contact" do
+  test "expiration flow: handles unknown client" do
     unknown_phone = "+15559999998"
     inbound_log = create_inbound_message(unknown_phone, "policy expire")
 
@@ -634,17 +634,17 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "expiration fulfillment: valid selection creates Request and sends SMS" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Start expiration flow
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "expiring")
+    inbound1 = create_inbound_message(client.phone_mobile, "expiring")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     session = ConversationSession.last
     assert_equal "awaiting_policy_selection", session.state
 
     # Select first policy
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+    inbound2 = create_inbound_message(client.phone_mobile, "1")
 
     assert_difference [ "Request.count", "MessageLog.where(direction: 'outbound').count" ], 1 do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -654,7 +654,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
     request = Request.last
     assert_equal "policy_expiration", request.request_type
     assert_equal "fulfilled", request.status
-    assert_equal contact.id, request.contact_id
+    assert_equal client.id, request.client_id
     assert_not_nil request.fulfilled_at
     assert_not_nil request.selected_ref
 
@@ -671,12 +671,12 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "expiration fulfillment: creates expire.request_fulfilled audit event" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "expiring")
+    inbound1 = create_inbound_message(client.phone_mobile, "expiring")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "1")
+    inbound2 = create_inbound_message(client.phone_mobile, "1")
 
     assert_difference "AuditEvent.where(event_type: 'expire.request_fulfilled').count", 1 do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -685,17 +685,17 @@ class ConversationManagerTest < ActiveSupport::TestCase
     audit = AuditEvent.where(event_type: "expire.request_fulfilled").last
     assert_not_nil audit.metadata["policy_id"]
     assert_not_nil audit.metadata["expires_on"]
-    assert_equal contact.id, audit.metadata["contact_id"]
+    assert_equal client.id, audit.metadata["client_id"]
   end
 
   test "expiration fulfillment: invalid selection sends error message" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "expiring")
+    inbound1 = create_inbound_message(client.phone_mobile, "expiring")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     # Invalid selection
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "99")
+    inbound2 = create_inbound_message(client.phone_mobile, "99")
 
     assert_no_difference "Request.count" do
       ConversationManager.process_inbound!(message_log_id: inbound2.id)
@@ -709,17 +709,17 @@ class ConversationManagerTest < ActiveSupport::TestCase
   end
 
   test "expiration flow: menu command returns to main menu" do
-    contact = contacts(:alice)
+    client = clients(:alice)
 
     # Start expiration flow
-    inbound1 = create_inbound_message(contact.mobile_phone_e164, "expiring")
+    inbound1 = create_inbound_message(client.phone_mobile, "expiring")
     ConversationManager.process_inbound!(message_log_id: inbound1.id)
 
     session = ConversationSession.last
     assert_equal "awaiting_policy_selection", session.state
 
     # Send MENU command
-    inbound2 = create_inbound_message(contact.mobile_phone_e164, "menu")
+    inbound2 = create_inbound_message(client.phone_mobile, "menu")
     ConversationManager.process_inbound!(message_log_id: inbound2.id)
 
     session.reload
@@ -736,7 +736,7 @@ class ConversationManagerTest < ActiveSupport::TestCase
       agency: @agency,
       direction: "inbound",
       from_phone: from_phone,
-      to_phone: @agency.sms_phone_number,
+      to_phone: @agency.phone_sms,
       body: body,
       provider_message_id: "SM#{SecureRandom.hex(16)}",
       media_count: 0

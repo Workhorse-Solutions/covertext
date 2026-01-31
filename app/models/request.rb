@@ -1,6 +1,6 @@
 class Request < ApplicationRecord
   belongs_to :agency
-  belongs_to :contact, optional: true
+  belongs_to :client, optional: true
   has_many :message_logs
   has_many :deliveries, dependent: :destroy
   has_many :audit_events

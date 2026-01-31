@@ -39,7 +39,7 @@ class Admin::RequestsControllerTest < ActionDispatch::IntegrationTest
     # Create a request for a different agency
     other_agency = Agency.create!(
       name: "Other Agency",
-      sms_phone_number: "+15551111111"
+      phone_sms: "+15551111111"
     )
     other_request = Request.create!(
       agency: other_agency,
@@ -95,10 +95,10 @@ class Admin::RequestsControllerTest < ActionDispatch::IntegrationTest
   test "request show page includes request details" do
     sign_in(@john)
 
-    contact = contacts(:alice)
+    client = clients(:alice)
     request = Request.create!(
       agency: @reliable_agency,
-      contact: contact,
+      client: client,
       request_type: "auto_id_card",
       status: "fulfilled",
       fulfilled_at: Time.current,
@@ -113,10 +113,10 @@ class Admin::RequestsControllerTest < ActionDispatch::IntegrationTest
   test "request show page includes transcript section" do
     sign_in(@john)
 
-    contact = contacts(:alice)
+    client = clients(:alice)
     request = Request.create!(
       agency: @reliable_agency,
-      contact: contact,
+      client: client,
       request_type: "auto_id_card",
       status: "fulfilled"
     )
@@ -126,8 +126,8 @@ class Admin::RequestsControllerTest < ActionDispatch::IntegrationTest
       agency: @reliable_agency,
       request: request,
       direction: "inbound",
-      from_phone: contact.mobile_phone_e164,
-      to_phone: @reliable_agency.sms_phone_number,
+      from_phone: client.phone_mobile,
+      to_phone: @reliable_agency.phone_sms,
       body: "I need my card",
       media_count: 0
     )

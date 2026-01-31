@@ -2,7 +2,7 @@ class OutboundMessenger
   def self.send_sms!(agency:, to_phone:, body:, request: nil)
     # Send via Twilio
     response = TwilioClient.client.messages.create(
-      from: agency.sms_phone_number,
+      from: agency.phone_sms,
       to: to_phone,
       body: body
     )
@@ -12,7 +12,7 @@ class OutboundMessenger
       agency: agency,
       request: request,
       direction: "outbound",
-      from_phone: agency.sms_phone_number,
+      from_phone: agency.phone_sms,
       to_phone: to_phone,
       body: body,
       provider_message_id: response.sid,
@@ -26,7 +26,7 @@ class OutboundMessenger
       agency: agency,
       request: request,
       direction: "outbound",
-      from_phone: agency.sms_phone_number,
+      from_phone: agency.phone_sms,
       to_phone: to_phone,
       body: body,
       provider_message_id: nil,
@@ -39,7 +39,7 @@ class OutboundMessenger
   def self.send_mms!(agency:, to_phone:, body:, media_url:, request: nil)
     # Send via Twilio
     response = TwilioClient.client.messages.create(
-      from: agency.sms_phone_number,
+      from: agency.phone_sms,
       to: to_phone,
       body: body,
       media_url: [ media_url ]
@@ -50,7 +50,7 @@ class OutboundMessenger
       agency: agency,
       request: request,
       direction: "outbound",
-      from_phone: agency.sms_phone_number,
+      from_phone: agency.phone_sms,
       to_phone: to_phone,
       body: body,
       provider_message_id: response.sid,
@@ -73,7 +73,7 @@ class OutboundMessenger
       agency: agency,
       request: request,
       direction: "outbound",
-      from_phone: agency.sms_phone_number,
+      from_phone: agency.phone_sms,
       to_phone: to_phone,
       body: body,
       provider_message_id: nil,

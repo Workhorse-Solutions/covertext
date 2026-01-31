@@ -4,13 +4,13 @@
 
 # Clear existing data
 puts "🧹 Clearing existing data..."
-[ AuditEvent, Delivery, MessageLog, Request, Document, Policy, Contact, ConversationSession, User, Agency ].each(&:destroy_all)
+[ AuditEvent, Delivery, MessageLog, Request, Document, Policy, Client, ConversationSession, User, Agency ].each(&:destroy_all)
 
 # Create Agency
 puts "🏢 Creating agency..."
 agency = Agency.create!(
   name: "Reliable Insurance Agency",
-  sms_phone_number: "+15551234567"  # Placeholder E.164 number for testing
+  phone_sms: "+15551234567"  # Placeholder E.164 number for testing
 )
 
 # Create admin User
@@ -24,43 +24,43 @@ user = User.create!(
   role: "admin"
 )
 
-# Create Contacts
-puts "📱 Creating contacts..."
-contact1 = Contact.create!(
+# Create Clients
+puts "📱 Creating clients..."
+client1 = Client.create!(
   agency: agency,
   first_name: "Alice",
   last_name: "Johnson",
-  mobile_phone_e164: "+15559876543"
+  phone_mobile: "+15559876543"
 )
 
-contact2 = Contact.create!(
+client2 = Client.create!(
   agency: agency,
   first_name: "Bob",
   last_name: "Smith",
-  mobile_phone_e164: "+15559876544"
+  phone_mobile: "+15559876544"
 )
 
-# Create Policies for each contact
+# Create Policies for each client
 puts "📋 Creating policies..."
 policies = []
 
 # Alice's policies
 policies << Policy.create!(
-  contact: contact1,
+  client: client1,
   label: "2018 Honda Accord",
   policy_type: "auto",
   expires_on: 6.months.from_now
 )
 
 policies << Policy.create!(
-  contact: contact1,
+  client: client1,
   label: "2020 Toyota Camry",
   policy_type: "auto",
   expires_on: 8.months.from_now
 )
 
 policies << Policy.create!(
-  contact: contact1,
+  client: client1,
   label: "2015 Ford F-150",
   policy_type: "auto",
   expires_on: 3.months.from_now
@@ -68,21 +68,21 @@ policies << Policy.create!(
 
 # Bob's policies
 policies << Policy.create!(
-  contact: contact2,
+  client: client2,
   label: "2019 Chevrolet Silverado",
   policy_type: "auto",
   expires_on: 4.months.from_now
 )
 
 policies << Policy.create!(
-  contact: contact2,
+  client: client2,
   label: "2021 Tesla Model 3",
   policy_type: "auto",
   expires_on: 10.months.from_now
 )
 
 policies << Policy.create!(
-  contact: contact2,
+  client: client2,
   label: "2017 Subaru Outback",
   policy_type: "auto",
   expires_on: 2.months.from_now
@@ -108,14 +108,14 @@ puts "\n✅ Seed data created successfully!"
 puts "\n📊 Summary:"
 puts "  - Agencies: #{Agency.count}"
 puts "  - Users: #{User.count}"
-puts "  - Contacts: #{Contact.count}"
+puts "  - Clients: #{Client.count}"
 puts "  - Policies: #{Policy.count}"
 puts "  - Documents: #{Document.count}"
 puts "  - Documents with files: #{Document.joins(:file_attachment).count}"
 puts "\n📱 Test Phone Numbers:"
-puts "  - Agency SMS: #{agency.sms_phone_number}"
-puts "  - Alice Johnson: #{contact1.mobile_phone_e164}"
-puts "  - Bob Smith: #{contact2.mobile_phone_e164}"
+puts "  - Agency SMS: #{agency.phone_sms}"
+puts "  - Alice Johnson: #{client1.phone_mobile}"
+puts "  - Bob Smith: #{client2.phone_mobile}"
 puts "\n👤 Admin Login:"
 puts "  - Email: #{user.email}"
 puts "  - Password: password123"

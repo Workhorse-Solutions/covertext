@@ -63,9 +63,9 @@
                   </span>
                 </td>
                 <td>
-                  <% if request.contact %>
-                    <div class="font-medium"><%= request.contact.first_name %> <%= request.contact.last_name %></div>
-                    <div class="text-sm text-gray-500"><%= request.contact.mobile_phone_e164 %></div>
+                  <% if request.client %>
+                    <div class="font-medium"><%= request.client.first_name %> <%= request.client.last_name %></div>
+                    <div class="text-sm text-gray-500"><%= request.client.phone_mobile %></div>
                   <% else %>
                     <span class="text-gray-400">Unknown</span>
                   <% end %>

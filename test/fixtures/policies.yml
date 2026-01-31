@@ -1,23 +1,23 @@
 alice_honda:
-  contact: alice
+  client: alice
   label: "2018 Honda Accord"
   policy_type: auto
   expires_on: <%= 6.months.from_now.to_date %>
 
 alice_toyota:
-  contact: alice
+  client: alice
   label: "2020 Toyota Camry"
   policy_type: auto
   expires_on: <%= 8.months.from_now.to_date %>
 
 bob_chevy:
-  contact: bob
+  client: bob
   label: "2019 Chevrolet Silverado"
   policy_type: auto
   expires_on: <%= 4.months.from_now.to_date %>
 
 charlie_tesla:
-  contact: charlie
+  client: charlie
   label: "2021 Tesla Model 3"
   policy_type: auto
   expires_on: <%= 10.months.from_now.to_date %>

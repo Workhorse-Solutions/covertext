@@ -305,9 +305,9 @@ class ConversationManager
   end
 
   def fulfill_insurance_card_request(policy_id)
-    contact = Contact.find_by(
+    client = Client.find_by(
       agency_id: message_log.agency_id,
-      mobile_phone_e164: message_log.from_phone
+      phone_mobile: message_log.from_phone
     )
 
     policy = Policy.find(policy_id)
@@ -315,7 +315,7 @@ class ConversationManager
     # Create Request record
     request = Request.create!(
       agency_id: message_log.agency_id,
-      contact: contact,
+      client: client,
       request_type: "auto_id_card",
       status: "fulfilled",
       fulfilled_at: Time.current,
@@ -351,7 +351,7 @@ class ConversationManager
       metadata: {
         policy_id: policy_id,
         document_id: document.id,
-        contact_id: contact&.id,
+        client_id: client&.id,
         session_id: session.id
       }
     )
@@ -361,9 +361,9 @@ class ConversationManager
   end
 
   def fulfill_policy_expiration_request(policy_id)
-    contact = Contact.find_by(
+    client = Client.find_by(
       agency_id: message_log.agency_id,
-      mobile_phone_e164: message_log.from_phone
+      phone_mobile: message_log.from_phone
     )
 
     policy = Policy.find(policy_id)
@@ -371,7 +371,7 @@ class ConversationManager
     # Create Request record
     request = Request.create!(
       agency_id: message_log.agency_id,
-      contact: contact,
+      client: client,
       request_type: "policy_expiration",
       status: "fulfilled",
       fulfilled_at: Time.current,
@@ -398,7 +398,7 @@ class ConversationManager
       metadata: {
         policy_id: policy_id,
         expires_on: policy.expires_on.to_s,
-        contact_id: contact&.id,
+        client_id: client&.id,
         session_id: session.id
       }
     )
@@ -408,21 +408,21 @@ class ConversationManager
   end
 
   def transition_to_card_flow
-    # Resolve Contact
-    contact = Contact.find_by(
+    # Resolve Client
+    client = Client.find_by(
       agency_id: message_log.agency_id,
-      mobile_phone_e164: message_log.from_phone
+      phone_mobile: message_log.from_phone
     )
 
-    unless contact
-      # No contact found - send error and return to menu
+    unless client
+      # No client found - send error and return to menu
       send_simple_message("We couldn't find your account. Please contact your agency.")
       reset_to_menu
       return
     end
 
     # Query auto policies
-    policies = contact.policies.where(policy_type: "auto")
+    policies = client.policies.where(policy_type: "auto")
 
     if policies.empty?
       # No policies found
@@ -452,21 +452,21 @@ class ConversationManager
   end
 
   def transition_to_expiration_flow
-    # Resolve Contact
-    contact = Contact.find_by(
+    # Resolve Client
+    client = Client.find_by(
       agency_id: message_log.agency_id,
-      mobile_phone_e164: message_log.from_phone
+      phone_mobile: message_log.from_phone
     )
 
-    unless contact
-      # No contact found - send error and return to menu
+    unless client
+      # No client found - send error and return to menu
       send_simple_message("We couldn't find your account. Please contact your agency.")
       reset_to_menu
       return
     end
 
-    # Query all policies for the contact
-    policies = contact.policies
+    # Query all policies for the client
+    policies = client.policies
 
     if policies.empty?
       # No policies found

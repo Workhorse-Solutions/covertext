@@ -15,7 +15,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
       assert_enqueued_with(job: ProcessInboundMessageJob) do
         post webhooks_twilio_inbound_url, params: {
           From: "+15559876543",
-          To: @agency.sms_phone_number,
+          To: @agency.phone_sms,
           Body: "I need my insurance card",
           MessageSid: "SM#{SecureRandom.hex(16)}",
           NumMedia: "0"
@@ -29,7 +29,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
     assert_equal @agency.id, message_log.agency_id
     assert_equal "inbound", message_log.direction
     assert_equal "+15559876543", message_log.from_phone
-    assert_equal @agency.sms_phone_number, message_log.to_phone
+    assert_equal @agency.phone_sms, message_log.to_phone
     assert_equal "I need my insurance card", message_log.body
     assert_equal 0, message_log.media_count
     assert message_log.provider_message_id.present?
@@ -38,7 +38,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
   test "handles NumMedia parameter correctly" do
     post webhooks_twilio_inbound_url, params: {
       From: "+15559876543",
-      To: @agency.sms_phone_number,
+      To: @agency.phone_sms,
       Body: "Check out this pic",
       MessageSid: "SM#{SecureRandom.hex(16)}",
       NumMedia: "2"
@@ -54,7 +54,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
     # First request
     post webhooks_twilio_inbound_url, params: {
       From: "+15559876543",
-      To: @agency.sms_phone_number,
+      To: @agency.phone_sms,
       Body: "First message",
       MessageSid: message_sid,
       NumMedia: "0"
@@ -68,7 +68,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
       assert_no_enqueued_jobs do
         post webhooks_twilio_inbound_url, params: {
           From: "+15559876543",
-          To: @agency.sms_phone_number,
+          To: @agency.phone_sms,
           Body: "Duplicate message",
           MessageSid: message_sid,
           NumMedia: "0"
@@ -99,7 +99,7 @@ class Webhooks::TwilioInboundControllerTest < ActionDispatch::IntegrationTest
   test "handles missing NumMedia parameter gracefully" do
     post webhooks_twilio_inbound_url, params: {
       From: "+15559876543",
-      To: @agency.sms_phone_number,
+      To: @agency.phone_sms,
       Body: "Message without NumMedia",
       MessageSid: "SM#{SecureRandom.hex(16)}"
     }

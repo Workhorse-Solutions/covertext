@@ -3,10 +3,10 @@ require "test_helper"
 class Webhooks::TwilioStatusControllerTest < ActionDispatch::IntegrationTest
   setup do
     @agency = agencies(:reliable)
-    @contact = contacts(:alice)
+    @client = clients(:alice)
     @coverage_request = Request.create!(
       agency: @agency,
-      contact: @contact,
+      client: @client,
       request_type: "insurance_card",
       status: "pending"
     )

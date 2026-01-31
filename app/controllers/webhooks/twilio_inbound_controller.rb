@@ -17,7 +17,7 @@ module Webhooks
       num_media = params[:NumMedia]&.to_i || 0
 
       # Resolve Agency by To phone number
-      agency = Agency.find_by(sms_phone_number: to_phone)
+      agency = Agency.find_by(phone_sms: to_phone)
       unless agency
         head :not_found
         return

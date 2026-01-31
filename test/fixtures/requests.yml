@@ -1,6 +1,6 @@
 card_request:
   agency: reliable
-  contact: alice
+  client: alice
   request_type: insurance_card
   status: pending
   inbound_body: "Can I get my insurance card?"
