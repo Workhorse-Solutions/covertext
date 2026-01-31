@@ -99,7 +99,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 159.65.110.3 >> ~/.ssh/known_hosts
+
+          # Add the server host key(s) to known_hosts (all common key types)
+          ssh-keyscan -T 10 -H -t rsa,ecdsa,ed25519 159.65.110.3 >> ~/.ssh/known_hosts
+
+          # Debug: show what we captured (safe; no secrets)
+          ssh-keygen -lf ~/.ssh/known_hosts
 
       - name: Deploy to production (use already-pushed image)
         env:
