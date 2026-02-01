@@ -2,7 +2,7 @@ require "test_helper"
 
 class SessionsFlowTest < ActionDispatch::IntegrationTest
   test "can login with valid credentials" do
-    user = users(:john_admin)
+    user = users(:john_owner)
 
     get login_path
     assert_response :success
@@ -20,7 +20,7 @@ class SessionsFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "can logout" do
-    user = users(:john_admin)
+    user = users(:john_owner)
     sign_in(user)
 
     delete logout_path

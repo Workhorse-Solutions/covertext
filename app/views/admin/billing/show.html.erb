@@ -22,27 +22,27 @@
           <div>
             <p class="text-sm text-base-content/60">Plan</p>
             <p class="text-lg font-bold">
-              <%= @agency.plan_name&.titleize || "No Plan" %>
+              <%= @account&.plan_name&.titleize || "No Plan" %>
             </p>
           </div>
 
           <div>
             <p class="text-sm text-base-content/60">Status</p>
             <p class="text-lg font-bold">
-              <% if @agency.subscription_status == "active" %>
+              <% if @account&.subscription_status == "active" %>
                 <span class="badge badge-success badge-lg">Active</span>
-              <% elsif @agency.subscription_status == "past_due" %>
+              <% elsif @account&.subscription_status == "past_due" %>
                 <span class="badge badge-warning badge-lg">Past Due</span>
-              <% elsif @agency.subscription_status == "canceled" %>
+              <% elsif @account&.subscription_status == "canceled" %>
                 <span class="badge badge-error badge-lg">Canceled</span>
               <% else %>
-                <span class="badge badge-ghost badge-lg"><%= @agency.subscription_status&.titleize || "None" %></span>
+                <span class="badge badge-ghost badge-lg"><%= @account&.subscription_status&.titleize || "None" %></span>
               <% end %>
             </p>
           </div>
         </div>
 
-        <% if @agency.stripe_customer_id.blank? %>
+        <% if @account&.stripe_customer_id.blank? %>
           <div class="alert alert-warning mt-4">
             <div>
               <p>No active subscription found.</p>
@@ -110,12 +110,12 @@
       <div class="card-body">
         <h2 class="card-title">Current Plans</h2>
         <div class="grid md:grid-cols-2 gap-4 mt-4">
-          <div class="border-2 rounded-lg p-4 <%= @agency.plan_name == 'pilot' ? 'border-primary' : 'border-base-300' %>">
+          <div class="border-2 rounded-lg p-4 <%= @account&.plan_name == 'pilot' ? 'border-primary' : 'border-base-300' %>">
             <h3 class="font-bold text-lg">Pilot</h3>
             <p class="text-3xl font-bold mt-2">$49<span class="text-sm text-base-content/60">/month</span></p>
             <p class="text-sm text-base-content/60 mt-2">Perfect for getting started</p>
           </div>
-          <div class="border-2 rounded-lg p-4 <%= @agency.plan_name == 'growth' ? 'border-primary' : 'border-base-300' %>">
+          <div class="border-2 rounded-lg p-4 <%= @account&.plan_name == 'growth' ? 'border-primary' : 'border-base-300' %>">
             <h3 class="font-bold text-lg">Growth</h3>
             <p class="text-3xl font-bold mt-2">$99<span class="text-sm text-base-content/60">/month</span></p>
             <p class="text-sm text-base-content/60 mt-2">Higher volume, premium support</p>

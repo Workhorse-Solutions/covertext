@@ -1,15 +1,23 @@
-john_admin:
-  agency: reliable
+john_owner:
+  account: reliable_group
   first_name: John
-  last_name: Admin
+  last_name: Owner
   email: john@reliable.example
   password_digest: <%= BCrypt::Password.create('password123', cost: 4) %>
-  role: admin
+  role: owner
 
 jane_admin:
-  agency: acme
+  account: acme_group
   first_name: Jane
   last_name: Smith
   email: jane@acme.example
+  password_digest: <%= BCrypt::Password.create('password123', cost: 4) %>
+  role: admin
+
+bob_admin:
+  account: reliable_group
+  first_name: Bob
+  last_name: Admin
+  email: bob@reliable.example
   password_digest: <%= BCrypt::Password.create('password123', cost: 4) %>
   role: admin

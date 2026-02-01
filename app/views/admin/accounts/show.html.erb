@@ -1,0 +1,111 @@
+<% content_for :title, "Account Settings - CoverText Admin" %>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold">Account Settings</h1>
+    <%= link_to "← Back to Dashboard", admin_requests_path, class: "btn btn-ghost" %>
+  </div>
+
+  <div class="grid gap-6">
+    <!-- Account Name Card -->
+    <div class="card bg-base-200 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Account Information</h2>
+
+        <%= form_with model: @account, url: admin_account_path, method: :patch, class: "mt-4" do |f| %>
+          <div class="form-control w-full max-w-md">
+            <%= f.label :name, "Account Name", class: "label" %>
+            <%= f.text_field :name, class: "input input-bordered w-full", required: true %>
+            <% if @account.errors[:name].any? %>
+              <label class="label">
+                <span class="label-text-alt text-error"><%= @account.errors[:name].first %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div class="mt-4">
+            <%= f.submit "Save Changes", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Agencies Card -->
+    <div class="card bg-base-200 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Agencies</h2>
+        <p class="text-base-content/70">Agencies under this account</p>
+
+        <div class="overflow-x-auto mt-4">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @agencies.each do |agency| %>
+                <tr>
+                  <td class="font-medium"><%= agency.name %></td>
+                  <td><%= agency.phone_sms %></td>
+                  <td>
+                    <% if agency.active? %>
+                      <span class="badge badge-success">Active</span>
+                    <% else %>
+                      <span class="badge badge-ghost">Inactive</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if agency.live_enabled? %>
+                      <span class="badge badge-info">Live</span>
+                    <% else %>
+                      <span class="badge badge-ghost">Not Live</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscription Status Card -->
+    <div class="card bg-base-200 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Subscription</h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <p class="text-sm text-base-content/60">Plan</p>
+            <p class="text-lg font-bold">
+              <%= @account.plan_name&.titleize || "No Plan" %>
+            </p>
+          </div>
+
+          <div>
+            <p class="text-sm text-base-content/60">Status</p>
+            <p class="text-lg font-bold">
+              <% if @account.subscription_status == "active" %>
+                <span class="badge badge-success badge-lg">Active</span>
+              <% elsif @account.subscription_status == "past_due" %>
+                <span class="badge badge-warning badge-lg">Past Due</span>
+              <% elsif @account.subscription_status == "canceled" %>
+                <span class="badge badge-error badge-lg">Canceled</span>
+              <% else %>
+                <span class="badge badge-ghost badge-lg"><%= @account.subscription_status&.titleize || "None" %></span>
+              <% end %>
+            </p>
+          </div>
+        </div>
+
+        <div class="card-actions mt-4">
+          <%= link_to "Manage Billing →", admin_billing_path, class: "btn btn-outline btn-sm" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

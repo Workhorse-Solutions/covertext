@@ -30,31 +30,38 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
         headers: { "Content-Type" => "application/json" }
       )
 
-    assert_difference "Agency.count", 1 do
-      assert_difference "User.count", 1 do
-        post signup_path, params: {
-          agency: {
-            name: "New Agency",
-            phone_sms: "+15551112222"
-          },
-          user_first_name: "John",
-          user_last_name: "Doe",
-          user_email: "john@newagency.com",
-          user_password: "password123",
-          plan: "pilot"
-        }
+    assert_difference "Account.count", 1 do
+      assert_difference "Agency.count", 1 do
+        assert_difference "User.count", 1 do
+          post signup_path, params: {
+            agency: {
+              name: "New Agency",
+              phone_sms: "+15551112222"
+            },
+            user_first_name: "John",
+            user_last_name: "Doe",
+            user_email: "john@newagency.com",
+            user_password: "password123",
+            plan: "pilot"
+          }
+        end
       end
     end
+
+    account = Account.last
+    assert_equal "New Agency", account.name
 
     agency = Agency.last
     assert_equal "New Agency", agency.name
     assert_equal false, agency.live_enabled
+    assert_equal account, agency.account
 
     user = User.last
     assert_equal "John", user.first_name
     assert_equal "Doe", user.last_name
     assert_equal "john@newagency.com", user.email
-    assert_equal agency, user.agency
+    assert_equal account, user.account
+    assert_equal "owner", user.role
 
     assert_redirected_to "https://checkout.stripe.com/test"
   end

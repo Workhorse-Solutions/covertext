@@ -1,0 +1,393 @@
+## Codebase Patterns
+- Use `DATABASE_URL="postgres://jward@localhost/covertext_test"` for local development (Docker config uses "postgres" host which doesn't work outside container)
+- Account model follows same validation patterns as Agency (stripe_*_id unique allow_nil, subscription_status with inclusion validation)
+- Stripe billing fields (stripe_customer_id, stripe_subscription_id, subscription_status, plan_name) are now on Account, not Agency
+- When creating Agency, always provide an Account; signup flow creates Account + Agency + User together
+- Billing views/controllers should use @account for subscription info, @agency only for live_enabled status
+- User belongs_to :account (not agency); Agency no longer has_many :users
+- Signup creates owner role; admin is the default role
+- Use `current_user.account.agencies.where(active: true).first` to get current_agency
+- Rails singular `resource` routes expect plural controller names (e.g., `resource :account` → AccountsController)
+- Use `User#owner?` helper method for role checks instead of `role == 'owner'`
+
+---
+
+## 2026-01-31 - US-001
+Thread: https://ampcode.com/threads/T-019c164b-fdbb-739c-9338-1995d473784f
+- Created Account model with name, stripe_customer_id, stripe_subscription_id, subscription_status, plan_name
+- Added migration with unique indexes on stripe_customer_id and stripe_subscription_id
+- Account has_many :agencies, has_many :users associations
+- Created comprehensive model tests (11 tests)
+- Files changed:
+  - app/models/account.rb (new)
+  - db/migrate/20260131230357_create_accounts.rb (new)
+  - test/models/account_test.rb (new)
+- **Learnings for future iterations:**
+  - Database connection configured for Docker; use DATABASE_URL env var for local development
+  - Follow existing validation patterns from Agency model for consistency
+  - All CI checks pass: tests (170), rubocop, brakeman
+---
+
+## 2026-01-31 - US-002
+Thread: https://ampcode.com/threads/T-019c1676-e016-764d-a32f-d16a70708e8b
+- Added `account_id` foreign key to agencies table (not null, with foreign key constraint)
+- Removed Stripe billing columns from agencies (stripe_customer_id, stripe_subscription_id, subscription_status, plan_name)
+- Added `active` boolean column to agencies (default: true)
+- Agency now `belongs_to :account`
+- Updated billing views/controller to use @account for subscription info
+- Updated RegistrationsController to create Account + Agency + User in transaction
+- Updated test fixtures and all tests referencing old agency Stripe fields
+- Files changed:
+  - db/migrate/20260131231104_add_account_id_to_agencies.rb (new)
+  - app/models/agency.rb (modified - added belongs_to :account, can_go_live?)
+  - app/models/account.rb (modified - temporarily removed has_many :users until US-003)
+  - app/controllers/registrations_controller.rb (modified - creates Account first)
+  - app/controllers/admin/billing_controller.rb (unchanged - already used @account)
+  - app/views/admin/billing/show.html.erb (modified - use @account for billing fields)
+  - db/seeds.rb (modified - creates Account before Agency)
+  - test/fixtures/accounts.yml (new)
+  - test/fixtures/agencies.yml (modified - references accounts)
+  - Multiple test files updated to use Account for Stripe fields
+- **Learnings for future iterations:**
+  - Account's `has_many :users` can't exist until users table has account_id (US-003)
+  - Tests that create agencies ad-hoc must also create an Account first
+  - The signup flow now creates Account + Agency together, not just Agency
+  - All CI checks pass: tests (168), rubocop, brakeman
+---
+
+## 2026-02-01 - US-003
+Thread: https://ampcode.com/threads/T-019c1680-1cd1-7204-ab75-75a8ccc2a27c
+- Added `account_id` foreign key to users table (not null)
+- Removed `agency_id` foreign key from users table
+- User now `belongs_to :account` instead of `belongs_to :agency`
+- Account now `has_many :users` (was commented out pending this migration)
+- Agency no longer `has_many :users`
+- Updated RegistrationsController to create user under account with 'owner' role
+- Updated Admin::BaseController.current_agency to use account.agencies.where(active: true).first
+- Updated Admin::BillingController to use current_user.account
+- Updated all fixtures: john_admin → john_owner, agency → account references
+- Files changed:
+  - db/migrate/20260201000038_move_user_from_agency_to_account.rb (new)
+  - app/models/user.rb (modified - belongs_to :account, added ROLES constant)
+  - app/models/account.rb (modified - has_many :users)
+  - app/models/agency.rb (modified - removed has_many :users)
+  - app/controllers/registrations_controller.rb (modified - user belongs to account)
+  - app/controllers/admin/base_controller.rb (modified - current_agency from account)
+  - app/controllers/admin/billing_controller.rb (modified - use current_user.account)
+  - test/fixtures/users.yml (modified - account references)
+  - Multiple test files updated for john_owner fixture name
+- **Learnings for future iterations:**
+  - Fixture renames require updating ALL test references
+  - Agency.has_many :users was causing "agency_id does not exist" errors in seed tests
+  - Admin controllers must get agency through account, not directly from user
+  - All CI checks pass: tests (168), rubocop, brakeman
+---
+
+## 2026-02-01 - US-004
+Thread: https://ampcode.com/threads/T-019c168c-efe5-721c-8a3a-bbe30b4a7489
+- Implemented `Account#subscription_active?` (already existed, added tests)
+- Implemented `Account#has_active_agency?` using `agencies.exists?(active: true)`
+- Implemented `Account#can_access_system?` combining subscription and agency checks
+- Implemented `Account#owner` returning user with role 'owner'
+- Added 11 comprehensive tests for all new methods
+- Files changed:
+  - app/models/account.rb (modified - added has_active_agency?, can_access_system?, owner)
+  - test/models/account_test.rb (modified - added tests for all methods)
+- **Learnings for future iterations:**
+  - Use `agencies.exists?(active: true)` for efficient existence checks
+  - Test fixtures provide ready-made data for testing relationships
+  - All CI checks pass: tests (180), rubocop, brakeman
+---
+
+## 2026-02-01 - US-005
+Thread: https://ampcode.com/threads/T-019c1693-3a44-70b3-ae61-79563fa20178
+- Implemented `Agency#activate!` method to set active: true
+- Implemented `Agency#deactivate!` method to set active: false
+- `can_go_live?` already existed from US-002
+- No `subscription_active?` method existed on Agency (only on Account) - no removal needed
+- Added 2 unit tests for activate! and deactivate!
+- Files changed:
+  - app/models/agency.rb (modified - added activate!, deactivate!)
+  - test/models/agency_test.rb (modified - added tests for new methods)
+- **Learnings for future iterations:**
+  - Agency never had `subscription_active?` - billing was moved to Account in US-002
+  - Simple update! methods follow Rails convention with bang suffix
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
+
+## 2026-02-01 - US-006
+Thread: https://ampcode.com/threads/T-019c1694-9bd5-7470-a57d-16b3624d791f
+- Verified test fixtures are already complete from US-002 and US-003
+- accounts.yml: contains reliable_group and acme_group test accounts
+- agencies.yml: agencies reference accounts via `account:` association
+- users.yml: users reference accounts (not agencies) with proper roles
+- All 182 tests pass, rubocop and brakeman clean
+- Files verified:
+  - test/fixtures/accounts.yml (created in US-002)
+  - test/fixtures/agencies.yml (updated in US-002)
+  - test/fixtures/users.yml (updated in US-003)
+- **Learnings for future iterations:**
+  - Fixtures were incrementally updated as models evolved
+  - No additional changes needed when acceptance criteria is already satisfied
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
+
+## 2026-02-01 - US-007
+Thread: https://ampcode.com/threads/T-019c16a3-deae-77fe-b8e4-88f2684644cf
+- Seeds.rb was already correctly updated in US-002 with multitenancy hierarchy
+- Updated seed_test.rb and seeds_test.rb to expect 2 agencies (not 1)
+- Tests now verify: 1 Account, 2 Agencies, 1 User (owner), 4 Clients, 10 Policies, 10 Documents
+- Files changed:
+  - test/models/seed_test.rb (modified - updated expectations for 2 agencies)
+  - test/models/seeds_test.rb (modified - updated expectations for 2 agencies)
+- **Learnings for future iterations:**
+  - There are two duplicate seed test files (seed_test.rb and seeds_test.rb) - both need updates
+  - When PRD specifies new data model with 2 agencies, existing tests expecting 1 agency need updating
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
+
+## 2026-01-31 - US-008
+Thread: https://ampcode.com/threads/T-019c16aa-5aa9-7274-92b8-c1799f87ba8c
+- Added `current_account` helper method to ApplicationController (returns `current_user&.account`)
+- Added `require_active_subscription` before_action to ApplicationController
+- Redirects to billing page with message when subscription inactive
+- Redirects to billing page with message when no active agencies
+- Updated Admin::BaseController to include `require_active_subscription` filter
+- Updated Admin::BillingController to inherit from BaseController and skip the subscription check
+- Created 4 integration tests for subscription access control
+- Files changed:
+  - app/controllers/application_controller.rb (modified - added current_account, require_active_subscription)
+  - app/controllers/admin/base_controller.rb (modified - added require_active_subscription before_action)
+  - app/controllers/admin/billing_controller.rb (modified - inherit from BaseController, skip subscription check)
+  - test/controllers/application_controller_test.rb (new - 4 tests)
+- **Learnings for future iterations:**
+  - BillingController must skip subscription check so users can access billing to fix issues
+  - The billing page is the appropriate redirect target for both subscription and agency issues
+  - All CI checks pass: tests (186), rubocop, brakeman
+---
+
+## 2026-01-31 - US-009
+Thread: https://ampcode.com/threads/T-019c16b1-1909-760f-9b09-49db916f9190
+- Verified all acceptance criteria already met from US-003 and US-008:
+  - `current_account` helper in ApplicationController (inherited by BaseController)
+  - `current_agency` in BaseController returns `current_user.account.agencies.where(active: true).first`
+  - BillingController and RequestsController both inherit from BaseController
+- No code changes needed - implementation complete from prior stories
+- Files verified:
+  - app/controllers/application_controller.rb (current_account helper)
+  - app/controllers/admin/base_controller.rb (current_agency helper)
+  - app/controllers/admin/billing_controller.rb (inherits BaseController)
+  - app/controllers/admin/requests_controller.rb (uses current_agency)
+- **Learnings for future iterations:**
+  - Some stories may be satisfied by earlier work - verify before implementing
+  - All CI checks pass: tests (186), rubocop, brakeman
+---
+
+## 2026-01-31 - US-010
+Thread: https://ampcode.com/threads/T-019c16b7-45e1-704b-a36b-b02b3c89a43d
+- Updated BillingController to use `current_account` and `current_agency` helpers
+- Verified no remaining `current_user.agency` references in admin controllers
+- RequestsController already correctly uses `current_agency.requests`
+- Files changed:
+  - app/controllers/admin/billing_controller.rb (modified - use helper methods)
+- **Learnings for future iterations:**
+  - Always use the helper methods instead of duplicating query logic
+  - All CI checks pass: tests (186), rubocop, brakeman
+---
+
+## 2026-01-31 - US-011
+Thread: https://ampcode.com/threads/T-019c16b8-d00c-7129-8e59-6e328a236567
+- Verified RegistrationsController already implements Account + Agency + User signup
+- All acceptance criteria met from prior work in US-002 and US-003:
+  - Creates Account with name from agency name (line 12)
+  - Creates Agency under Account with phone_sms, active: true (lines 14-16)
+  - Creates User under Account with role: 'owner' (lines 23-30)
+  - Passes account_id in Stripe subscription metadata (lines 47-50)
+  - Success action updates Account with Stripe details (lines 78-83)
+  - Auto-login user after successful signup (lines 86-87)
+- Files verified:
+  - app/controllers/registrations_controller.rb (already complete)
+  - test/controllers/registrations_controller_test.rb (4 tests pass)
+- **Learnings for future iterations:**
+  - Earlier stories may already satisfy later acceptance criteria
+  - Check existing implementation before making changes
+  - All CI checks pass: tests (186), rubocop, brakeman
+---
+
+## 2026-01-31 - US-012
+Thread: https://ampcode.com/threads/T-019c16be-eee1-771a-bd51-c076044eb910
+- Updated StripeWebhooksController to use Account instead of Agency for all billing operations
+- `handle_subscription_update` now finds Account by stripe_subscription_id or metadata.account_id
+- `handle_subscription_update` sets status to 'canceled' when `cancel_at_period_end` is true
+- `handle_payment_success` updates Account subscription_status to 'active'
+- `handle_payment_failure` updates Account subscription_status to 'past_due'
+- Added `find_account_for_subscription` helper method for subscription lookup with fallback
+- Created 7 unit tests for all webhook handler methods
+- Files changed:
+  - app/controllers/webhooks/stripe_webhooks_controller.rb (modified - use Account instead of Agency)
+  - test/controllers/webhooks/stripe_webhooks_controller_test.rb (modified - added unit tests)
+- **Learnings for future iterations:**
+  - Stripe subscription metadata contains account_id from signup (subscription_data.metadata.account_id)
+  - Use OpenStruct for mocking Stripe objects in tests
+  - Webhook handlers should gracefully handle unknown subscriptions (return early, no error)
+  - All CI checks pass: tests (193), rubocop, brakeman
+---
+
+## 2026-02-01 - US-013
+Thread: https://ampcode.com/threads/T-019c16c0-a7c0-70de-9c3e-0924bfc581c4
+- Verified BillingController already correctly uses Account context (from earlier stories)
+- Controller uses `current_account` helper for @account
+- Controller uses `current_agency` helper for @agency
+- View displays Account subscription info (plan_name, subscription_status)
+- Stripe portal session uses Account's stripe_customer_id
+- 6 tests in billing_controller_test.rb all pass
+- Files verified (no changes needed):
+  - app/controllers/admin/billing_controller.rb (already uses current_account, current_agency)
+  - app/views/admin/billing/show.html.erb (already uses @account for subscription info)
+  - test/controllers/admin/billing_controller_test.rb (6 tests pass)
+- **Learnings for future iterations:**
+  - BillingController was updated incrementally during US-002, US-008, US-010
+  - Always verify existing implementation before making changes
+  - All CI checks pass: tests (193), rubocop, brakeman
+---
+
+## 2026-01-31 - US-014
+Thread: https://ampcode.com/threads/T-019c16c6-c168-7792-818c-40b1d3e4f66d
+- Created Admin::AccountsController with show and update actions
+- Added GET/PATCH /admin/account routes via `resource :account`
+- Created account settings view showing:
+  - Editable account name with form
+  - Read-only agencies table (name, phone, active status, live status)
+  - Subscription status card with link to billing
+- Added `require_owner` before_action for owner-only access
+- Added bob_admin fixture for testing admin role restriction
+- Created 9 integration tests for all functionality
+- Files changed:
+  - app/controllers/admin/accounts_controller.rb (new)
+  - app/views/admin/accounts/show.html.erb (new)
+  - config/routes.rb (modified - added account resource)
+  - test/controllers/admin/accounts_controller_test.rb (new - 9 tests)
+  - test/fixtures/users.yml (modified - added bob_admin)
+- **Learnings for future iterations:**
+  - Rails singular `resource` route still expects plural controller (AccountsController, not AccountController)
+  - View folder must match plural controller name (admin/accounts/, not admin/account/)
+  - All CI checks pass: tests (202), rubocop, brakeman
+---
+
+## 2026-01-31 - US-015
+Thread: https://ampcode.com/threads/T-019c16c9-d232-74fc-9237-4423057aa58c
+- Added Account link to admin navbar, visible only to users with owner role
+- Added `User#owner?` helper method for cleaner role checking
+- Added role validation to User model (inclusion in ROLES constant)
+- Added 2 navigation tests (owner sees link, admin does not)
+- Added 3 User model tests (owner?, role validation)
+- Files changed:
+  - app/models/user.rb (modified - added owner? method, role validation)
+  - app/views/layouts/admin.html.erb (modified - added Account link with owner check)
+  - test/controllers/admin/accounts_controller_test.rb (modified - added nav visibility tests)
+  - test/models/user_test.rb (modified - added owner? and role validation tests)
+- **Learnings for future iterations:**
+  - Use `User#owner?` method for role checks instead of direct string comparison
+  - Role validation uses ROLES constant with allow_nil for backwards compatibility
+  - All CI checks pass: tests (207), rubocop, brakeman
+---
+
+## 2026-02-01 - US-016
+Thread: https://ampcode.com/threads/T-019c16d0-d251-77c9-838a-b5057bb01b27
+- Added `subscription_ends_at` datetime column to accounts table
+- Implemented `Account#in_grace_period?` (canceled + ends_at in future within 14 days)
+- Implemented `Account#read_only?` (delegates to in_grace_period?)
+- Implemented `Account#days_until_lockout` (ceil of days remaining)
+- Updated `Account#can_access_system?` to allow access during grace period
+- Added GRACE_PERIOD_DAYS constant (14 days)
+- Added 12 new tests for all grace period methods
+- Files changed:
+  - db/migrate/20260201012850_add_subscription_ends_at_to_accounts.rb (new)
+  - app/models/account.rb (modified - added grace period methods)
+  - test/models/account_test.rb (modified - added 12 tests)
+- **Learnings for future iterations:**
+  - Grace period is max 14 days from cancellation, calculated from `subscription_ends_at`
+  - `read_only?` is equivalent to `in_grace_period?` - use for UI decisions
+  - All CI checks pass: tests (219), rubocop, brakeman
+---
+
+## 2026-02-01 - US-017
+Thread: https://ampcode.com/threads/T-019c16d7-e75b-73cf-842e-1891a2ab78a9
+- Added subscription warning banner to admin layout for accounts in grace period
+- Banner shows days remaining until lockout and link to billing page
+- Banner is dismissible via session-based Stimulus controller
+- Created Admin::BannersController with dismiss_grace_period action
+- Created banner Stimulus controller (banner_controller.js) for AJAX dismiss
+- Added route: POST /admin/dismiss_grace_period_banner
+- Files changed:
+  - app/controllers/admin/banners_controller.rb (new)
+  - app/javascript/controllers/banner_controller.js (new)
+  - app/views/layouts/admin.html.erb (modified - added grace period banner)
+  - config/routes.rb (modified - added dismiss_grace_period_banner route)
+  - test/controllers/admin/banners_controller_test.rb (new - 2 tests)
+  - test/controllers/application_controller_test.rb (modified - 3 new banner tests)
+- **Learnings for future iterations:**
+  - Use Stimulus controllers for interactive UI behavior (dismiss actions)
+  - Session-based dismiss is simpler than database-based for per-session banners
+  - Grace period banner takes priority over generic subscription error banner
+  - All CI checks pass: tests (224), rubocop, brakeman
+---
+
+## 2026-02-01 - US-018
+Thread: https://ampcode.com/threads/T-019c16de-d73c-7776-b3a1-c933a438f56e
+- Created `SubscriptionExpiryWarningJob` to send warning emails at 7, 3, and 1 day before lockout
+- Created `AccountMailer` with `subscription_expiry_warning` method
+- Created HTML and text email templates for expiry warnings
+- Added `last_expiry_warning_sent_at` column to accounts table
+- Added job to recurring.yml to run daily at 9am
+- Job prevents duplicate emails using last_expiry_warning_sent_at timestamp
+- Created 9 job tests and 1 mailer test
+- Files changed:
+  - db/migrate/20260201014419_add_last_expiry_warning_sent_at_to_accounts.rb (new)
+  - app/jobs/subscription_expiry_warning_job.rb (new)
+  - app/mailers/account_mailer.rb (new)
+  - app/views/account_mailer/subscription_expiry_warning.html.erb (new)
+  - app/views/account_mailer/subscription_expiry_warning.text.erb (new)
+  - config/recurring.yml (modified - added subscription_expiry_warning job)
+  - test/jobs/subscription_expiry_warning_job_test.rb (new - 9 tests)
+  - test/mailers/account_mailer_test.rb (new - 1 test)
+- **Learnings for future iterations:**
+  - Use `include ActionMailer::TestHelper` in job tests to access `assert_enqueued_emails`
+  - For multipart emails, use `email.html_part.body.to_s` to test HTML content
+  - Recurring jobs are configured in config/recurring.yml (production section)
+  - All tests pass: 234 tests, rubocop, brakeman
+---
+
+## 2026-01-31 - US-019
+Thread: https://ampcode.com/threads/T-019c16e6-160f-729e-bd5a-fb7bc7faf590
+- Created comprehensive integration tests for signup flow
+- Tests cover: Account+Agency+User creation, owner role, agency active status, Stripe checkout, webhook updates
+- 6 new integration tests in signup_flow_test.rb
+- Files changed:
+  - test/integration/signup_flow_test.rb (new - 6 tests)
+- **Learnings for future iterations:**
+  - Use OpenStruct for mocking Stripe checkout session retrieve responses
+  - Integration tests can stub Stripe API calls using WebMock
+  - Complete flow tests should verify both signup and checkout success
+  - All tests pass: 240 tests, rubocop, brakeman
+---
+
+## 2026-01-31 - US-020
+Thread: https://ampcode.com/threads/T-019c16ec-bccc-729e-9f6b-48fb3f54fd3c
+- Created integration tests for subscription-based access control
+- 8 tests covering all acceptance criteria:
+  - Active subscription + active agency = access granted
+  - Canceled subscription + expired grace period = access denied
+  - Active subscription + no active agencies = redirect to billing
+  - Grace period = access granted with warning banner
+  - Grace period at 1 day shows correct message
+  - Canceled with nil subscription_ends_at = access denied
+  - Billing page always accessible (skips subscription check)
+  - Past due subscription = access denied
+- Files changed:
+  - test/integration/access_control_test.rb (new - 8 tests)
+- **Learnings for future iterations:**
+  - Integration tests for access control should cover edge cases like nil dates
+  - Billing page must always be accessible regardless of subscription status
+  - All 248 tests pass, rubocop clean, brakeman clean
+---

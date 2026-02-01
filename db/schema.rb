@@ -10,9 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_01_014419) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "accounts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_expiry_warning_sent_at"
+    t.string "name", null: false
+    t.string "plan_name"
+    t.string "stripe_customer_id"
+    t.string "stripe_subscription_id"
+    t.datetime "subscription_ends_at"
+    t.string "subscription_status"
+    t.datetime "updated_at", null: false
+    t.index ["stripe_customer_id"], name: "index_accounts_on_stripe_customer_id", unique: true
+    t.index ["stripe_subscription_id"], name: "index_accounts_on_stripe_subscription_id", unique: true
+  end
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -43,19 +57,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
   end
 
   create_table "agencies", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.boolean "live_enabled", default: false, null: false
     t.string "name", null: false
     t.string "phone_sms", null: false
-    t.string "plan_name"
     t.jsonb "settings", default: {}
-    t.string "stripe_customer_id"
-    t.string "stripe_subscription_id"
-    t.string "subscription_status"
     t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_agencies_on_account_id"
     t.index ["phone_sms"], name: "index_agencies_on_phone_sms", unique: true
-    t.index ["stripe_customer_id"], name: "index_agencies_on_stripe_customer_id", unique: true
-    t.index ["stripe_subscription_id"], name: "index_agencies_on_stripe_subscription_id", unique: true
   end
 
   create_table "audit_events", force: :cascade do |t|
@@ -166,7 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.bigint "agency_id", null: false
+    t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "first_name", null: false
@@ -176,13 +187,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
     t.string "reset_password_token_digest"
     t.string "role", default: "admin"
     t.datetime "updated_at", null: false
-    t.index ["agency_id"], name: "index_users_on_agency_id"
+    t.index ["account_id"], name: "index_users_on_account_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token_digest"], name: "index_users_on_reset_password_token_digest", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "agencies", "accounts"
   add_foreign_key "audit_events", "agencies"
   add_foreign_key "audit_events", "requests"
   add_foreign_key "clients", "agencies"
@@ -195,5 +207,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_014143) do
   add_foreign_key "requests", "agencies"
   add_foreign_key "requests", "clients"
   add_foreign_key "sms_opt_outs", "agencies"
-  add_foreign_key "users", "agencies"
+  add_foreign_key "users", "accounts"
 end

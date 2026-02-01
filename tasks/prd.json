@@ -1,0 +1,320 @@
+{
+  "project": "CoverText",
+  "branchName": "ralph/multitenancy-refactor",
+  "description": "Multitenancy Architecture Refactor - Separate billing (Account) from operational units (Agency) to support multi-location agencies",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create Account model and migration",
+      "description": "As a developer, I need to create the Account model that owns billing and users.",
+      "acceptanceCriteria": [
+        "Create `accounts` table with: `name`, `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan_name`, `created_at`, `updated_at`",
+        "Add unique index on `stripe_customer_id` and `stripe_subscription_id`",
+        "Create Account model with validations (name required, stripe IDs unique allow_nil)",
+        "Account has_many :agencies, has_many :users",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add account_id to agencies table",
+      "description": "As a developer, I need agencies to belong to an account.",
+      "acceptanceCriteria": [
+        "Add `account_id` foreign key to agencies table (required, not null)",
+        "Remove Stripe billing columns from agencies (`stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan_name`)",
+        "Add `active` boolean column to agencies (default: true)",
+        "Agency belongs_to :account",
+        "Unique constraint on `phone_sms` remains",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Move user association from Agency to Account",
+      "description": "As a developer, I need users to belong to Account instead of Agency.",
+      "acceptanceCriteria": [
+        "Add `account_id` foreign key to users table (required)",
+        "Remove `agency_id` foreign key from users table",
+        "Add `role` string column: 'owner', 'admin' (default: 'admin')",
+        "User belongs_to :account",
+        "Account has_many :users",
+        "Unique constraint on email remains",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Implement Account subscription and access methods",
+      "description": "As a developer, I need Account to provide subscription status checks and access validation.",
+      "acceptanceCriteria": [
+        "`Account#subscription_active?` returns true when `subscription_status == 'active'`",
+        "`Account#has_active_agency?` returns true when at least one agency has `active: true`",
+        "`Account#can_access_system?` returns `subscription_active? && has_active_agency?`",
+        "`Account#owner` returns user with role 'owner'",
+        "Unit tests pass for all methods",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Implement Agency activation and access methods",
+      "description": "As a developer, I need Agency to provide activation status checks.",
+      "acceptanceCriteria": [
+        "`Agency#can_go_live?` returns `active? && account.subscription_active? && live_enabled?`",
+        "Remove old `subscription_active?` method from Agency",
+        "`Agency#deactivate!` sets `active: false`",
+        "`Agency#activate!` sets `active: true`",
+        "Unit tests pass",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Update test fixtures for new model",
+      "description": "As a developer, I need test fixtures that reflect the new hierarchy.",
+      "acceptanceCriteria": [
+        "Create accounts.yml with test accounts",
+        "Update agencies.yml to reference accounts",
+        "Update users.yml to reference accounts (not agencies)",
+        "All existing tests pass after fixture updates",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Fixtures were already updated in US-002 and US-003"
+    },
+    {
+      "id": "US-007",
+      "title": "Update seeds.rb for new data model",
+      "description": "As a developer, I need seed data that demonstrates the new hierarchy.",
+      "acceptanceCriteria": [
+        "Create 1 Account ('Reliable Insurance Group')",
+        "Create 2 Agencies under Account (different locations/brands)",
+        "Create 1 User (owner) under Account",
+        "Distribute existing clients/policies across both agencies",
+        "`bin/rails db:seed` runs without errors",
+        "Summary output shows Account → Agencies → Users hierarchy"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Seeds were already updated in US-002; updated test expectations to match 2 agencies"
+    },
+    {
+      "id": "US-008",
+      "title": "Update ApplicationController authentication",
+      "description": "As a developer, I need the authentication layer to work with the new Account-based model.",
+      "acceptanceCriteria": [
+        "`current_user` remains unchanged",
+        "Add `current_account` helper method returning `current_user&.account`",
+        "Add `require_active_subscription` before_action that checks `current_account.can_access_system?`",
+        "Redirect to billing page with message when subscription inactive",
+        "Redirect to agency setup when no active agencies",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Update Admin::BaseController for account context",
+      "description": "As a developer, I need the admin namespace to use Account context.",
+      "acceptanceCriteria": [
+        "Add `current_account` helper (delegates to ApplicationController)",
+        "`current_agency` returns first active agency for account (temporary until agency switcher)",
+        "All admin controllers inherit proper context",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Already implemented in US-003 and US-008"
+    },
+    {
+      "id": "US-010",
+      "title": "Update all agency-scoped queries to use current_agency",
+      "description": "As a developer, I need all admin queries to properly scope to the current agency.",
+      "acceptanceCriteria": [
+        "RequestsController scopes to `current_agency.requests`",
+        "All other admin controllers scope to current_agency where applicable",
+        "No direct references to `current_user.agency` remain",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "BillingController updated to use current_account and current_agency helpers"
+    },
+    {
+      "id": "US-011",
+      "title": "Refactor RegistrationsController for Account + Agency signup",
+      "description": "As a developer, I need signup to create Account, Agency, and User together.",
+      "acceptanceCriteria": [
+        "Create Account with name from agency name",
+        "Create Agency under Account with phone_sms, active: true",
+        "Create User under Account with role: 'owner'",
+        "Pass `account_id` (not agency_id) in Stripe metadata",
+        "Stripe checkout success updates Account (not Agency)",
+        "Auto-login user after successful signup",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Already implemented in US-002 and US-003"
+    },
+    {
+      "id": "US-012",
+      "title": "Update Stripe webhook handler for Account billing",
+      "description": "As a developer, I need Stripe webhooks to update Account subscription status.",
+      "acceptanceCriteria": [
+        "`customer.subscription.updated` updates Account by `account_id` in metadata",
+        "`customer.subscription.deleted` sets Account status to 'canceled'",
+        "`invoice.payment_failed` sets Account status to 'past_due'",
+        "Webhook continues to work for existing events",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Update BillingController for Account context",
+      "description": "As a developer, I need billing management to work with Account.",
+      "acceptanceCriteria": [
+        "Billing page shows Account subscription info",
+        "Stripe customer portal uses Account's `stripe_customer_id`",
+        "Plan upgrades/downgrades update Account",
+        "CI passes (`bin/ci`)",
+        "Verify in browser: billing page loads and shows correct info"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "Implementation was already complete from earlier stories. All tests pass."
+    },
+    {
+      "id": "US-014",
+      "title": "Add Account settings page (basic)",
+      "description": "As a user, I want to view and edit my account name.",
+      "acceptanceCriteria": [
+        "New route: GET/PATCH /admin/account",
+        "Account settings page shows account name (editable)",
+        "Shows list of agencies under account (read-only for now)",
+        "Shows current subscription status",
+        "Owner role required to access",
+        "CI passes (`bin/ci`)",
+        "Verify in browser: account settings page loads and saves"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "Added Admin::AccountsController with show/update, owner-only access, and 9 tests"
+    },
+    {
+      "id": "US-015",
+      "title": "Add navigation link to Account settings",
+      "description": "As a user, I want to access Account settings from the admin nav.",
+      "acceptanceCriteria": [
+        "Add 'Account' link to admin sidebar/nav",
+        "Link only visible to users with owner role",
+        "CI passes (`bin/ci`)",
+        "Verify in browser: nav shows Account link for owner"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": "Added Account link to nav visible only for owner role; added User#owner? helper method and role validation"
+    },
+    {
+      "id": "US-016",
+      "title": "Implement grace period for subscription lapses",
+      "description": "As a developer, I need to handle subscription cancellation with a 14-day read-only grace period.",
+      "acceptanceCriteria": [
+        "Add `subscription_ends_at` timestamp to accounts table",
+        "When subscription canceled, set `subscription_ends_at` to end of billing period",
+        "`Account#in_grace_period?` returns true if canceled but `subscription_ends_at` is in future (max 14 days)",
+        "`Account#read_only?` returns true when in grace period",
+        "`Account#can_access_system?` allows access during grace period (read-only)",
+        "Add `Account#days_until_lockout` helper",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "Added subscription_ends_at column to accounts, implemented in_grace_period?, read_only?, days_until_lockout methods; 12 new tests"
+    },
+    {
+      "id": "US-017",
+      "title": "Add subscription warning banner",
+      "description": "As a user, I want to see a warning when my subscription is about to expire.",
+      "acceptanceCriteria": [
+        "Show warning banner in admin layout when `in_grace_period?`",
+        "Banner shows days remaining and link to billing",
+        "Banner dismissible (session-based)",
+        "CI passes (`bin/ci`)",
+        "Verify in browser: banner appears when subscription is in grace period"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "Added warning banner with Stimulus controller for dismiss, BannersController to handle dismiss action, and 5 tests"
+    },
+    {
+      "id": "US-018",
+      "title": "Create warning email job for expiring accounts",
+      "description": "As a developer, I need a background job to send warning emails before account lockout.",
+      "acceptanceCriteria": [
+        "Create `SubscriptionExpiryWarningJob` (Solid Queue)",
+        "Job finds accounts in grace period",
+        "Job sends warning email to owner at 7 days, 3 days, and 1 day before lockout",
+        "Add `last_expiry_warning_sent_at` to accounts to prevent duplicate emails",
+        "Job scheduled to run daily",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "Created SubscriptionExpiryWarningJob, AccountMailer, migration for last_expiry_warning_sent_at; scheduled daily at 9am; 11 tests"
+    },
+    {
+      "id": "US-019",
+      "title": "Write integration tests for signup flow",
+      "description": "As a developer, I need integration tests for the new signup flow.",
+      "acceptanceCriteria": [
+        "Test: successful signup creates Account + Agency + User",
+        "Test: User has owner role after signup",
+        "Test: Agency is active after signup",
+        "Test: Stripe webhook updates Account subscription",
+        "All tests pass",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "Created signup_flow_test.rb with 6 integration tests covering all acceptance criteria"
+    },
+    {
+      "id": "US-020",
+      "title": "Write integration tests for access control",
+      "description": "As a developer, I need integration tests for subscription-based access.",
+      "acceptanceCriteria": [
+        "Test: active subscription + active agency = access granted",
+        "Test: canceled subscription + expired grace = access denied",
+        "Test: active subscription + no active agencies = redirect to setup",
+        "Test: grace period = access granted with warning",
+        "All tests pass",
+        "CI passes (`bin/ci`)"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "Created access_control_test.rb with 8 integration tests covering all scenarios"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates reset token and sends email for existing user" do
-    user = users(:john_admin)
+    user = users(:john_owner)
 
     assert_enqueued_with(job: ActionMailer::MailDeliveryJob) do
       post password_resets_path, params: { email: user.email }

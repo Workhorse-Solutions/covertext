@@ -1,0 +1,9 @@
+Hi <%= @user.first_name %>,
+
+Your CoverText subscription for <%= @account.name %> expires in <%= @days_remaining %> <%= "day".pluralize(@days_remaining) %>.
+
+After your subscription expires, you will lose access to CoverText and your automated SMS services will stop.
+
+Renew your subscription: <%= @billing_url %>
+
+If you have any questions, please reply to this email.

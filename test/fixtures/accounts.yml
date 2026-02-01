@@ -1,0 +1,7 @@
+reliable_group:
+  name: Reliable Insurance Group
+  subscription_status: active
+
+acme_group:
+  name: Acme Insurance Group
+  subscription_status: active

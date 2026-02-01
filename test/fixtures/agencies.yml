@@ -2,8 +2,12 @@ reliable:
   name: Reliable Insurance Agency
   phone_sms: "+15551234567"
   settings: {}
+  account: reliable_group
+  active: true
 
 acme:
   name: Acme Insurance Co
   phone_sms: "+15559876543"
   settings: {}
+  account: acme_group
+  active: true

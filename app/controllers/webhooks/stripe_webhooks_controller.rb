@@ -35,35 +35,51 @@ module Webhooks
     private
 
     def handle_subscription_update(subscription)
-      agency = Agency.find_by(stripe_subscription_id: subscription.id)
-      return unless agency
+      account = find_account_for_subscription(subscription)
+      return unless account
 
-      agency.update!(
-        subscription_status: subscription.status,
-        plan_name: subscription.metadata.plan_name || agency.plan_name
+      status = subscription.status
+      if subscription.respond_to?(:cancel_at_period_end) && subscription.cancel_at_period_end
+        status = "canceled"
+      end
+
+      account.update!(
+        subscription_status: status,
+        plan_name: subscription.metadata.plan_name || account.plan_name
       )
 
-      Rails.logger.info "Updated subscription for agency #{agency.id}: #{subscription.status}"
+      Rails.logger.info "Updated subscription for account #{account.id}: #{status}"
     end
 
     def handle_payment_success(invoice)
       return unless invoice.subscription
 
-      agency = Agency.find_by(stripe_subscription_id: invoice.subscription)
-      return unless agency
+      account = Account.find_by(stripe_subscription_id: invoice.subscription)
+      return unless account
 
-      agency.update!(subscription_status: "active")
-      Rails.logger.info "Payment succeeded for agency #{agency.id}"
+      account.update!(subscription_status: "active")
+      Rails.logger.info "Payment succeeded for account #{account.id}"
     end
 
     def handle_payment_failure(invoice)
       return unless invoice.subscription
 
-      agency = Agency.find_by(stripe_subscription_id: invoice.subscription)
-      return unless agency
+      account = Account.find_by(stripe_subscription_id: invoice.subscription)
+      return unless account
 
-      agency.update!(subscription_status: "past_due")
-      Rails.logger.warn "Payment failed for agency #{agency.id}"
+      account.update!(subscription_status: "past_due")
+      Rails.logger.warn "Payment failed for account #{account.id}"
+    end
+
+    def find_account_for_subscription(subscription)
+      # First try to find by subscription ID
+      account = Account.find_by(stripe_subscription_id: subscription.id)
+      return account if account
+
+      # Fallback: find by account_id in metadata (for new subscriptions)
+      if subscription.metadata&.account_id
+        Account.find_by(id: subscription.metadata.account_id)
+      end
     end
   end
 end

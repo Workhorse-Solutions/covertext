@@ -1,11 +1,18 @@
 class User < ApplicationRecord
-  belongs_to :agency
+  belongs_to :account
 
   has_secure_password
+
+  ROLES = %w[owner admin].freeze
 
   validates :first_name, presence: true
   validates :last_name, presence: true
   validates :email, presence: true, uniqueness: true
+  validates :role, inclusion: { in: ROLES }, allow_nil: true
+
+  def owner?
+    role == "owner"
+  end
 
   RESET_TOKEN_EXPIRY = 2.hours
 

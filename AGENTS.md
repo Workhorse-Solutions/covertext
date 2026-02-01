@@ -1,10 +1,15 @@
 # CoverText Agent Guide
 
 ## Context
-- CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service.
-- The text conversation is the primary UI.
-- Deterministic logic only (no AI/LLMs).
-- Multi-tenant: each agency is a tenant.
+CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text conversation IS the user interface. Deterministic logic only (no AI/LLMs).
+
+### Multi-Tenant Architecture
+- **Account** → top-level billing entity (has Stripe subscription)
+- **Agency** → belongs to Account, represents insurance agency tenant
+- **User** → belongs to Account (NOT Agency), can be 'owner' or 'admin'
+- **Client** → belongs to Agency, represents insurance client
+- Each Account can have multiple Agencies (active/inactive)
+- Agencies are the tenant boundary for operational data (clients, policies, requests)
 
 ## Phase Discipline
 - Implement only the current phase scope.
@@ -22,6 +27,131 @@
 - Minitest only (no RSpec).
 - ViewComponent + Heroicon for reusable UI.
 
+## Data Model Patterns
+
+### Account Model
+- Handles Stripe billing: `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan_name`
+- Validations: stripe IDs are `unique: true, allow_nil: true`
+- subscription_status uses inclusion validation with allowed values
+- Key methods: `subscription_active?`, `has_active_agency?`, `can_access_system?`, `owner`
+- `has_many :agencies`, `has_many :users`
+
+### Agency Model
+- Represents insurance agency tenant
+- Belongs to Account: `belongs_to :account`
+- Has operational data: `has_many :clients`, `has_many :policies`, `has_many :requests`
+- Key fields: `phone_sms` (Twilio number), `active` (boolean)
+- Key methods: `can_go_live?`, `activate!`, `deactivate!`
+- Does NOT have `has_many :users` (users belong to Account)
+
+### User Model
+- Belongs to Account: `belongs_to :account` (NOT `belongs_to :agency`)
+- Roles: 'owner' (one per account) or 'admin'
+- Use `ROLES` constant for role validation
+
+### Client Model (was Contact)
+- Belongs to Agency: `belongs_to :agency`
+- Phone field: `phone_mobile` (E.164 format)
+- Represents insurance agency clients who text for service
+
+### Naming Conventions
+- Use "Client" not "Contact" for insurance clients
+- Use `phone_mobile` for client phone numbers
+- Use `phone_sms` for agency Twilio numbers
+
+## Controller Patterns
+
+### Helper Methods (Always Use These)
+```ruby
+# ApplicationController
+current_user      # Returns authenticated User
+current_account   # Returns current_user&.account
+
+# Admin::BaseController (inherits ApplicationController)
+current_agency    # Returns current_user.account.agencies.where(active: true).first
+```
+
+**Never duplicate this logic.** Always use the helpers.
+
+### Access Control
+- `require_active_subscription` before_action in Admin::BaseController
+- Redirects to billing page when subscription inactive OR no active agencies
+- Admin::BillingController MUST skip this check (users need billing access to fix issues)
+- Use `require_owner` before_action for owner-only actions (e.g., account settings)
+
+### Controller Inheritance
+- Admin controllers inherit from `Admin::BaseController`
+- BillingController and other admin controllers get `current_agency`, `current_account` automatically
+- RequestsController uses `current_agency.requests` for scoping
+
+### Route Conventions
+- Singular `resource` routes expect **plural** controller names
+  - `resource :account` → `Admin::AccountsController` (not AccountController)
+  - View folder: `app/views/admin/accounts/` (not account/)
+
+## Signup & Billing Flow
+
+### Registration (RegistrationsController)
+Creates Account + Agency + User in transaction:
+1. Create Account with `name` from agency name
+2. Create Agency under Account with `phone_sms`, `active: true`
+3. Create User under Account with `role: 'owner'`
+4. Pass `account_id` in Stripe subscription metadata
+5. On Stripe success, update Account with Stripe IDs
+6. Auto-login user after successful signup
+
+### Stripe Webhooks (StripeWebhooksController)
+- Updates **Account** (not Agency) for billing events
+- Find account by `stripe_subscription_id` or `metadata.account_id`
+- `subscription.updated`: set `cancel_at_period_end` → status 'canceled'
+- `invoice.payment_succeeded`: set status 'active'
+- `invoice.payment_failed`: set status 'past_due'
+- Use `OpenStruct` for mocking Stripe objects in tests
+
+### Billing Controller
+- Uses `current_account` for subscription info (@account.plan_name, etc.)
+- Uses `current_agency` for agency-specific data (@agency.live_enabled, etc.)
+- Stripe portal session uses `current_account.stripe_customer_id`
+
+## Testing Conventions
+
+### Fixtures
+- accounts.yml: test accounts (reliable_group, acme_group)
+- agencies.yml: agencies reference accounts via `account:` key
+- users.yml: users reference accounts (not agencies) with roles
+- clients.yml: clients have `phone_mobile` field
+- **Fixture renames require updating ALL test file references**
+
+### Common Patterns
+- Use `agencies(:reliable)` not `Agency.first` when you need a specific agency
+- Use `users(:john_owner)` for owner role, `users(:bob_admin)` for admin role
+- When creating agencies in tests, create an Account first
+- Use `OpenStruct.new(id: '...', status: '...')` for Stripe object mocks
+- Use `.exists?(condition)` for efficient existence checks
+
+### Seed Tests
+- **Two duplicate files exist:** `seed_test.rb` AND `seeds_test.rb` - update both!
+- Current expectations: 1 Account, 2 Agencies, 1 User (owner), 4 Clients, 10 Policies, 10 Documents
+
+## Database & Environment
+
+### Local Development
+```bash
+# Docker postgres config doesn't work outside container
+# Use this for local development:
+export DATABASE_URL="postgres://jward@localhost/covertext_test"
+```
+
+### Migration Patterns
+- Use `foreign_key: true` and `null: false` for required associations
+- Use `index: true` for frequently queried columns
+- Use `unique: true` for columns that must be unique
+- Stripe IDs: `unique: true, allow_nil: true` (unique when present, but optional)
+
+### Common Issues
+- Agency.has_many :users causes "agency_id does not exist" - users belong to Account
+- When adding account_id to existing model, temporarily remove has_many until migration runs
+
 ## Do Not Add (Yet)
 - AI, chatbots, or LLMs.
 - HawkSoft CRM integration.
@@ -36,20 +166,70 @@ bin/dev
 
 ## Testing
 ```bash
-bin/rails test
-bin/rails test:system
-bin/ci
+bin/rails test              # Run all tests
+bin/rails test:system       # Run system tests
+bin/ci                      # Full CI suite (rubocop, brakeman, bundler-audit, importmap audit, tests)
 ```
 
 ## CI Expectations
-- CI should be green before merging.
-- Keep security tools (Brakeman, bundler-audit, importmap audit) up to date.
+- CI must be green before merging.
+- GitHub Actions: CI → Publish Docker → Deploy (sequential)
+- Security tools: Brakeman, bundler-audit, importmap audit must pass.
+- All tests must pass (currently 202 tests).
 
 ## Deployment
-- Kamal (see docs/DEPLOYMENT.md).
-- Keep secrets out of git; use Rails credentials and .kamal/secrets.
+- Kamal to production (see docs/DEPLOYMENT.md)
+- Secrets from 1Password via service account token
+- Keep secrets out of git; use Rails credentials and .kamal/secrets
+- Docker images: `ghcr.io/workhorse-solutions/covertext` (lowercase required)
 
-## Notes
-- Use realistic mock data (no HawkSoft yet).
-- Favor simple, explicit implementations.
-- Leave TODOs for later phases when needed.
+## Common Gotchas
+- Always verify existing implementation before adding features (earlier stories may satisfy later ones)
+- BillingController must skip subscription check so users can fix billing issues
+- Helper methods exist for a reason - use them instead of duplicating query logic
+- When PRD specifies new data model, update test expectations to match
+- Check both seed test files when updating seed expectations
+
+---
+
+## Maintaining This Document
+
+**This is a living document.** All AI agents working on CoverText should:
+
+### Before Starting Work:
+1. Read this file completely
+2. Read `.github/copilot-instructions.md` for project overview
+3. Read `.github/agent-checklist.md` for agent standard operating proceedures
+3. Check `tasks/progress.txt` for recent learnings
+
+### While Working:
+- When you discover a new pattern or solve a tricky issue, note it
+- If you find incorrect information here, fix it immediately
+- When you encounter a gotcha that cost you time, add it to "Common Gotchas"
+
+### After Completing Work:
+1. Update relevant sections with new patterns discovered
+2. Add entry to `tasks/progress.txt` with:
+   - What was implemented
+   - Key learnings for future iterations
+   - Files changed
+3. If you created new conventions (controller patterns, model methods, etc.), document them
+
+### What to Document:
+- **Data model relationships** that aren't obvious from code
+- **Controller/helper method patterns** that should be reused
+- **Testing conventions** discovered through trial and error
+- **Deployment/infrastructure gotchas** that caused issues
+- **Database migration patterns** that worked well
+- **Common mistakes** and their solutions
+
+### Update Template:
+When adding new information, use this structure:
+```markdown
+### [Section Name]
+- [Specific pattern/rule]
+- Why: [Reasoning or context]
+- Example: [Code snippet or file reference]
+```
+
+**Goal:** Every agent after you should make fewer mistakes and move faster.

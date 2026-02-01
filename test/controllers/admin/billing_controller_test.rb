@@ -3,8 +3,9 @@ require "test_helper"
 module Admin
   class BillingControllerTest < ActionDispatch::IntegrationTest
     setup do
-      @user = users(:john_admin)
+      @user = users(:john_owner)
       @agency = agencies(:reliable)
+      @account = @user.account
       sign_in(@user)
     end
 
@@ -20,7 +21,7 @@ module Admin
     end
 
     test "displays subscription status" do
-      @agency.update!(
+      @account.update!(
         subscription_status: "active",
         plan_name: "pilot"
       )
@@ -31,21 +32,21 @@ module Admin
     end
 
     test "shows warning when no subscription exists" do
-      @agency.update!(stripe_customer_id: nil)
+      @account.update!(stripe_customer_id: nil)
 
       get admin_billing_path
       assert_match /No active subscription/, response.body
     end
 
     test "shows live status banner" do
-      @agency.update!(live_enabled: false, subscription_status: "active")
+      @account.update!(subscription_status: "active")
 
       get admin_billing_path
       assert_match /not yet live/, response.body
     end
 
     test "creates Stripe portal session when customer exists" do
-      @agency.update!(stripe_customer_id: "cus_test_123")
+      @account.update!(stripe_customer_id: "cus_test_123")
 
       # Mock Stripe Billing Portal Session creation
       stub_request(:post, "https://api.stripe.com/v1/billing_portal/sessions")
