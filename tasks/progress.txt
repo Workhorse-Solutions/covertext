@@ -129,3 +129,17 @@ Thread: https://ampcode.com/threads/T-019c1694-9bd5-7470-a57d-16b3624d791f
   - No additional changes needed when acceptance criteria is already satisfied
   - All CI checks pass: tests (182), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-007
+Thread: https://ampcode.com/threads/T-019c16a3-deae-77fe-b8e4-88f2684644cf
+- Seeds.rb was already correctly updated in US-002 with multitenancy hierarchy
+- Updated seed_test.rb and seeds_test.rb to expect 2 agencies (not 1)
+- Tests now verify: 1 Account, 2 Agencies, 1 User (owner), 4 Clients, 10 Policies, 10 Documents
+- Files changed:
+  - test/models/seed_test.rb (modified - updated expectations for 2 agencies)
+  - test/models/seeds_test.rb (modified - updated expectations for 2 agencies)
+- **Learnings for future iterations:**
+  - There are two duplicate seed test files (seed_test.rb and seeds_test.rb) - both need updates
+  - When PRD specifies new data model with 2 agencies, existing tests expecting 1 agency need updating
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
