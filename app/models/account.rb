@@ -10,4 +10,16 @@ class Account < ApplicationRecord
   def subscription_active?
     subscription_status == "active"
   end
+
+  def has_active_agency?
+    agencies.exists?(active: true)
+  end
+
+  def can_access_system?
+    subscription_active? && has_active_agency?
+  end
+
+  def owner
+    users.find_by(role: "owner")
+  end
 end
