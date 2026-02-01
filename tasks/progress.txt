@@ -4,6 +4,9 @@
 - Stripe billing fields (stripe_customer_id, stripe_subscription_id, subscription_status, plan_name) are now on Account, not Agency
 - When creating Agency, always provide an Account; signup flow creates Account + Agency + User together
 - Billing views/controllers should use @account for subscription info, @agency only for live_enabled status
+- User belongs_to :account (not agency); Agency no longer has_many :users
+- Signup creates owner role; admin is the default role
+- Use `current_user.account.agencies.where(active: true).first` to get current_agency
 
 ---
 
@@ -47,5 +50,33 @@ Thread: https://ampcode.com/threads/T-019c1676-e016-764d-a32f-d16a70708e8b
   - Account's `has_many :users` can't exist until users table has account_id (US-003)
   - Tests that create agencies ad-hoc must also create an Account first
   - The signup flow now creates Account + Agency together, not just Agency
+  - All CI checks pass: tests (168), rubocop, brakeman
+---
+
+## 2026-02-01 - US-003
+Thread: https://ampcode.com/threads/T-019c1680-1cd1-7204-ab75-75a8ccc2a27c
+- Added `account_id` foreign key to users table (not null)
+- Removed `agency_id` foreign key from users table
+- User now `belongs_to :account` instead of `belongs_to :agency`
+- Account now `has_many :users` (was commented out pending this migration)
+- Agency no longer `has_many :users`
+- Updated RegistrationsController to create user under account with 'owner' role
+- Updated Admin::BaseController.current_agency to use account.agencies.where(active: true).first
+- Updated Admin::BillingController to use current_user.account
+- Updated all fixtures: john_admin → john_owner, agency → account references
+- Files changed:
+  - db/migrate/20260201000038_move_user_from_agency_to_account.rb (new)
+  - app/models/user.rb (modified - belongs_to :account, added ROLES constant)
+  - app/models/account.rb (modified - has_many :users)
+  - app/models/agency.rb (modified - removed has_many :users)
+  - app/controllers/registrations_controller.rb (modified - user belongs to account)
+  - app/controllers/admin/base_controller.rb (modified - current_agency from account)
+  - app/controllers/admin/billing_controller.rb (modified - use current_user.account)
+  - test/fixtures/users.yml (modified - account references)
+  - Multiple test files updated for john_owner fixture name
+- **Learnings for future iterations:**
+  - Fixture renames require updating ALL test references
+  - Agency.has_many :users was causing "agency_id does not exist" errors in seed tests
+  - Admin controllers must get agency through account, not directly from user
   - All CI checks pass: tests (168), rubocop, brakeman
 ---
