@@ -5,8 +5,8 @@ module Admin
     skip_before_action :require_active_subscription
 
     def show
-      @account = current_user.account
-      @agency = @account.agencies.where(active: true).first
+      @account = current_account
+      @agency = current_agency
 
       if @account&.stripe_customer_id
         @portal_session = Stripe::BillingPortal::Session.create(
