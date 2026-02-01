@@ -94,4 +94,26 @@ class AgencyTest < ActiveSupport::TestCase
     account.update!(subscription_status: "past_due")
     assert_not agency.can_go_live?
   end
+
+  test "activate! sets active to true" do
+    agency = agencies(:reliable)
+    agency.update!(active: false)
+    assert_not agency.active?
+
+    agency.activate!
+
+    assert agency.active?
+    assert agency.reload.active?
+  end
+
+  test "deactivate! sets active to false" do
+    agency = agencies(:reliable)
+    agency.update!(active: true)
+    assert agency.active?
+
+    agency.deactivate!
+
+    assert_not agency.active?
+    assert_not agency.reload.active?
+  end
 end

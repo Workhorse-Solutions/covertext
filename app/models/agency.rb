@@ -14,4 +14,12 @@ class Agency < ApplicationRecord
   def can_go_live?
     active? && account.subscription_active? && live_enabled?
   end
+
+  def activate!
+    update!(active: true)
+  end
+
+  def deactivate!
+    update!(active: false)
+  end
 end
