@@ -1,6 +1,9 @@
 ## Codebase Patterns
 - Use `DATABASE_URL="postgres://jward@localhost/covertext_test"` for local development (Docker config uses "postgres" host which doesn't work outside container)
 - Account model follows same validation patterns as Agency (stripe_*_id unique allow_nil, subscription_status with inclusion validation)
+- Stripe billing fields (stripe_customer_id, stripe_subscription_id, subscription_status, plan_name) are now on Account, not Agency
+- When creating Agency, always provide an Account; signup flow creates Account + Agency + User together
+- Billing views/controllers should use @account for subscription info, @agency only for live_enabled status
 
 ---
 
@@ -18,4 +21,31 @@ Thread: https://ampcode.com/threads/T-019c164b-fdbb-739c-9338-1995d473784f
   - Database connection configured for Docker; use DATABASE_URL env var for local development
   - Follow existing validation patterns from Agency model for consistency
   - All CI checks pass: tests (170), rubocop, brakeman
+---
+
+## 2026-01-31 - US-002
+Thread: https://ampcode.com/threads/T-019c1676-e016-764d-a32f-d16a70708e8b
+- Added `account_id` foreign key to agencies table (not null, with foreign key constraint)
+- Removed Stripe billing columns from agencies (stripe_customer_id, stripe_subscription_id, subscription_status, plan_name)
+- Added `active` boolean column to agencies (default: true)
+- Agency now `belongs_to :account`
+- Updated billing views/controller to use @account for subscription info
+- Updated RegistrationsController to create Account + Agency + User in transaction
+- Updated test fixtures and all tests referencing old agency Stripe fields
+- Files changed:
+  - db/migrate/20260131231104_add_account_id_to_agencies.rb (new)
+  - app/models/agency.rb (modified - added belongs_to :account, can_go_live?)
+  - app/models/account.rb (modified - temporarily removed has_many :users until US-003)
+  - app/controllers/registrations_controller.rb (modified - creates Account first)
+  - app/controllers/admin/billing_controller.rb (unchanged - already used @account)
+  - app/views/admin/billing/show.html.erb (modified - use @account for billing fields)
+  - db/seeds.rb (modified - creates Account before Agency)
+  - test/fixtures/accounts.yml (new)
+  - test/fixtures/agencies.yml (modified - references accounts)
+  - Multiple test files updated to use Account for Stripe fields
+- **Learnings for future iterations:**
+  - Account's `has_many :users` can't exist until users table has account_id (US-003)
+  - Tests that create agencies ad-hoc must also create an Account first
+  - The signup flow now creates Account + Agency together, not just Agency
+  - All CI checks pass: tests (168), rubocop, brakeman
 ---
