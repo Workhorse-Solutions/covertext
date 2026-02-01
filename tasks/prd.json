@@ -219,8 +219,8 @@
         "Verify in browser: account settings page loads and saves"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Admin::AccountsController with show/update, owner-only access, and 9 tests"
     },
     {
       "id": "US-015",
@@ -233,8 +233,8 @@
         "Verify in browser: nav shows Account link for owner"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Account link to nav visible only for owner role; added User#owner? helper method and role validation"
     },
     {
       "id": "US-016",

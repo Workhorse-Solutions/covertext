@@ -7,6 +7,8 @@
 - User belongs_to :account (not agency); Agency no longer has_many :users
 - Signup creates owner role; admin is the default role
 - Use `current_user.account.agencies.where(active: true).first` to get current_agency
+- Rails singular `resource` routes expect plural controller names (e.g., `resource :account` → AccountsController)
+- Use `User#owner?` helper method for role checks instead of `role == 'owner'`
 
 ---
 
@@ -247,4 +249,45 @@ Thread: https://ampcode.com/threads/T-019c16c0-a7c0-70de-9c3e-0924bfc581c4
   - BillingController was updated incrementally during US-002, US-008, US-010
   - Always verify existing implementation before making changes
   - All CI checks pass: tests (193), rubocop, brakeman
+---
+
+## 2026-01-31 - US-014
+Thread: https://ampcode.com/threads/T-019c16c6-c168-7792-818c-40b1d3e4f66d
+- Created Admin::AccountsController with show and update actions
+- Added GET/PATCH /admin/account routes via `resource :account`
+- Created account settings view showing:
+  - Editable account name with form
+  - Read-only agencies table (name, phone, active status, live status)
+  - Subscription status card with link to billing
+- Added `require_owner` before_action for owner-only access
+- Added bob_admin fixture for testing admin role restriction
+- Created 9 integration tests for all functionality
+- Files changed:
+  - app/controllers/admin/accounts_controller.rb (new)
+  - app/views/admin/accounts/show.html.erb (new)
+  - config/routes.rb (modified - added account resource)
+  - test/controllers/admin/accounts_controller_test.rb (new - 9 tests)
+  - test/fixtures/users.yml (modified - added bob_admin)
+- **Learnings for future iterations:**
+  - Rails singular `resource` route still expects plural controller (AccountsController, not AccountController)
+  - View folder must match plural controller name (admin/accounts/, not admin/account/)
+  - All CI checks pass: tests (202), rubocop, brakeman
+---
+
+## 2026-01-31 - US-015
+Thread: https://ampcode.com/threads/T-019c16c9-d232-74fc-9237-4423057aa58c
+- Added Account link to admin navbar, visible only to users with owner role
+- Added `User#owner?` helper method for cleaner role checking
+- Added role validation to User model (inclusion in ROLES constant)
+- Added 2 navigation tests (owner sees link, admin does not)
+- Added 3 User model tests (owner?, role validation)
+- Files changed:
+  - app/models/user.rb (modified - added owner? method, role validation)
+  - app/views/layouts/admin.html.erb (modified - added Account link with owner check)
+  - test/controllers/admin/accounts_controller_test.rb (modified - added nav visibility tests)
+  - test/models/user_test.rb (modified - added owner? and role validation tests)
+- **Learnings for future iterations:**
+  - Use `User#owner?` method for role checks instead of direct string comparison
+  - Role validation uses ROLES constant with allow_nil for backwards compatibility
+  - All CI checks pass: tests (207), rubocop, brakeman
 ---
