@@ -180,3 +180,15 @@ Thread: https://ampcode.com/threads/T-019c16b1-1909-760f-9b09-49db916f9190
   - Some stories may be satisfied by earlier work - verify before implementing
   - All CI checks pass: tests (186), rubocop, brakeman
 ---
+
+## 2026-01-31 - US-010
+Thread: https://ampcode.com/threads/T-019c16b7-45e1-704b-a36b-b02b3c89a43d
+- Updated BillingController to use `current_account` and `current_agency` helpers
+- Verified no remaining `current_user.agency` references in admin controllers
+- RequestsController already correctly uses `current_agency.requests`
+- Files changed:
+  - app/controllers/admin/billing_controller.rb (modified - use helper methods)
+- **Learnings for future iterations:**
+  - Always use the helper methods instead of duplicating query logic
+  - All CI checks pass: tests (186), rubocop, brakeman
+---
