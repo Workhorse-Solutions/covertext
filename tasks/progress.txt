@@ -371,3 +371,23 @@ Thread: https://ampcode.com/threads/T-019c16e6-160f-729e-bd5a-fb7bc7faf590
   - Complete flow tests should verify both signup and checkout success
   - All tests pass: 240 tests, rubocop, brakeman
 ---
+
+## 2026-01-31 - US-020
+Thread: https://ampcode.com/threads/T-019c16ec-bccc-729e-9f6b-48fb3f54fd3c
+- Created integration tests for subscription-based access control
+- 8 tests covering all acceptance criteria:
+  - Active subscription + active agency = access granted
+  - Canceled subscription + expired grace period = access denied
+  - Active subscription + no active agencies = redirect to billing
+  - Grace period = access granted with warning banner
+  - Grace period at 1 day shows correct message
+  - Canceled with nil subscription_ends_at = access denied
+  - Billing page always accessible (skips subscription check)
+  - Past due subscription = access denied
+- Files changed:
+  - test/integration/access_control_test.rb (new - 8 tests)
+- **Learnings for future iterations:**
+  - Integration tests for access control should cover edge cases like nil dates
+  - Billing page must always be accessible regardless of subscription status
+  - All 248 tests pass, rubocop clean, brakeman clean
+---
