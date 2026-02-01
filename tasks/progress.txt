@@ -211,3 +211,22 @@ Thread: https://ampcode.com/threads/T-019c16b8-d00c-7129-8e59-6e328a236567
   - Check existing implementation before making changes
   - All CI checks pass: tests (186), rubocop, brakeman
 ---
+
+## 2026-01-31 - US-012
+Thread: https://ampcode.com/threads/T-019c16be-eee1-771a-bd51-c076044eb910
+- Updated StripeWebhooksController to use Account instead of Agency for all billing operations
+- `handle_subscription_update` now finds Account by stripe_subscription_id or metadata.account_id
+- `handle_subscription_update` sets status to 'canceled' when `cancel_at_period_end` is true
+- `handle_payment_success` updates Account subscription_status to 'active'
+- `handle_payment_failure` updates Account subscription_status to 'past_due'
+- Added `find_account_for_subscription` helper method for subscription lookup with fallback
+- Created 7 unit tests for all webhook handler methods
+- Files changed:
+  - app/controllers/webhooks/stripe_webhooks_controller.rb (modified - use Account instead of Agency)
+  - test/controllers/webhooks/stripe_webhooks_controller_test.rb (modified - added unit tests)
+- **Learnings for future iterations:**
+  - Stripe subscription metadata contains account_id from signup (subscription_data.metadata.account_id)
+  - Use OpenStruct for mocking Stripe objects in tests
+  - Webhook handlers should gracefully handle unknown subscriptions (return early, no error)
+  - All CI checks pass: tests (193), rubocop, brakeman
+---
