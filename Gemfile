@@ -26,7 +26,7 @@ gem "bcrypt", "~> 3.1.7"
 gem "twilio-ruby", "~> 7.3"
 
 # Stripe for subscription billing
-gem "stripe", "~> 13.4"
+gem "stripe", "~> 18.3"
 
 gem "heroicon"
 gem "view_component"
