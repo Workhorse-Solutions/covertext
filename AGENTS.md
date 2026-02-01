@@ -199,6 +199,7 @@ bin/ci                      # Full CI suite (rubocop, brakeman, bundler-audit, i
 ### Before Starting Work:
 1. Read this file completely
 2. Read `.github/copilot-instructions.md` for project overview
+3. Read `.github/agent-checklist.md` for agent standard operating proceedures
 3. Check `tasks/progress.txt` for recent learnings
 
 ### While Working:

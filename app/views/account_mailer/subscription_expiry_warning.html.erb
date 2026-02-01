@@ -1,0 +1,11 @@
+<p>Hi <%= @user.first_name %>,</p>
+
+<p>Your CoverText subscription for <strong><%= @account.name %></strong> expires in <%= @days_remaining %> <%= "day".pluralize(@days_remaining) %>.</p>
+
+<p>After your subscription expires, you will lose access to CoverText and your automated SMS services will stop.</p>
+
+<p>
+  <a href="<%= @billing_url %>">Renew your subscription</a>
+</p>
+
+<p>If you have any questions, please reply to this email.</p>

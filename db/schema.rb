@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_01_012850) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_01_014419) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "last_expiry_warning_sent_at"
     t.string "name", null: false
     t.string "plan_name"
     t.string "stripe_customer_id"
