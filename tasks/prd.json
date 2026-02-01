@@ -64,7 +64,7 @@
         "CI passes (`bin/ci`)"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

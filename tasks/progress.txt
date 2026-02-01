@@ -80,3 +80,19 @@ Thread: https://ampcode.com/threads/T-019c1680-1cd1-7204-ab75-75a8ccc2a27c
   - Admin controllers must get agency through account, not directly from user
   - All CI checks pass: tests (168), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-004
+Thread: https://ampcode.com/threads/T-019c168c-efe5-721c-8a3a-bbe30b4a7489
+- Implemented `Account#subscription_active?` (already existed, added tests)
+- Implemented `Account#has_active_agency?` using `agencies.exists?(active: true)`
+- Implemented `Account#can_access_system?` combining subscription and agency checks
+- Implemented `Account#owner` returning user with role 'owner'
+- Added 11 comprehensive tests for all new methods
+- Files changed:
+  - app/models/account.rb (modified - added has_active_agency?, can_access_system?, owner)
+  - test/models/account_test.rb (modified - added tests for all methods)
+- **Learnings for future iterations:**
+  - Use `agencies.exists?(active: true)` for efficient existence checks
+  - Test fixtures provide ready-made data for testing relationships
+  - All CI checks pass: tests (180), rubocop, brakeman
+---
