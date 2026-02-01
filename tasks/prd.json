@@ -80,7 +80,7 @@
         "CI passes (`bin/ci`)"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -95,8 +95,8 @@
         "CI passes (`bin/ci`)"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "Moved earlier - fixtures needed before controller tests"
+      "passes": true,
+      "notes": "Fixtures were already updated in US-002 and US-003"
     },
     {
       "id": "US-007",

@@ -96,3 +96,36 @@ Thread: https://ampcode.com/threads/T-019c168c-efe5-721c-8a3a-bbe30b4a7489
   - Test fixtures provide ready-made data for testing relationships
   - All CI checks pass: tests (180), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-005
+Thread: https://ampcode.com/threads/T-019c1693-3a44-70b3-ae61-79563fa20178
+- Implemented `Agency#activate!` method to set active: true
+- Implemented `Agency#deactivate!` method to set active: false
+- `can_go_live?` already existed from US-002
+- No `subscription_active?` method existed on Agency (only on Account) - no removal needed
+- Added 2 unit tests for activate! and deactivate!
+- Files changed:
+  - app/models/agency.rb (modified - added activate!, deactivate!)
+  - test/models/agency_test.rb (modified - added tests for new methods)
+- **Learnings for future iterations:**
+  - Agency never had `subscription_active?` - billing was moved to Account in US-002
+  - Simple update! methods follow Rails convention with bang suffix
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
+
+## 2026-02-01 - US-006
+Thread: https://ampcode.com/threads/T-019c1694-9bd5-7470-a57d-16b3624d791f
+- Verified test fixtures are already complete from US-002 and US-003
+- accounts.yml: contains reliable_group and acme_group test accounts
+- agencies.yml: agencies reference accounts via `account:` association
+- users.yml: users reference accounts (not agencies) with proper roles
+- All 182 tests pass, rubocop and brakeman clean
+- Files verified:
+  - test/fixtures/accounts.yml (created in US-002)
+  - test/fixtures/agencies.yml (updated in US-002)
+  - test/fixtures/users.yml (updated in US-003)
+- **Learnings for future iterations:**
+  - Fixtures were incrementally updated as models evolved
+  - No additional changes needed when acceptance criteria is already satisfied
+  - All CI checks pass: tests (182), rubocop, brakeman
+---
