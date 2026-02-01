@@ -357,3 +357,17 @@ Thread: https://ampcode.com/threads/T-019c16de-d73c-7776-b3a1-c933a438f56e
   - Recurring jobs are configured in config/recurring.yml (production section)
   - All tests pass: 234 tests, rubocop, brakeman
 ---
+
+## 2026-01-31 - US-019
+Thread: https://ampcode.com/threads/T-019c16e6-160f-729e-bd5a-fb7bc7faf590
+- Created comprehensive integration tests for signup flow
+- Tests cover: Account+Agency+User creation, owner role, agency active status, Stripe checkout, webhook updates
+- 6 new integration tests in signup_flow_test.rb
+- Files changed:
+  - test/integration/signup_flow_test.rb (new - 6 tests)
+- **Learnings for future iterations:**
+  - Use OpenStruct for mocking Stripe checkout session retrieve responses
+  - Integration tests can stub Stripe API calls using WebMock
+  - Complete flow tests should verify both signup and checkout success
+  - All tests pass: 240 tests, rubocop, brakeman
+---
