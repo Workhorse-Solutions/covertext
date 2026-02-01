@@ -250,8 +250,8 @@
         "CI passes (`bin/ci`)"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added subscription_ends_at column to accounts, implemented in_grace_period?, read_only?, days_until_lockout methods; 12 new tests"
     },
     {
       "id": "US-017",

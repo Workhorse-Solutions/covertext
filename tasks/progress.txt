@@ -291,3 +291,22 @@ Thread: https://ampcode.com/threads/T-019c16c9-d232-74fc-9237-4423057aa58c
   - Role validation uses ROLES constant with allow_nil for backwards compatibility
   - All CI checks pass: tests (207), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-016
+Thread: https://ampcode.com/threads/T-019c16d0-d251-77c9-838a-b5057bb01b27
+- Added `subscription_ends_at` datetime column to accounts table
+- Implemented `Account#in_grace_period?` (canceled + ends_at in future within 14 days)
+- Implemented `Account#read_only?` (delegates to in_grace_period?)
+- Implemented `Account#days_until_lockout` (ceil of days remaining)
+- Updated `Account#can_access_system?` to allow access during grace period
+- Added GRACE_PERIOD_DAYS constant (14 days)
+- Added 12 new tests for all grace period methods
+- Files changed:
+  - db/migrate/20260201012850_add_subscription_ends_at_to_accounts.rb (new)
+  - app/models/account.rb (modified - added grace period methods)
+  - test/models/account_test.rb (modified - added 12 tests)
+- **Learnings for future iterations:**
+  - Grace period is max 14 days from cancellation, calculated from `subscription_ends_at`
+  - `read_only?` is equivalent to `in_grace_period?` - use for UI decisions
+  - All CI checks pass: tests (219), rubocop, brakeman
+---
