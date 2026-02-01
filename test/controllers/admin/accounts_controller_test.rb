@@ -68,5 +68,17 @@ module Admin
       @account.reload
       assert_not_equal "Hacked", @account.name
     end
+
+    test "owner sees Account link in nav" do
+      sign_in(@owner)
+      get admin_requests_path
+      assert_select "a[href=?]", admin_account_path, text: "Account"
+    end
+
+    test "admin does not see Account link in nav" do
+      sign_in(@admin)
+      get admin_requests_path
+      assert_select "a[href=?]", admin_account_path, count: 0
+    end
   end
 end

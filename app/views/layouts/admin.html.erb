@@ -16,6 +16,9 @@
         <a href="<%= admin_requests_path %>" class="btn btn-ghost text-xl">CoverText Admin</a>
       </div>
       <div class="flex-none gap-2">
+        <% if current_user.owner? %>
+          <%= link_to "Account", admin_account_path, class: "btn btn-ghost btn-sm" %>
+        <% end %>
         <%= link_to "Billing", admin_billing_path, class: "btn btn-ghost btn-sm" %>
         <div class="dropdown dropdown-end">
           <div tabindex="0" role="button" class="btn btn-ghost">

@@ -8,6 +8,11 @@ class User < ApplicationRecord
   validates :first_name, presence: true
   validates :last_name, presence: true
   validates :email, presence: true, uniqueness: true
+  validates :role, inclusion: { in: ROLES }, allow_nil: true
+
+  def owner?
+    role == "owner"
+  end
 
   RESET_TOKEN_EXPIRY = 2.hours
 

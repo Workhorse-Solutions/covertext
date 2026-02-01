@@ -41,4 +41,20 @@ class UserTest < ActiveSupport::TestCase
     assert user.authenticate("password123")
     assert_not user.authenticate("wrongpassword")
   end
+
+  test "owner? returns true for owner role" do
+    user = users(:john_owner)
+    assert user.owner?
+  end
+
+  test "owner? returns false for admin role" do
+    user = users(:bob_admin)
+    assert_not user.owner?
+  end
+
+  test "validates role inclusion" do
+    user = User.new(account: accounts(:reliable_group), first_name: "Test", last_name: "User", email: "invalid@example.com", password: "password", role: "invalid")
+    assert_not user.valid?
+    assert_includes user.errors[:role], "is not included in the list"
+  end
 end
