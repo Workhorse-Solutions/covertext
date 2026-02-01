@@ -230,3 +230,21 @@ Thread: https://ampcode.com/threads/T-019c16be-eee1-771a-bd51-c076044eb910
   - Webhook handlers should gracefully handle unknown subscriptions (return early, no error)
   - All CI checks pass: tests (193), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-013
+Thread: https://ampcode.com/threads/T-019c16c0-a7c0-70de-9c3e-0924bfc581c4
+- Verified BillingController already correctly uses Account context (from earlier stories)
+- Controller uses `current_account` helper for @account
+- Controller uses `current_agency` helper for @agency
+- View displays Account subscription info (plan_name, subscription_status)
+- Stripe portal session uses Account's stripe_customer_id
+- 6 tests in billing_controller_test.rb all pass
+- Files verified (no changes needed):
+  - app/controllers/admin/billing_controller.rb (already uses current_account, current_agency)
+  - app/views/admin/billing/show.html.erb (already uses @account for subscription info)
+  - test/controllers/admin/billing_controller_test.rb (6 tests pass)
+- **Learnings for future iterations:**
+  - BillingController was updated incrementally during US-002, US-008, US-010
+  - Always verify existing implementation before making changes
+  - All CI checks pass: tests (193), rubocop, brakeman
+---

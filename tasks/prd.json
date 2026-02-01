@@ -202,8 +202,8 @@
         "Verify in browser: billing page loads and shows correct info"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implementation was already complete from earlier stories. All tests pass."
     },
     {
       "id": "US-014",
