@@ -265,8 +265,8 @@
         "Verify in browser: banner appears when subscription is in grace period"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added warning banner with Stimulus controller for dismiss, BannersController to handle dismiss action, and 5 tests"
     },
     {
       "id": "US-018",

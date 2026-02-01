@@ -310,3 +310,25 @@ Thread: https://ampcode.com/threads/T-019c16d0-d251-77c9-838a-b5057bb01b27
   - `read_only?` is equivalent to `in_grace_period?` - use for UI decisions
   - All CI checks pass: tests (219), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-017
+Thread: https://ampcode.com/threads/T-019c16d7-e75b-73cf-842e-1891a2ab78a9
+- Added subscription warning banner to admin layout for accounts in grace period
+- Banner shows days remaining until lockout and link to billing page
+- Banner is dismissible via session-based Stimulus controller
+- Created Admin::BannersController with dismiss_grace_period action
+- Created banner Stimulus controller (banner_controller.js) for AJAX dismiss
+- Added route: POST /admin/dismiss_grace_period_banner
+- Files changed:
+  - app/controllers/admin/banners_controller.rb (new)
+  - app/javascript/controllers/banner_controller.js (new)
+  - app/views/layouts/admin.html.erb (modified - added grace period banner)
+  - config/routes.rb (modified - added dismiss_grace_period_banner route)
+  - test/controllers/admin/banners_controller_test.rb (new - 2 tests)
+  - test/controllers/application_controller_test.rb (modified - 3 new banner tests)
+- **Learnings for future iterations:**
+  - Use Stimulus controllers for interactive UI behavior (dismiss actions)
+  - Session-based dismiss is simpler than database-based for per-session banners
+  - Grace period banner takes priority over generic subscription error banner
+  - All CI checks pass: tests (224), rubocop, brakeman
+---
