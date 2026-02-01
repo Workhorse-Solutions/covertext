@@ -332,3 +332,28 @@ Thread: https://ampcode.com/threads/T-019c16d7-e75b-73cf-842e-1891a2ab78a9
   - Grace period banner takes priority over generic subscription error banner
   - All CI checks pass: tests (224), rubocop, brakeman
 ---
+
+## 2026-02-01 - US-018
+Thread: https://ampcode.com/threads/T-019c16de-d73c-7776-b3a1-c933a438f56e
+- Created `SubscriptionExpiryWarningJob` to send warning emails at 7, 3, and 1 day before lockout
+- Created `AccountMailer` with `subscription_expiry_warning` method
+- Created HTML and text email templates for expiry warnings
+- Added `last_expiry_warning_sent_at` column to accounts table
+- Added job to recurring.yml to run daily at 9am
+- Job prevents duplicate emails using last_expiry_warning_sent_at timestamp
+- Created 9 job tests and 1 mailer test
+- Files changed:
+  - db/migrate/20260201014419_add_last_expiry_warning_sent_at_to_accounts.rb (new)
+  - app/jobs/subscription_expiry_warning_job.rb (new)
+  - app/mailers/account_mailer.rb (new)
+  - app/views/account_mailer/subscription_expiry_warning.html.erb (new)
+  - app/views/account_mailer/subscription_expiry_warning.text.erb (new)
+  - config/recurring.yml (modified - added subscription_expiry_warning job)
+  - test/jobs/subscription_expiry_warning_job_test.rb (new - 9 tests)
+  - test/mailers/account_mailer_test.rb (new - 1 test)
+- **Learnings for future iterations:**
+  - Use `include ActionMailer::TestHelper` in job tests to access `assert_enqueued_emails`
+  - For multipart emails, use `email.html_part.body.to_s` to test HTML content
+  - Recurring jobs are configured in config/recurring.yml (production section)
+  - All tests pass: 234 tests, rubocop, brakeman
+---

@@ -281,8 +281,8 @@
         "CI passes (`bin/ci`)"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created SubscriptionExpiryWarningJob, AccountMailer, migration for last_expiry_warning_sent_at; scheduled daily at 9am; 11 tests"
     },
     {
       "id": "US-019",
