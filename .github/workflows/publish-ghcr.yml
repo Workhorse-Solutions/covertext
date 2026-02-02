@@ -95,6 +95,18 @@ jobs:
       - name: Install kamal
         run: gem install kamal
 
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 165.227.9.95 >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<EOF
+          Host 165.227.9.95
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          EOF
+
       - name: Deploy to production (use already-pushed image)
         env:
           VERSION: ${{ needs.build-and-push.outputs.version }}
