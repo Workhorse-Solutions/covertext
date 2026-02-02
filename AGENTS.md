@@ -228,7 +228,6 @@ Ralph reads AGENTS.md and copilot-instructions.md on every iteration, so updatin
 2. Read `.github/copilot-instructions.md` for project overview
 3. Read `.github/agent-checklist.md` for agent standard operating procedures
 4. Check `scripts/ralph/progress.txt` for recent learnings (if using Ralph)
-5. Check `tasks/progress.txt` for recent learnings (if working manually)
 
 ### While Working:
 - When you discover a new pattern or solve a tricky issue, note it
@@ -237,11 +236,9 @@ Ralph reads AGENTS.md and copilot-instructions.md on every iteration, so updatin
 
 ### After Completing Work:
 1. Update relevant sections with new patterns discovered
-2. Add entry to appropriate progress log:
-   - Ralph work: `scripts/ralph/progress.txt`
-   - Manual work: `tasks/progress.txt`
-   - Include: what was implemented, key learnings, files changed
-3. If you created new conventions (controller patterns, model methods, etc.), document them
+2. If using Ralph: Ralph automatically updates `scripts/ralph/progress.txt`
+3. If working manually: Update AGENTS.md with new patterns directly (no separate progress log)
+4. If you created new conventions (controller patterns, model methods, etc.), document them
 
 ### What to Document:
 - **Data model relationships** that aren't obvious from code

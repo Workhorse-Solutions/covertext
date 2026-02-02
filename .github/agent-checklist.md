@@ -6,7 +6,7 @@ Use this checklist for every work session to ensure consistency and knowledge ca
 
 - [ ] Read [AGENTS.md](../AGENTS.md) completely
 - [ ] Read [.github/copilot-instructions.md](copilot-instructions.md) for project context
-- [ ] Review recent entries in [tasks/progress.txt](../tasks/progress.txt)
+- [ ] Check `scripts/ralph/progress.txt` for recent learnings (if using Ralph)
 - [ ] Check current CI status (tests passing? rubocop clean?)
 - [ ] Identify which Phase this work belongs to
 
@@ -23,18 +23,15 @@ Use this checklist for every work session to ensure consistency and knowledge ca
 
 - [ ] Run `bin/ci` (must be green)
 - [ ] Update AGENTS.md with any new patterns discovered
-- [ ] Add entry to tasks/progress.txt with:
-  - User story number (if applicable)
-  - What was implemented
-  - Key learnings for future iterations
-  - Files changed
+- [ ] If using Ralph: progress automatically tracked in `scripts/ralph/progress.txt`
+- [ ] If working manually: Document learnings directly in AGENTS.md
 - [ ] Commit with clear message describing what and why
 - [ ] Push changes
 
 ## Before Handing Off
 
 - [ ] All tests passing (check CI)
-- [ ] Documentation updated (AGENTS.md, progress.txt)
+- [ ] Documentation updated (AGENTS.md)
 - [ ] No outstanding TODOs that block current phase
 - [ ] Leave clear notes about any incomplete work
 
