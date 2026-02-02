@@ -95,32 +95,6 @@ jobs:
       - name: Install kamal
         run: gem install kamal
 
-      - name: Set up SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          mkdir -p ~/.ssh
-          printf "%s\n" "$DEPLOY_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          DEPLOY_HOST="165.227.9.95"
-
-          # Add the server host key(s) to known_hosts (retry because fresh infra can lag)
-          for i in 1 2 3 4 5; do
-            ssh-keyscan -T 10 -H -t rsa,ecdsa,ed25519 "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null && break
-            echo "ssh-keyscan attempt $i failed; retrying..." >&2
-            sleep 2
-          done
-
-          if [ ! -s ~/.ssh/known_hosts ]; then
-            echo "ERROR: ssh-keyscan produced no host keys for $DEPLOY_HOST. Is SSH reachable on port 22?" >&2
-            exit 1
-          fi
-
-          # Debug output should never fail the job
-          ssh-keygen -lf ~/.ssh/known_hosts || true
-
       - name: Deploy to production (use already-pushed image)
         env:
           VERSION: ${{ needs.build-and-push.outputs.version }}
