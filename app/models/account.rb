@@ -1,6 +1,8 @@
 class Account < ApplicationRecord
   GRACE_PERIOD_DAYS = 14
 
+  enum :plan_tier, { starter: "starter", professional: "professional", enterprise: "enterprise" }, default: :starter
+
   has_many :agencies, dependent: :destroy
   has_many :users, dependent: :destroy
 

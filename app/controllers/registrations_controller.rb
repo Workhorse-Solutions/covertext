@@ -8,8 +8,15 @@ class RegistrationsController < ApplicationController
   end
 
   def create
+    # Get selected plan, validate and default to starter
+    plan = params[:plan]&.to_sym
+    plan = Plan.default unless Plan.valid?(plan)
+
     # Create Account first
-    @account = Account.new(name: agency_params[:name])
+    @account = Account.new(
+      name: agency_params[:name],
+      plan_tier: plan
+    )
 
     @agency = @account.agencies.build(agency_params)
     @agency.live_enabled = false # Always start as non-live
@@ -34,19 +41,21 @@ class RegistrationsController < ApplicationController
         customer_email: user.email,
         mode: "subscription",
         line_items: [ {
-          price: stripe_price_id_for_plan(params[:plan] || "pilot"),
+          price: stripe_price_id_for_plan(plan),
           quantity: 1
         } ],
-        success_url: signup_success_url(session_id: "{CHECKOUT_SESSION_ID}"),
-        cancel_url: signup_url,
+        success_url: signup_success_url(session_id: "{CHECKOUT_SESSION_ID}", plan: plan),
+        cancel_url: signup_url(plan: plan),
         metadata: {
           account_id: @account.id,
           agency_id: @agency.id,
-          user_id: user.id
+          user_id: user.id,
+          plan_tier: plan
         },
         subscription_data: {
           metadata: {
-            account_id: @account.id
+            account_id: @account.id,
+            plan_tier: plan
           }
         }
       )
@@ -75,11 +84,14 @@ class RegistrationsController < ApplicationController
       end
 
       # Update account with Stripe details
+      plan_tier = checkout_session.metadata.plan_tier&.to_sym
+      plan_tier = Plan.default unless Plan.valid?(plan_tier)
+
       account.update!(
         stripe_customer_id: checkout_session.customer,
         stripe_subscription_id: checkout_session.subscription,
         subscription_status: "active",
-        plan_name: params[:plan] || "pilot"
+        plan_tier: plan_tier
       )
 
       # Log the user in
@@ -100,13 +112,16 @@ class RegistrationsController < ApplicationController
 
   def stripe_price_id_for_plan(plan)
     # These should be stored in credentials in production
-    case plan
-    when "pilot"
-      Rails.application.credentials.dig(:stripe, :pilot_price_id) || "price_pilot_placeholder"
-    when "growth"
-      Rails.application.credentials.dig(:stripe, :growth_price_id) || "price_growth_placeholder"
+    case plan.to_sym
+    when :starter
+      Rails.application.credentials.dig(:stripe, :starter_price_id) || "price_starter_placeholder"
+    when :professional
+      Rails.application.credentials.dig(:stripe, :professional_price_id) || "price_professional_placeholder"
+    when :enterprise
+      Rails.application.credentials.dig(:stripe, :enterprise_price_id) || "price_enterprise_placeholder"
     else
-      Rails.application.credentials.dig(:stripe, :pilot_price_id) || "price_pilot_placeholder"
+      # Default to starter
+      Rails.application.credentials.dig(:stripe, :starter_price_id) || "price_starter_placeholder"
     end
   end
 end

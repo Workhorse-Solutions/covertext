@@ -40,28 +40,36 @@ module Webhooks
       subscription = OpenStruct.new(
         id: "sub_test_123",
         status: "past_due",
-        metadata: OpenStruct.new(plan_name: nil),
-        cancel_at_period_end: false
+        metadata: OpenStruct.new(plan_tier: "professional"),
+        cancel_at_period_end: false,
+        items: OpenStruct.new(
+          data: [ OpenStruct.new(price: OpenStruct.new(id: "price_professional_test")) ]
+        )
       )
 
       @controller.send(:handle_subscription_update, subscription)
 
       @account.reload
       assert_equal "past_due", @account.subscription_status
+      assert @account.professional?
     end
 
     test "handle_subscription_update sets canceled when cancel_at_period_end" do
       subscription = OpenStruct.new(
         id: "sub_test_123",
         status: "active",
-        metadata: OpenStruct.new(plan_name: nil),
-        cancel_at_period_end: true
+        metadata: OpenStruct.new(plan_tier: "starter"),
+        cancel_at_period_end: true,
+        items: OpenStruct.new(
+          data: [ OpenStruct.new(price: OpenStruct.new(id: "price_starter_test")) ]
+        )
       )
 
       @controller.send(:handle_subscription_update, subscription)
 
       @account.reload
       assert_equal "canceled", @account.subscription_status
+      assert @account.starter?
     end
 
     test "handle_subscription_update finds account by metadata when subscription ID not stored yet" do
@@ -70,15 +78,18 @@ module Webhooks
       subscription = OpenStruct.new(
         id: "sub_new_123",
         status: "active",
-        metadata: OpenStruct.new(account_id: new_account.id.to_s, plan_name: "pilot"),
-        cancel_at_period_end: false
+        metadata: OpenStruct.new(account_id: new_account.id.to_s, plan_tier: "professional"),
+        cancel_at_period_end: false,
+        items: OpenStruct.new(
+          data: [ OpenStruct.new(price: OpenStruct.new(id: "price_professional_test")) ]
+        )
       )
 
       @controller.send(:handle_subscription_update, subscription)
 
       new_account.reload
       assert_equal "active", new_account.subscription_status
-      assert_equal "pilot", new_account.plan_name
+      assert new_account.professional?
     end
 
     test "handle_payment_success updates account to active" do

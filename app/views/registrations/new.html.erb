@@ -4,13 +4,15 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <h2 class="text-center text-3xl font-bold text-primary">CoverText</h2>
-        <h3 class="mt-6 text-center text-2xl font-bold">Start Your Pilot</h3>
+        <h3 class="mt-6 text-center text-2xl font-bold">Start Your Free Trial</h3>
         <p class="mt-2 text-center text-sm text-base-content/60">
-          Sign up and subscribe to get started
+          Sign up for the <span class="font-semibold"><%= plan_info[:name] %> Plan</span> • <%= plan_info[:price_display] %>
         </p>
       </div>
 
       <%= form_with model: @agency, url: signup_path, class: "mt-8 space-y-6" do |f| %>
+        <%= hidden_field_tag :plan, selected_plan %>
+
         <% if @agency.errors.any? %>
           <div class="alert alert-error">
             <div>
@@ -64,31 +66,6 @@
             <%= password_field_tag :user_password, nil, class: "input input-bordered w-full", required: true, minlength: 8 %>
             <label class="label">
               <span class="label-text-alt">Minimum 8 characters</span>
-            </label>
-          </div>
-
-          <!-- Plan Selection -->
-          <div class="divider">Choose Your Plan</div>
-
-          <div class="form-control">
-            <label class="label cursor-pointer border rounded-lg p-4 bg-base-200">
-              <%= radio_button_tag :plan, "pilot", true, class: "radio radio-primary" %>
-              <span class="flex-1 ml-3">
-                <span class="label-text font-bold">Pilot - $49/month</span>
-                <br>
-                <span class="label-text-alt">Perfect for getting started</span>
-              </span>
-            </label>
-          </div>
-
-          <div class="form-control">
-            <label class="label cursor-pointer border rounded-lg p-4 bg-base-200">
-              <%= radio_button_tag :plan, "growth", false, class: "radio radio-primary" %>
-              <span class="flex-1 ml-3">
-                <span class="label-text font-bold">Growth - $99/month</span>
-                <br>
-                <span class="label-text-alt">Higher volume, premium support</span>
-              </span>
             </label>
           </div>
         </div>

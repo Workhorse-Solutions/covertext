@@ -124,20 +124,21 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
           metadata: {
             account_id: account.id.to_s,
             agency_id: agency.id.to_s,
-            user_id: user.id.to_s
+            user_id: user.id.to_s,
+            plan_tier: "starter"
           }
         }.to_json,
         headers: { "Content-Type" => "application/json" }
       )
 
-    get signup_success_path(session_id: "cs_test_checkout_456")
+    get signup_success_path(session_id: "cs_test_checkout_456", plan: "starter")
 
     account.reload
 
     assert_equal "cus_checkout_test", account.stripe_customer_id
     assert_equal "sub_checkout_test", account.stripe_subscription_id
     assert_equal "active", account.subscription_status
-    assert_equal "pilot", account.plan_name
+    assert account.starter?
 
     assert_equal user.id, session[:user_id]
     assert_redirected_to admin_requests_path
@@ -167,8 +168,11 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
     subscription = OpenStruct.new(
       id: "sub_webhook_test",
       status: "active",
-      metadata: OpenStruct.new(account_id: account.id.to_s, plan_name: "growth"),
-      cancel_at_period_end: false
+      metadata: OpenStruct.new(account_id: account.id.to_s, plan_tier: "professional"),
+      cancel_at_period_end: false,
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_professional_test")) ]
+      )
     )
 
     controller.send(:handle_subscription_update, subscription)
@@ -176,7 +180,7 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
     account.reload
 
     assert_equal "active", account.subscription_status
-    assert_equal "growth", account.plan_name
+    assert account.professional?
   end
 
   test "complete signup flow from form to active subscription" do
@@ -203,7 +207,7 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
       user_last_name: "Flow",
       user_email: "complete@flowagency.com",
       user_password: "securepassword123",
-      plan: "pilot"
+      plan: "starter"
     }
 
     assert_redirected_to "https://checkout.stripe.com/complete"
@@ -222,13 +226,14 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
           metadata: {
             account_id: account.id.to_s,
             agency_id: agency.id.to_s,
-            user_id: user.id.to_s
+            user_id: user.id.to_s,
+            plan_tier: "starter"
           }
         }.to_json,
         headers: { "Content-Type" => "application/json" }
       )
 
-    get signup_success_path(session_id: "cs_complete_flow_123")
+    get signup_success_path(session_id: "cs_complete_flow_123", plan: "starter")
 
     account.reload
 

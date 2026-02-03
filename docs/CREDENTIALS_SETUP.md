@@ -33,10 +33,13 @@ You'll need:
 In your Stripe Dashboard (test mode):
 
 1. Go to **Products** → **Add Product**
-2. Create two products:
-   - **Pilot Plan**: $49/month recurring
-   - **Growth Plan**: $99/month recurring
+2. Create three pricing tiers:
+   - **Starter Plan**: $49/month ($490/year) recurring
+   - **Professional Plan**: $99/month ($950/year) recurring
+   - **Enterprise Plan**: $199/month ($1990/year) recurring
 3. Note the Price IDs (e.g., `price_1ABC123...`)
+   - For monthly/yearly billing, create separate price IDs for each interval
+   - Currently, the app uses monthly pricing only (annual billing is future work)
 
 ## Setup Instructions
 
@@ -53,8 +56,9 @@ Add this structure:
 stripe:
   secret_key: sk_test_YOUR_KEY_HERE
   publishable_key: pk_test_YOUR_KEY_HERE
-  pilot_price_id: price_1ABC123_YOUR_PILOT_PRICE_ID
-  growth_price_id: price_1DEF456_YOUR_GROWTH_PRICE_ID
+  starter_price_id: price_1ABC123_YOUR_STARTER_PRICE_ID
+  professional_price_id: price_1DEF456_YOUR_PROFESSIONAL_PRICE_ID
+  enterprise_price_id: price_1GHI789_YOUR_ENTERPRISE_PRICE_ID
   webhook_secret: whsec_YOUR_WEBHOOK_SECRET
 ```
 

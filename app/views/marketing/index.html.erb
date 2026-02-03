@@ -19,7 +19,7 @@
 
         <!-- CTAs -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          <%= link_to "Get Started", signup_path, class: "btn btn-primary btn-lg" %>
+          <%= link_to "Get Started", signup_path(plan: "professional"), class: "btn btn-primary btn-lg" %>
           <a href="mailto:hello@covertext.io" class="btn btn-outline btn-lg">Request a Demo</a>
         </div>
       </div>
@@ -169,7 +169,7 @@
           "Email support"
         ],
         cta_text: "Get Started",
-        cta_url: signup_path,
+        cta_url: signup_path(plan: "starter"),
         cta_primary: false,
         header_bg: "bg-base-200"
       ) %>
@@ -189,7 +189,7 @@
           "Priority support"
         ],
         cta_text: "Get Started",
-        cta_url: signup_path,
+        cta_url: signup_path(plan: "professional"),
         cta_primary: true,
         header_bg: "bg-primary/10",
         header_color: "text-primary"

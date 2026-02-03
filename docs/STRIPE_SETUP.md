@@ -6,10 +6,13 @@ This application uses Stripe for subscription billing. To configure Stripe:
 
 In your Stripe Dashboard, create the following products:
 
-- **Pilot Plan**: $49/month recurring subscription
-- **Growth Plan**: $99/month recurring subscription
+- **Starter Plan**: $49/month ($490/year) recurring subscription
+- **Professional Plan**: $99/month ($950/year) recurring subscription
+- **Enterprise Plan**: $199/month ($1990/year) recurring subscription
 
 Note the Price IDs for each plan (e.g., `price_1ABC123...`).
+
+**Note**: Currently, the app uses monthly pricing only. Annual billing support can be added later.
 
 ## 2. Configure Credentials
 
@@ -19,8 +22,9 @@ Add the following to your Rails credentials:
 stripe:
   secret_key: sk_test_... # Your Stripe secret key
   publishable_key: pk_test_... # Your Stripe publishable key (not currently used but good to have)
-  pilot_price_id: price_1ABC123... # Pilot plan price ID
-  growth_price_id: price_1DEF456... # Growth plan price ID
+  starter_price_id: price_1ABC123... # Starter plan price ID
+  professional_price_id: price_1DEF456... # Professional plan price ID
+  enterprise_price_id: price_1GHI789... # Enterprise plan price ID
   webhook_secret: whsec_... # Webhook signing secret from Stripe Dashboard
 ```
 
@@ -90,12 +94,13 @@ This will give you a webhook secret for local testing (starts with `whsec_`).
 
 ### Database Fields
 
-Added to `agencies` table:
-- `stripe_customer_id` - Stripe Customer ID (unique)
-- `stripe_subscription_id` - Stripe Subscription ID (unique)
+Added to `accounts` table:
+- `stripe_customer_id` - Stripe Customer ID (unique, nullable)
+- `stripe_subscription_id` - Stripe Subscription ID (unique, nullable)
 - `subscription_status` - Status from Stripe (active, past_due, canceled, etc.)
-- `plan_name` - Plan name (pilot, growth)
-- `live_enabled` - Boolean flag to control "live" status (default: false)
+- `plan_tier` - Plan tier name (starter, professional, enterprise) - defaults to "starter"
+
+The `plan_tier` field is used for feature gating throughout the application. It's set during signup and updated via Stripe webhooks when subscriptions change.
 
 ## Compliance & A2P Readiness
 

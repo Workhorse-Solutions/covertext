@@ -87,7 +87,9 @@ The goal is to ensure first-time visitors (independent insurance agency owners) 
 - [ ] Document in `STRIPE_SETUP.md`
 
 **Files to update:**
-- `app/controllers/registrations_controller.rb` - Update `stripe_price_id_for_plan` method
+- `app/models/account.rb` - Add migration for `plan_tier` column
+- `app/controllers/registrations_controller.rb` - Update `stripe_price_id_for_plan` method, set `plan_tier` on Account creation
+- `app/controllers/webhooks/stripe_webhooks_controller.rb` - Map Stripe price ID to tier and update Account's `plan_tier`
 - `docs/CREDENTIALS_SETUP.md` - Document new price IDs
 - `docs/STRIPE_SETUP.md` - Update setup instructions
 
@@ -239,4 +241,41 @@ stripe:
 ```
 
 Note: Marketing page toggle shows monthly/yearly prices, but Stripe integration currently uses monthly pricing only. Annual billing can be added in a future iteration.
+
+### Tier Storage and Feature Gating
+The backend needs to know subscription tier for feature gating:
+
+**Two approaches to tier determination:**
+
+**Option A: Query Stripe API on-demand** (no migration needed)
+- Use existing `stripe_subscription_id` to query Stripe: `Stripe::Subscription.retrieve(account.stripe_subscription_id)`
+- Read `subscription.items.data[0].price.id` from response
+- Map price ID → tier using reverse lookup of stored price IDs
+- **Pros:** No new database column, always accurate, handles plan changes automatically
+- **Cons:** API call on every request that checks features (latency, rate limits, external dependency)
+- **Use case:** Simple apps with infrequent feature checks
+
+**Option B: Store tier locally in Account** (recommended)
+- Migration: `add_column :accounts, :plan_tier, :string, default: "starter"`
+- Set during signup from plan parameter
+- Update via Stripe webhooks when subscription changes
+- **Pros:** Fast lookups (no API calls), works offline for feature checks
+- **Cons:** Requires migration, must keep in sync via webhooks
+- **Use case:** Production apps with frequent feature checks (e.g., every request)
+
+**Recommended approach: Option B** - Store `plan_tier` locally and keep it in sync via Stripe webhooks. This avoids API calls on every request where feature gating is checked.
+
+Implementation flow:
+1. **Signup:** Set `account.plan_tier` based on selected plan parameter
+2. **Stripe checkout:** Create subscription with correct price ID for tier
+3. **Webhooks:** Map Stripe price ID → tier and update `account.plan_tier`
+   - `subscription.created`, `subscription.updated`: Read price ID, determine tier, update `plan_tier`
+4. **Feature checks:** `current_account.plan_tier` for instant lookups
+
+Example tier-based features:
+- **Starter:** 1 active agency, basic SMS features
+- **Professional:** 3 active agencies, priority card delivery, custom branding
+- **Enterprise:** Unlimited agencies, API access, dedicated support, priority everything
+
+**Note:** Feature gating implementation (permission checks, limits enforcement) will be a separate PRD after marketing launch. This PRD only covers tier selection and storage.
 - Do we need to enforce tier limits in backend logic, or keep it honor-system for now?
