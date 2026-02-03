@@ -1,7 +1,5 @@
 <% content_for :title, "CoverText - Automated Insurance Client Service via SMS" %>
 
-<%= render "shared/public_header" %>
-
 <!-- Hero Section -->
   <div class="hero min-h-screen bg-gradient-to-br from-primary/10 via-base-100 to-secondary/10">
     <div class="hero-content text-center max-w-4xl px-4">
@@ -29,31 +27,26 @@
   </div>
 
   <!-- What CoverText Does -->
+
   <div class="bg-base-200 py-20">
     <div class="container mx-auto px-4 max-w-5xl">
       <h3 class="text-3xl font-bold text-center mb-12">What CoverText Does</h3>
       <div class="grid md:grid-cols-3 gap-8">
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <div class="text-4xl mb-4">📱</div>
-            <h4 class="card-title">Clients Text Your Number</h4>
-            <p>Your agency gets a dedicated SMS number. Clients text it just like they'd call.</p>
-          </div>
-        </div>
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <div class="text-4xl mb-4">⚡</div>
-            <h4 class="card-title">Automatic Fulfillment</h4>
-            <p>CoverText identifies and fulfills common requests instantly, no manual work required.</p>
-          </div>
-        </div>
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <div class="text-4xl mb-4">📋</div>
-            <h4 class="card-title">Full Audit Trail</h4>
-            <p>Every request is logged and auditable. You stay in control of your client data.</p>
-          </div>
-        </div>
+        <%= render UI::CardComponent.new do %>
+          <div class="text-4xl mb-4">📱</div>
+          <h4 class="card-title">Clients Text Your Number</h4>
+          <p>Your agency gets a dedicated SMS number. Clients text it just like they'd call.</p>
+        <% end %>
+        <%= render UI::CardComponent.new do %>
+          <div class="text-4xl mb-4">⚡</div>
+          <h4 class="card-title">Automatic Fulfillment</h4>
+          <p>CoverText identifies and fulfills common requests instantly, no manual work required.</p>
+        <% end %>
+        <%= render UI::CardComponent.new do %>
+          <div class="text-4xl mb-4">📋</div>
+          <h4 class="card-title">Full Audit Trail</h4>
+          <p>Every request is logged and auditable. You stay in control of your client data.</p>
+        <% end %>
       </div>
     </div>
   </div>
@@ -185,17 +178,16 @@
   </div>
 
   <!-- Pricing -->
+
   <div class="py-20">
     <div class="container mx-auto px-4 max-w-3xl text-center">
       <h3 class="text-3xl font-bold mb-8">Simple, Transparent Pricing</h3>
-      <div class="card bg-base-200 shadow-xl max-w-md mx-auto">
-        <div class="card-body">
-          <div class="text-5xl font-bold text-primary mb-2">$49<span class="text-2xl text-base-content/60">/month</span></div>
-          <p class="text-xl mb-4">Per Agency</p>
-          <p class="text-base-content/70 mb-6">Get started with automated client service. Cancel anytime.</p>
-          <%= link_to "Get Started", signup_path, class: "btn btn-primary btn-lg" %>
-        </div>
-      </div>
+      <%= render UI::CardComponent.new(outer_class: "card bg-base-200 shadow-xl max-w-md mx-auto") do %>
+        <div class="text-5xl font-bold text-primary mb-2">$49<span class="text-2xl text-base-content/60">/month</span></div>
+        <p class="text-xl mb-4">Per Agency</p>
+        <p class="text-base-content/70 mb-6">Get started with automated client service. Cancel anytime.</p>
+        <%= link_to "Get Started", signup_path, class: "btn btn-primary btn-lg" %>
+      <% end %>
       <p class="text-sm text-base-content/60 mt-8">Need higher volume? Contact us for Growth pricing ($99/month)</p>
     </div>
   </div>

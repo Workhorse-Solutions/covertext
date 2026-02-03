@@ -9,37 +9,88 @@
 
 /* Optional: ONLY for custom themes you define yourself */
 @plugin "./daisyui-theme.mjs" {
-  /* leave empty for now */
   name: "light";
   default: true;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(98% 0 0);
-  --color-base-300: oklch(95% 0 0);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(62% 0.214 259.815);
-  --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(75% 0.183 55.934);
-  --color-secondary-content: oklch(100% 0 0);
-  --color-accent: oklch(81% 0.111 293.571);
-  --color-accent-content: oklch(38% 0.189 293.745);
-  --color-neutral: oklch(14% 0.005 285.823);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(86% 0.127 207.078);
-  --color-info-content: oklch(30% 0.056 229.695);
-  --color-success: oklch(84% 0.143 164.978);
-  --color-success-content: oklch(37% 0.077 168.94);
-  --color-warning: oklch(90% 0.182 98.111);
-  --color-warning-content: oklch(42% 0.095 57.708);
-  --color-error: oklch(63% 0.237 25.331);
-  --color-error-content: oklch(97% 0.013 17.38);
-  --radius-selector: 0.5rem;
+  color-scheme: light;
+  --color-primary: #1b77ff;
+  --color-primary-content: #ffffff;
+  --color-secondary: #9c5de8;
+  --color-secondary-content: #ffffff;
+  --color-accent: #00d3bb;
+  --color-accent-content: #f3fbf6;
+  --color-neutral: #1e2832;
+  --color-neutral-content: #fafcff;
+  --color-info: #14b4ff;
+  --color-info-content: #ffffff;
+  --color-success: #17c964;
+  --color-success-content: #ffffff;
+  --color-warning: #f5a524;
+  --color-warning-content: #150a00;
+  --color-error: #f31260;
+  --color-error-content: #ffffff;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #eef0f2;
+  --color-base-300: #dcdee0;
+  --color-base-content: #1e2328;
+
   --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.3125rem;
-  --size-field: 0.3125rem;
+  --radius-box: 0.25rem;
+  --rounded-box: 0.25rem;
+  --radius-selector: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
   --border: 1px;
-  --depth: 1;
+  --card-p: 20px;
+  --card-fs: var(--text-base);
+
+  --depth: 0;
   --noise: 0;
 }
+
+/** Container utility **/
+@utility container {
+    margin-inline: auto;
+    padding-inline: 1rem;
+    @apply px-[1rem] sm:px-[1rem] md:px-[2rem] lg:px-[3rem] xl:px-[4rem] 2xl:px-[6rem];
+}
+
+html {
+  @apply relative scroll-smooth;
+}
+
+body {
+  @apply bg-base-100 text-base-content overflow-x-hidden;
+}
+
+:target {
+  @apply scroll-m-12 lg:scroll-mt-0;
+}
+
+/* == Components == */
+
+.btn {
+  @apply font-medium;
+}
+
+/* == Forms == */
+
+.fieldset {
+  .fieldset-legend {
+    @apply text-base-content/80 text-sm font-normal;
+  }
+}
+
+.checkbox,
+.radio,
+.range,
+.toggle {
+  &:disabled {
+    @apply opacity-35;
+  }
+}
+
+.label {
+  @apply text-base-content/80 cursor-pointer;
+}
+
