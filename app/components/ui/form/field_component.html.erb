@@ -1,0 +1,17 @@
+<div class="form-control">
+  <%= form.label attribute, (label.presence || nil), class: "label text-neutral text-base font-semibold pb-1" %>
+
+  <%= input %>
+
+  <% if hint.present? %>
+    <p class="mt-1 text-xs text-base-content/60"><%= hint %></p>
+  <% end %>
+
+  <% if invalid? %>
+    <div class="mt-1 space-y-0.5">
+      <% error_messages.each do |msg| %>
+        <p class="text-xs text-error"><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+</div>

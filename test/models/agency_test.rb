@@ -7,12 +7,6 @@ class AgencyTest < ActiveSupport::TestCase
     assert_includes agency.errors[:name], "can't be blank"
   end
 
-  test "requires phone_sms" do
-    agency = Agency.new(name: "Test Agency", account: accounts(:reliable_group))
-    assert_not agency.valid?
-    assert_includes agency.errors[:phone_sms], "can't be blank"
-  end
-
   test "requires account" do
     agency = Agency.new(name: "Test Agency", phone_sms: "+15559999999")
     assert_not agency.valid?

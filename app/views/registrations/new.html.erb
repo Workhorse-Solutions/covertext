@@ -1,88 +1,73 @@
 <% content_for :title, "Sign Up - CoverText" %>
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="text-center text-3xl font-bold text-primary">CoverText</h2>
-        <h3 class="mt-6 text-center text-2xl font-bold">Start Your Free Trial</h3>
-        <p class="mt-2 text-center text-sm text-base-content/60">
-          Sign up for the <span class="font-semibold"><%= plan_info[:name] %> Plan</span> • <%= plan_info[:price_display] %>
-        </p>
-      </div>
+<%= render UI::SectionComponent.new(class_name: "min-h-screen flex items-center justify-center", inner_class: "w-full md:w-1/2 mx-auto") do %>
+  <%= render UI::CardComponent.new do %>
+    <div>
+      <h2 class="text-center text-3xl font-bold text-primary">Create Your Account</h2>
+      <p class="mt-2 text-center text-sm text-base-content/60">
+        Sign up for the <span class="font-semibold"><%= @plan_info[:name] %> Plan</span> • <%= @plan_info[:price_display] %>
+      </p>
+    </div>
 
-      <%= form_with model: @agency, url: signup_path, class: "mt-8 space-y-6" do |f| %>
-        <%= hidden_field_tag :plan, selected_plan %>
+    <%= form_with model: @registration, url: signup_path, scope: :registration, class: "mt-8 space-y-6" do |f| %>
+      <%= hidden_field_tag :plan, @selected_plan %>
 
-        <% if @agency.errors.any? %>
-          <div class="alert alert-error">
-            <div>
-              <h3 class="font-bold">Please fix the following errors:</h3>
-              <ul class="list-disc list-inside">
-                <% @agency.errors.full_messages.each do |message| %>
-                  <li><%= message %></li>
-                <% end %>
-              </ul>
-            </div>
-          </div>
+      <!-- Account Details -->
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :account_name, label: "Account Name") do |field| %>
+        <%= field.with_input do %>
+          <%= f.text_field :account_name, class: "input input-bordered w-full", required: true, placeholder: "Reliable Insurance Group" %>
+        <% end %>
+      <% end %>
+
+      <!-- Agency Details -->
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :agency_name, label: "Agency Name") do |field| %>
+        <%= field.with_input do %>
+          <%= f.text_field :agency_name, class: "input input-bordered w-full", required: true, placeholder: "Acme Insurance Agency" %>
+        <% end %>
+      <% end %>
+
+      <!-- User Details -->
+      <div class="divider">Admin User</div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_first_name, label: "First Name") do |field| %>
+          <%= field.with_input do %>
+            <%= f.text_field :user_first_name, class: "input input-bordered w-full", required: true, placeholder: "John" %>
+          <% end %>
         <% end %>
 
-        <div class="rounded-md shadow-sm space-y-4">
-          <!-- Agency Details -->
-          <div class="form-control">
-            <%= f.label :name, "Agency Name", class: "label" %>
-            <%= f.text_field :name, class: "input input-bordered w-full", required: true, placeholder: "Acme Insurance Agency" %>
-          </div>
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_last_name, label: "Last Name") do |field| %>
+          <%= field.with_input do %>
+            <%= f.text_field :user_last_name, class: "input input-bordered w-full", required: true, placeholder: "Doe" %>
+          <% end %>
+        <% end %>
+      </div>
 
-          <div class="form-control">
-            <%= f.label :phone_sms, "Agency Phone Number", class: "label" %>
-            <%= f.text_field :phone_sms, class: "input input-bordered w-full", required: true, placeholder: "+1 555-123-4567" %>
-            <label class="label">
-              <span class="label-text-alt">This will be your dedicated SMS number (we'll provision it)</span>
-            </label>
-          </div>
-
-          <!-- User Details -->
-          <div class="divider">Admin User</div>
-
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="form-control">
-              <%= label_tag :user_first_name, "First Name", class: "label" %>
-              <%= text_field_tag :user_first_name, nil, class: "input input-bordered w-full", required: true, placeholder: "Jane" %>
-            </div>
-
-            <div class="form-control">
-              <%= label_tag :user_last_name, "Last Name", class: "label" %>
-              <%= text_field_tag :user_last_name, nil, class: "input input-bordered w-full", required: true, placeholder: "Smith" %>
-            </div>
-          </div>
-
-          <div class="form-control">
-            <%= label_tag :user_email, "Email", class: "label" %>
-            <%= email_field_tag :user_email, nil, class: "input input-bordered w-full", required: true, placeholder: "admin@acmeinsurance.com" %>
-          </div>
-
-          <div class="form-control">
-            <%= label_tag :user_password, "Password", class: "label" %>
-            <%= password_field_tag :user_password, nil, class: "input input-bordered w-full", required: true, minlength: 8 %>
-            <label class="label">
-              <span class="label-text-alt">Minimum 8 characters</span>
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <%= f.submit "Continue to Payment", class: "btn btn-primary w-full btn-lg" %>
-        </div>
-
-        <div class="text-center text-sm">
-          <p class="text-base-content/60">
-            You'll be redirected to Stripe to complete payment setup.
-            Cancel anytime.
-          </p>
-          <p class="mt-2">
-            <%= link_to "← Back to Homepage", root_path, class: "link link-primary" %>
-          </p>
-        </div>
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_email, label: "Email") do |field| %>
+        <%= field.with_input do %>
+          <%= f.email_field :user_email, class: "input input-bordered w-full", required: true, placeholder: "admin@reliableinsurancegroup.com" %>
+        <% end %>
       <% end %>
-    </div>
-  </div>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_password, label: "Password") do |field| %>
+        <%= field.with_input do %>
+          <%= f.password_field :user_password, class: "input input-bordered w-full", required: true, placeholder: "Enter your password" %>
+        <% end %>
+      <% end %>
+
+      <div>
+        <%= f.submit "Continue to Payment", class: "btn btn-primary w-full btn-lg" %>
+      </div>
+
+      <div class="text-center text-sm">
+        <p class="text-base-content/60">
+          You'll be redirected to Stripe to complete payment setup.
+          Cancel anytime.
+        </p>
+        <p class="mt-2">
+          <%= link_to "← Back to Homepage", root_path, class: "link link-primary" %>
+        </p>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

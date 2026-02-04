@@ -8,12 +8,13 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
   test "signup form has required fields" do
     get signup_path
-    assert_select "input[name=?]", "agency[name]"
-    assert_select "input[name=?]", "agency[phone_sms]"
-    assert_select "input[name=?]", "user_first_name"
-    assert_select "input[name=?]", "user_last_name"
-    assert_select "input[name=?]", "user_email"
-    assert_select "input[name=?]", "user_password"
+    assert_select "input[name=?]", "registration[account_name]"
+    assert_select "input[name=?]", "registration[agency_name]"
+
+    assert_select "input[name=?]", "registration[user_first_name]"
+    assert_select "input[name=?]", "registration[user_last_name]"
+    assert_select "input[name=?]", "registration[user_email]"
+    assert_select "input[name=?]", "registration[user_password]"
   end
 
   test "creates agency with Stripe checkout redirect" do
@@ -34,14 +35,15 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       assert_difference "Agency.count", 1 do
         assert_difference "User.count", 1 do
           post signup_path, params: {
-            agency: {
-              name: "New Agency",
-              phone_sms: "+15551112222"
+            registration: {
+              account_name: "New Insurance Group",
+              agency_name: "New Agency",
+              phone_sms: "+15551112222",
+              user_first_name: "John",
+              user_last_name: "Doe",
+              user_email: "john@newagency.com",
+              user_password: "password123"
             },
-            user_first_name: "John",
-            user_last_name: "Doe",
-            user_email: "john@newagency.com",
-            user_password: "password123",
             plan: "pilot"
           }
         end
@@ -49,7 +51,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     account = Account.last
-    assert_equal "New Agency", account.name
+    assert_equal "New Insurance Group", account.name
 
     agency = Agency.last
     assert_equal "New Agency", agency.name
@@ -69,14 +71,15 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
   test "validation errors prevent agency creation" do
     assert_no_difference "Agency.count" do
       post signup_path, params: {
-        agency: {
-          name: "",
-          phone_sms: ""
-        },
-        user_first_name: "Jane",
-        user_last_name: "Doe",
-        user_email: "jane@test.com",
-        user_password: "password123"
+        registration: {
+          account_name: "Test Account",
+          agency_name: "",
+          phone_sms: "",
+          user_first_name: "Jane",
+          user_last_name: "Doe",
+          user_email: "jane@test.com",
+          user_password: "password123"
+        }
       }
     end
 

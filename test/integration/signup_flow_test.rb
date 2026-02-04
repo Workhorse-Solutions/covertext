@@ -16,14 +16,15 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
 
     assert_difference [ "Account.count", "Agency.count", "User.count" ], 1 do
       post signup_path, params: {
-        agency: {
-          name: "Integration Test Agency",
-          phone_sms: "+15559998888"
+        registration: {
+          account_name: "Integration Test Group",
+          agency_name: "Integration Test Agency",
+          phone_sms: "+15559998888",
+          user_first_name: "Integration",
+          user_last_name: "Test",
+          user_email: "integration@testagency.com",
+          user_password: "securepassword123"
         },
-        user_first_name: "Integration",
-        user_last_name: "Test",
-        user_email: "integration@testagency.com",
-        user_password: "securepassword123",
         plan: "pilot"
       }
     end
@@ -32,7 +33,7 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
     agency = Agency.last
     user = User.last
 
-    assert_equal "Integration Test Agency", account.name
+    assert_equal "Integration Test Group", account.name
     assert_equal account, agency.account
     assert_equal account, user.account
     assert_redirected_to "https://checkout.stripe.com/test"
@@ -50,14 +51,15 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
       )
 
     post signup_path, params: {
-      agency: {
-        name: "Owner Test Agency",
-        phone_sms: "+15557776666"
+      registration: {
+        account_name: "Owner Test Group",
+        agency_name: "Owner Test Agency",
+        phone_sms: "+15557776666",
+        user_first_name: "Owner",
+        user_last_name: "User",
+        user_email: "owner@testagency.com",
+        user_password: "securepassword123"
       },
-      user_first_name: "Owner",
-      user_last_name: "User",
-      user_email: "owner@testagency.com",
-      user_password: "securepassword123",
       plan: "pilot"
     }
 
@@ -80,14 +82,15 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
       )
 
     post signup_path, params: {
-      agency: {
-        name: "Active Test Agency",
-        phone_sms: "+15554443333"
+      registration: {
+        account_name: "Active Test Group",
+        agency_name: "Active Test Agency",
+        phone_sms: "+15554443333",
+        user_first_name: "Active",
+        user_last_name: "User",
+        user_email: "active@testagency.com",
+        user_password: "securepassword123"
       },
-      user_first_name: "Active",
-      user_last_name: "User",
-      user_email: "active@testagency.com",
-      user_password: "securepassword123",
       plan: "pilot"
     }
 
@@ -199,14 +202,15 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", signup_path
 
     post signup_path, params: {
-      agency: {
-        name: "Complete Flow Agency",
-        phone_sms: "+15550009999"
+      registration: {
+        account_name: "Complete Flow Group",
+        agency_name: "Complete Flow Agency",
+        phone_sms: "+15550009999",
+        user_first_name: "Complete",
+        user_last_name: "Flow",
+        user_email: "complete@flowagency.com",
+        user_password: "securepassword123"
       },
-      user_first_name: "Complete",
-      user_last_name: "Flow",
-      user_email: "complete@flowagency.com",
-      user_password: "securepassword123",
       plan: "starter"
     }
 
@@ -237,12 +241,13 @@ class SignupFlowTest < ActionDispatch::IntegrationTest
 
     account.reload
 
-    assert_equal "Complete Flow Agency", account.name
+    assert_equal "Complete Flow Group", account.name
     assert_equal "cus_complete_flow", account.stripe_customer_id
     assert_equal "sub_complete_flow", account.stripe_subscription_id
     assert_equal "active", account.subscription_status
     assert account.subscription_active?
 
+    assert_equal "Complete Flow Agency", agency.name
     assert_equal account, agency.account
     assert agency.active?
 

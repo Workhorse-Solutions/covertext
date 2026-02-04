@@ -41,6 +41,8 @@ CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text
 - Belongs to Account: `belongs_to :account`
 - Has operational data: `has_many :clients`, `has_many :policies`, `has_many :requests`
 - Key fields: `phone_sms` (Twilio number), `active` (boolean)
+- **phone_sms is optional:** NOT collected during signup; agencies provision Twilio numbers later via admin panel
+- Validation: `validates :phone_sms, uniqueness: true, allow_nil: true` (allows creation without phone number)
 - Key methods: `can_go_live?`, `activate!`, `deactivate!`
 - Does NOT have `has_many :users` (users belong to Account)
 
@@ -88,6 +90,37 @@ current_agency    # Returns current_user.account.agencies.where(active: true).fi
 - Singular `resource` routes expect **plural** controller names
   - `resource :account` → `Admin::AccountsController` (not AccountController)
   - View folder: `app/views/admin/accounts/` (not account/)
+
+## View Conventions
+
+### Form Fields
+- **Always use `UI::Form::FieldComponent`** for form fields with form builders
+- Component handles labels, inputs, hints, and inline validation errors automatically
+- Example:
+  ```erb
+  <%= render UI::Form::FieldComponent.new(form: f, attribute: :name, label: "Name", hint: "Optional helper text") do |field| %>
+    <%= field.with_input do %>
+      <%= f.text_field :name, class: "input input-bordered w-full" %>
+    <% end %>
+  <% end %>
+  ```
+- For tag helpers (without form builder), match the component's structure:
+  - Use `class: "label text-neutral text-base font-semibold pb-1"` for labels
+  - Use `<p class="mt-1 text-xs text-base-content/60">` for hints
+  - Wrap in `<div class="form-control">`
+
+### Form Validation Errors
+- **Prefer inline field-level errors** over error summary lists
+- `UI::Form::FieldComponent` automatically displays errors next to fields
+- Do NOT use summary blocks like:
+  ```erb
+  <% if @model.errors.any? %>
+    <div class="alert alert-error">
+      <ul><% @model.errors.full_messages.each do |msg| %>...</ul>
+    </div>
+  <% end %>
+  ```
+- Why: Field-level errors provide better UX by showing errors in context
 
 ## Signup & Billing Flow
 

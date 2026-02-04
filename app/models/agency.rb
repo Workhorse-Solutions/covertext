@@ -9,7 +9,7 @@ class Agency < ApplicationRecord
   has_many :sms_opt_outs, dependent: :destroy
 
   validates :name, presence: true
-  validates :phone_sms, presence: true, uniqueness: true
+  validates :phone_sms, uniqueness: true, allow_nil: true
 
   def can_go_live?
     active? && account.subscription_active? && live_enabled?

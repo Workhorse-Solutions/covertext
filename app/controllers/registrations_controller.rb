@@ -4,7 +4,9 @@ class RegistrationsController < ApplicationController
   skip_before_action :require_authentication
 
   def new
-    @agency = Agency.new
+    @registration = RegistrationForm.new
+    @selected_plan = selected_plan_from_params
+    @plan_info = Plan.info(@selected_plan)
   end
 
   def create
@@ -12,33 +14,21 @@ class RegistrationsController < ApplicationController
     plan = params[:plan]&.to_sym
     plan = Plan.default unless Plan.valid?(plan)
 
-    # Create Account first
-    @account = Account.new(
-      name: agency_params[:name],
-      plan_tier: plan
+    @registration = RegistrationForm.new(
+      account_name: params[:registration]&.dig(:account_name),
+      plan_tier: plan.to_s,
+      agency_name: params[:registration]&.dig(:agency_name),
+
+      user_first_name: params[:registration]&.dig(:user_first_name),
+      user_last_name: params[:registration]&.dig(:user_last_name),
+      user_email: params[:registration]&.dig(:user_email),
+      user_password: params[:registration]&.dig(:user_password)
     )
 
-    @agency = @account.agencies.build(agency_params)
-    @agency.live_enabled = false # Always start as non-live
-    @agency.active = true
-
-    ActiveRecord::Base.transaction do
-      @account.save!
-      @agency.save!
-
-      # Create owner user for the account
-      user = @account.users.create!(
-        first_name: params[:user_first_name],
-        last_name: params[:user_last_name],
-        email: params[:user_email],
-        password: params[:user_password],
-        password_confirmation: params[:user_password],
-        role: "owner"
-      )
-
+    if @registration.save
       # Create Stripe checkout session
       session = Stripe::Checkout::Session.create(
-        customer_email: user.email,
+        customer_email: @registration.user.email,
         mode: "subscription",
         line_items: [ {
           price: stripe_price_id_for_plan(plan),
@@ -47,24 +37,28 @@ class RegistrationsController < ApplicationController
         success_url: signup_success_url(session_id: "{CHECKOUT_SESSION_ID}", plan: plan),
         cancel_url: signup_url(plan: plan),
         metadata: {
-          account_id: @account.id,
-          agency_id: @agency.id,
-          user_id: user.id,
+          account_id: @registration.account.id,
+          agency_id: @registration.agency.id,
+          user_id: @registration.user.id,
           plan_tier: plan
         },
         subscription_data: {
           metadata: {
-            account_id: @account.id,
+            account_id: @registration.account.id,
             plan_tier: plan
           }
         }
       )
 
       redirect_to session.url, allow_other_host: true
+    else
+      @selected_plan = selected_plan_from_params
+      @plan_info = Plan.info(@selected_plan)
+      render :new, status: :unprocessable_entity
     end
-  rescue ActiveRecord::RecordInvalid => e
-    render :new, status: :unprocessable_entity
   rescue Stripe::StripeError => e
+    @selected_plan = selected_plan_from_params
+    @plan_info = Plan.info(@selected_plan)
     flash[:alert] = "Payment setup failed: #{e.message}"
     render :new, status: :unprocessable_entity
   end
@@ -108,6 +102,11 @@ class RegistrationsController < ApplicationController
 
   def agency_params
     params.require(:agency).permit(:name, :phone_sms)
+  end
+
+  def selected_plan_from_params
+    plan = params[:plan]&.to_sym
+    Plan.valid?(plan) ? plan : Plan.default
   end
 
   def stripe_price_id_for_plan(plan)
