@@ -3,7 +3,8 @@ ENV["RAILS_ENV"] ||= "test"
 # Set test credentials before loading environment
 ENV["TWILIO_ACCOUNT_SID"] ||= "test_account_sid"
 ENV["TWILIO_AUTH_TOKEN"] ||= "test_auth_token"
-# Stripe keys now come from config/credentials/test.yml.enc
+ENV["STRIPE_SECRET_KEY"] ||= "sk_test_mock_key_for_testing"
+ENV["STRIPE_PUBLISHABLE_KEY"] ||= "pk_test_mock_key_for_testing"
 
 require_relative "../config/environment"
 require "rails/test_help"
