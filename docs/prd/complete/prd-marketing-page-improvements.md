@@ -2,12 +2,13 @@
 
 ## Status Summary
 
-**Overall Status:** ✅ **Launch Ready** (with 1 minor admin UI issue)
+**Overall Status:** ✅ **COMPLETE**
 
-**Last Updated:** February 4, 2026
+**Completed:** February 4, 2026
 
-### Completed (8/8 User Stories)
+### All User Stories Complete (8/8)
 - ✅ US-001: Global public header with navigation
+- ✅ US-002: "Pilot" language removed from all public/signup pages
 - ✅ US-003: Refined hero and marketing copy
 - ✅ US-004: "What CoverText Does NOT Do" section clarity
 - ✅ US-005: Consistent footer navigation
@@ -15,17 +16,14 @@
 - ✅ US-007: Tier selection flow from marketing to signup
 - ✅ US-008: Stripe 3-tier pricing configuration (monthly + yearly)
 
-### Partially Complete (1/8 User Stories)
-- ⚠️ US-002: "Pilot" language removed from public pages, but admin billing page still shows old plan names
+### Notes
 
-### Known Issues
+**Out of Scope (Admin UI):**
+- Admin billing page still shows outdated "Pilot" and "Growth" plan cards
+- This was explicitly excluded from PRD scope (see Non-Goals: "Billing admin UI updates deferred")
+- Recommend creating separate "Admin UI Refresh" PRD to address this
 
-**Admin UI (Cosmetic):**
-- Admin billing page (`app/views/admin/billing/show.html.erb`) displays outdated "Pilot" and "Growth" plan cards
-- This is admin-only UI and does not affect customer-facing signup or subscription functionality
-- Can be addressed in a future admin UI refresh
-
-**Development Workflow (Fixed):**
+**Development Workflow Fix (Bonus):**
 - ~~`bin/ci` was calling `bin/setup` which destroyed development database with `db:seed`~~
 - ✅ **FIXED:**
   - `config/ci.rb`: Changed from `bin/setup --skip-server` to `bin/rails db:test:prepare` (only touches test DB)
