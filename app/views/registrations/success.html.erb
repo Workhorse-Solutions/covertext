@@ -1,0 +1,68 @@
+<% content_for :title, "Complete Your Signup - CoverText" %>
+
+<%= render UI::SectionComponent.new(class_name: "min-h-screen flex items-center justify-center", inner_class: "w-full md:w-1/2 mx-auto") do %>
+  <%= render UI::CardComponent.new do %>
+    <div>
+      <h2 class="text-center text-3xl font-bold text-primary">Welcome to CoverText!</h2>
+      <p class="mt-2 text-center text-sm text-base-content/60">
+        Payment successful. Set your password to complete your account setup.
+      </p>
+    </div>
+
+    <div class="mt-8 space-y-6">
+      <!-- Account/Agency Info (from Stripe) -->
+      <div class="bg-base-200 rounded-lg p-4 space-y-2">
+        <div>
+          <span class="text-sm font-semibold text-base-content/60">Account:</span>
+          <span class="ml-2"><%= @registration.account_name %></span>
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-base-content/60">Agency:</span>
+          <span class="ml-2"><%= @registration.agency_name %></span>
+        </div>
+      </div>
+
+      <!-- User Info (from Stripe) -->
+      <div class="form-control">
+        <label class="label text-neutral text-base font-semibold pb-1">
+          <span class="label-text">Name (from payment info)</span>
+        </label>
+        <input type="text" value="<%= "#{@registration.first_name} #{@registration.last_name}".strip %>" class="input input-bordered w-full" disabled>
+      </div>
+
+      <div class="form-control">
+        <label class="label text-neutral text-base font-semibold pb-1">
+          <span class="label-text">Email (from payment info)</span>
+        </label>
+        <input type="email" value="<%= @registration.email %>" class="input input-bordered w-full" disabled>
+        <p class="mt-1 text-xs text-base-content/60">This will be your login email</p>
+      </div>
+
+      <!-- Password Form -->
+      <%= form_with url: signup_complete_path, method: :post, class: "space-y-6" do |f| %>
+        <%= hidden_field_tag :session_id, @session_id %>
+
+        <div class="divider">Set Your Password</div>
+
+        <div class="form-control">
+          <label class="label text-neutral text-base font-semibold pb-1">
+            <span class="label-text">Password</span>
+          </label>
+          <%= password_field_tag :password, nil, class: "input input-bordered w-full", required: true, minlength: 8, placeholder: "Enter your password" %>
+          <p class="mt-1 text-xs text-base-content/60">Minimum 8 characters</p>
+        </div>
+
+        <div class="form-control">
+          <label class="label text-neutral text-base font-semibold pb-1">
+            <span class="label-text">Confirm Password</span>
+          </label>
+          <%= password_field_tag :password_confirmation, nil, class: "input input-bordered w-full", required: true, minlength: 8, placeholder: "Confirm your password" %>
+        </div>
+
+        <div>
+          <%= submit_tag "Complete Signup", class: "btn btn-primary w-full btn-lg" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

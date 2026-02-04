@@ -2,92 +2,68 @@
 
 <%= render UI::SectionComponent.new(class_name: "min-h-screen flex items-center justify-center", inner_class: "w-full md:w-1/2 mx-auto") do %>
   <%= render UI::CardComponent.new do %>
-    <div>
-      <h2 class="text-center text-3xl font-bold text-primary">Create Your Account</h2>
-      <p class="mt-2 text-center text-sm text-base-content/60">
-        Sign up for the <span class="font-semibold"><%= @plan_info[:name] %> Plan</span>
-      </p>
-
-      <!-- Billing Interval Toggle -->
-      <div class="mt-4" data-controller="billing-interval" data-billing-interval-monthly-price-value="<%= @plan_info[:monthly_price] %>" data-billing-interval-yearly-price-value="<%= @plan_info[:yearly_price] %>">
-        <%= render UI::Form::BillingIntervalToggleComponent.new(
-          name: "billing_interval",
-          selected: @selected_interval,
-          show_badge: true,
-          badge_text: "Save 20%",
-          data: {
-            action: "change->billing-interval#updatePrice"
-          }
-        ) do |c| %>
-          <%= c.with_price_display do %>
-            <p class="mt-2 text-center text-2xl font-bold" data-billing-interval-target="priceDisplay">
-              <%= @selected_interval == :yearly ? @plan_info[:yearly_price_display] : @plan_info[:monthly_price_display] %>
-            </p>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-
-    <%= form_with model: @registration, url: signup_path, scope: :registration, class: "mt-8 space-y-6" do |f| %>
-      <%= hidden_field_tag :plan, @selected_plan %>
-      <%= hidden_field_tag :interval, @selected_interval, data: { billing_interval_target: "intervalField" } %>
-
-      <!-- Account Details -->
-      <%= render UI::Form::FieldComponent.new(form: f, attribute: :account_name, label: "Account Name") do |field| %>
-        <%= field.with_input do %>
-          <%= f.text_field :account_name, class: "input input-bordered w-full", required: true, placeholder: "Reliable Insurance Group" %>
-        <% end %>
-      <% end %>
-
-      <!-- Agency Details -->
-      <%= render UI::Form::FieldComponent.new(form: f, attribute: :agency_name, label: "Agency Name") do |field| %>
-        <%= field.with_input do %>
-          <%= f.text_field :agency_name, class: "input input-bordered w-full", required: true, placeholder: "Acme Insurance Agency" %>
-        <% end %>
-      <% end %>
-
-      <!-- User Details -->
-      <div class="divider">Admin User</div>
-
-      <div class="grid md:grid-cols-2 gap-4">
-        <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_first_name, label: "First Name") do |field| %>
-          <%= field.with_input do %>
-            <%= f.text_field :user_first_name, class: "input input-bordered w-full", required: true, placeholder: "John" %>
-          <% end %>
-        <% end %>
-
-        <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_last_name, label: "Last Name") do |field| %>
-          <%= field.with_input do %>
-            <%= f.text_field :user_last_name, class: "input input-bordered w-full", required: true, placeholder: "Doe" %>
-          <% end %>
-        <% end %>
-      </div>
-
-      <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_email, label: "Email") do |field| %>
-        <%= field.with_input do %>
-          <%= f.email_field :user_email, class: "input input-bordered w-full", required: true, placeholder: "admin@reliableinsurancegroup.com" %>
-        <% end %>
-      <% end %>
-
-      <%= render UI::Form::FieldComponent.new(form: f, attribute: :user_password, label: "Password") do |field| %>
-        <%= field.with_input do %>
-          <%= f.password_field :user_password, class: "input input-bordered w-full", required: true, placeholder: "Enter your password" %>
-        <% end %>
-      <% end %>
-
+    <div data-controller="billing-interval" data-billing-interval-monthly-price-value="<%= @plan_info[:monthly_price] %>" data-billing-interval-yearly-price-value="<%= @plan_info[:yearly_price] %>">
       <div>
-        <%= f.submit "Continue to Payment", class: "btn btn-primary w-full btn-lg" %>
+        <h2 class="text-center text-3xl font-bold text-primary">Create Your Account</h2>
+        <p class="mt-2 text-center text-sm text-base-content/60">
+          Sign up for the <span class="font-semibold"><%= @plan_info[:name] %> Plan</span>
+        </p>
+
+        <!-- Billing Interval Toggle -->
+        <div class="mt-4">
+          <%= render UI::Form::BillingIntervalToggleComponent.new(
+            name: "billing_interval",
+            selected: @selected_interval,
+            show_badge: true,
+            badge_text: "Save 20%",
+            data: {
+              action: "change->billing-interval#updatePrice"
+            }
+          ) do |c| %>
+            <%= c.with_price_display do %>
+              <p class="mt-2 text-center text-2xl font-bold" data-billing-interval-target="priceDisplay">
+                <%= @selected_interval == :yearly ? @plan_info[:yearly_price_display] : @plan_info[:monthly_price_display] %>
+              </p>
+            <% end %>
+          <% end %>
+        </div>
       </div>
 
-      <div class="text-center text-sm">
-        <p class="text-base-content/60">
-          You'll be redirected to Stripe to complete payment setup.
-          Cancel anytime.
-        </p>
-        <p class="mt-2">
-          <%= link_to "← Back to Homepage", root_path, class: "link link-primary" %>
-        </p>
-      </div>
-    <% end %>
+<%= form_with url: signup_path, method: :post, class: "mt-8 space-y-6", data: { turbo: false } do |f| %>
+        <%= hidden_field_tag :plan, @selected_plan %>
+        <%= hidden_field_tag :interval, @selected_interval, data: { billing_interval_target: "intervalField" } %>
+
+        <!-- Account Details -->
+        <div class="form-control">
+          <label class="label text-neutral text-base font-semibold pb-1">
+            <span class="label-text">Account Name</span>
+          </label>
+          <%= text_field_tag :account_name, params[:account_name], class: "input input-bordered w-full", required: true, placeholder: "Reliable Insurance Group" %>
+          <p class="mt-1 text-xs text-base-content/60">Your company or organization name</p>
+        </div>
+
+        <!-- Agency Details -->
+        <div class="form-control">
+          <label class="label text-neutral text-base font-semibold pb-1">
+            <span class="label-text">Agency Name</span>
+          </label>
+          <%= text_field_tag :agency_name, params[:agency_name], class: "input input-bordered w-full", required: true, placeholder: "Downtown Office" %>
+          <p class="mt-1 text-xs text-base-content/60">Location or branch name</p>
+        </div>
+
+        <div>
+          <%= submit_tag "Continue to Payment", class: "btn btn-primary w-full btn-lg" %>
+        </div>
+
+        <div class="text-center text-sm">
+          <p class="text-base-content/60">
+            You'll enter your contact info and payment details on the next screen.
+            Cancel anytime.
+          </p>
+          <p class="mt-2">
+            <%= link_to "← Back to Homepage", root_path, class: "link link-primary" %>
+          </p>
+        </div>
+      <% end %>
   <% end %>
 <% end %>

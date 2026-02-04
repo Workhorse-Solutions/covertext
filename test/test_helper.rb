@@ -1,22 +1,22 @@
 ENV["RAILS_ENV"] ||= "test"
+
+# Set test credentials before loading environment
+ENV["TWILIO_ACCOUNT_SID"] ||= "test_account_sid"
+ENV["TWILIO_AUTH_TOKEN"] ||= "test_auth_token"
+# Stripe keys now come from config/credentials/test.yml.enc
+
 require_relative "../config/environment"
 require "rails/test_help"
 require "webmock/minitest"
-
-# Ensure Twilio is stubbed in tests
-ENV["TWILIO_ACCOUNT_SID"] ||= "test_account_sid"
-ENV["TWILIO_AUTH_TOKEN"] ||= "test_auth_token"
-
-# Set test Stripe API key
-Stripe.api_key = "sk_test_123456789"
 
 # Configure WebMock
 WebMock.disable_net_connect!(allow_localhost: true)
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # Disable parallel tests due to WebMock stub timing issues
+    # parallelize(workers: :number_of_processors)
+    parallelize(workers: 1)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
@@ -40,8 +40,16 @@ module ActiveSupport
     private
 
     def stub_stripe_api_calls
-      # Stub common Stripe API endpoints to prevent real API calls
-      stub_request(:any, /api.stripe.com/).to_return(
+      # Stub Stripe Customer retrieval (most common call in tests)
+      stub_request(:get, %r{https://api\.stripe\.com/v1/customers/.*})
+        .to_return(
+          status: 200,
+          body: { id: "cus_default", email: "default@example.com" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      # Stub all other Stripe API endpoints as fallback
+      stub_request(:any, /api\.stripe\.com/).to_return(
         status: 200,
         body: { id: "stub_response" }.to_json,
         headers: { "Content-Type" => "application/json" }

@@ -144,7 +144,7 @@ production:
   primary: &primary_production
     <<: *default
     database: covertext_production
-    url: <%= Rails.application.credentials.dig(:database, :url) %>
+    url: <%= Rails.application.credentials.dig(:database, :url) rescue nil %>
   # Use SQLite for Solid trifecta (faster, cheaper, simpler than Postgres)
   cable:
     adapter: sqlite3

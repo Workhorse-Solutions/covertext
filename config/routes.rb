@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   get "signup", to: "registrations#new"
   post "signup", to: "registrations#create"
   get "signup/success", to: "registrations#success", as: :signup_success
+  post "signup/complete", to: "registrations#complete", as: :signup_complete
 
   # Twilio webhooks
   namespace :webhooks do
