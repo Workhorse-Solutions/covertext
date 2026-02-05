@@ -1,0 +1,69 @@
+/* Admin-specific Tailwind styles */
+
+@layer components {
+  /* Admin sidebar menu items */
+  .admin-menu-item {
+    @apply flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors;
+    @apply text-base-content/70 hover:bg-base-200 hover:text-base-content;
+  }
+
+  .admin-menu-item.active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  /* Admin page header */
+  .admin-page-header {
+    @apply mb-6 border-b border-base-300 pb-4;
+  }
+
+  .admin-page-title {
+    @apply text-2xl font-bold text-base-content;
+  }
+
+  /* Admin cards/panels */
+  .admin-card {
+    @apply rounded-lg border border-base-300 bg-base-100 p-6 shadow-sm;
+  }
+
+  .admin-card-header {
+    @apply mb-4 flex items-center justify-between border-b border-base-300 pb-3;
+  }
+
+  .admin-card-title {
+    @apply text-lg font-semibold text-base-content;
+  }
+
+  /* Admin stats/metrics */
+  .admin-stat {
+    @apply rounded-lg border border-base-300 bg-base-100 p-4;
+  }
+
+  .admin-stat-value {
+    @apply text-3xl font-bold text-base-content;
+  }
+
+  .admin-stat-label {
+    @apply mt-1 text-sm text-base-content/60;
+  }
+
+  /* Admin table styles */
+  .admin-table {
+    @apply w-full table-auto;
+  }
+
+  .admin-table thead {
+    @apply border-b border-base-300 bg-base-200/50;
+  }
+
+  .admin-table th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-base-content;
+  }
+
+  .admin-table td {
+    @apply border-b border-base-300 px-4 py-3 text-sm;
+  }
+
+  .admin-table tbody tr {
+    @apply transition-colors hover:bg-base-200/50;
+  }
+}

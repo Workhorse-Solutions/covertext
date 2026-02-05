@@ -2,6 +2,9 @@
 
 @source not "./daisyui{,*}.mjs";
 
+/* Import admin-specific styles */
+@import "../stylesheets/admin.css";
+
 /* Enable daisyUI + built-in themes */
 @plugin "./daisyui.mjs" {
   themes: light --default, dark --prefersdark, corporate;
