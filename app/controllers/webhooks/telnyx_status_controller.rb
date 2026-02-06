@@ -61,6 +61,7 @@ module Webhooks
       rescue Telnyx::SignatureVerificationError => e
         Rails.logger.error "[TelnyxStatus] Signature verification failed: #{e.message}"
         head :unauthorized
+        nil
       ensure
         request.body.rewind
       end

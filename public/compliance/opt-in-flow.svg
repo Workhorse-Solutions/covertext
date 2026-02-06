@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Opt-In Workflow Diagram for Carrier Compliance
+  This image demonstrates the SMS opt-in process for CoverText
+  Served statically from /public/compliance/ for Telnyx Toll-Free verification
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <style>
+      .title { font: bold 24px sans-serif; fill: #1a202c; }
+      .step-title { font: bold 18px sans-serif; fill: #2d3748; }
+      .step-text { font: 14px sans-serif; fill: #4a5568; }
+      .box { fill: #fff; stroke: #cbd5e0; stroke-width: 2; }
+      .highlight-box { fill: #edf2f7; stroke: #4299e1; stroke-width: 2; }
+      .arrow { fill: none; stroke: #4299e1; stroke-width: 2; marker-end: url(#arrowhead); }
+      .stop-help { font: bold 12px sans-serif; fill: #e53e3e; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4299e1" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" class="title">SMS Opt-In Workflow</text>
+  
+  <!-- Step 1: Customer Initiates -->
+  <rect x="50" y="80" width="300" height="100" rx="8" class="highlight-box"/>
+  <text x="200" y="110" text-anchor="middle" class="step-title">1. Customer Initiates Contact</text>
+  <text x="200" y="135" text-anchor="middle" class="step-text">Customer texts agency's toll-free number</text>
+  <text x="200" y="155" text-anchor="middle" class="step-text">Example: "I need my insurance card"</text>
+  
+  <!-- Arrow 1 to 2 -->
+  <path d="M 200 180 L 200 220" class="arrow"/>
+  
+  <!-- Step 2: System Confirms Opt-In -->
+  <rect x="50" y="220" width="300" height="100" rx="8" class="highlight-box"/>
+  <text x="200" y="250" text-anchor="middle" class="step-title">2. System Confirms Opt-In</text>
+  <text x="200" y="275" text-anchor="middle" class="step-text">Automated reply confirms enrollment</text>
+  <text x="200" y="295" text-anchor="middle" class="step-text">"Reply STOP to opt-out, HELP for help"</text>
+  
+  <!-- Arrow 2 to 3 -->
+  <path d="M 200 320 L 200 360" class="arrow"/>
+  
+  <!-- Step 3: Service Messages -->
+  <rect x="50" y="360" width="300" height="100" rx="8" class="highlight-box"/>
+  <text x="200" y="390" text-anchor="middle" class="step-title">3. Service Messages Sent</text>
+  <text x="200" y="415" text-anchor="middle" class="step-text">Customer receives requested documents</text>
+  <text x="200" y="435" text-anchor="middle" class="step-text">Policy info, insurance cards, etc.</text>
+  
+  <!-- Step 4: Opt-Out Options (right side) -->
+  <rect x="450" y="220" width="300" height="240" rx="8" class="box"/>
+  <text x="600" y="250" text-anchor="middle" class="step-title">Opt-Out Controls</text>
+  
+  <!-- STOP command -->
+  <rect x="470" y="270" width="260" height="70" rx="4" fill="#fff5f5" stroke="#fc8181" stroke-width="1"/>
+  <text x="600" y="295" text-anchor="middle" class="stop-help">STOP</text>
+  <text x="600" y="315" text-anchor="middle" class="step-text">Customer texts "STOP" to unsubscribe</text>
+  <text x="600" y="330" text-anchor="middle" class="step-text">immediately from all messages</text>
+  
+  <!-- HELP command -->
+  <rect x="470" y="355" width="260" height="70" rx="4" fill="#f0fff4" stroke="#68d391" stroke-width="1"/>
+  <text x="600" y="380" text-anchor="middle" style="font: bold 12px sans-serif; fill: #38a169;">HELP</text>
+  <text x="600" y="400" text-anchor="middle" class="step-text">Customer texts "HELP" for support</text>
+  <text x="600" y="415" text-anchor="middle" class="step-text">information and contact details</text>
+  
+  <!-- Arrow from Step 2/3 to Opt-Out -->
+  <path d="M 350 270 L 450 270" class="arrow"/>
+  
+  <!-- Footer Note -->
+  <text x="400" y="550" text-anchor="middle" style="font: italic 12px sans-serif; fill: #718096;">
+    All messages are transactional and service-related. No marketing messages sent.
+  </text>
+  <text x="400" y="570" text-anchor="middle" style="font: italic 12px sans-serif; fill: #718096;">
+    Customers must initiate contact to receive messages.
+  </text>
+</svg>

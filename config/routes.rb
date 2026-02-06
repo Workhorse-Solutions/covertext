@@ -26,6 +26,11 @@ Rails.application.routes.draw do
     get "documents/:signed_id", to: "documents#show", as: :document
   end
 
+  # Compliance assets (carrier verification, toll-free registration, etc.)
+  namespace :compliance do
+    get "opt-in-flow.png", to: "opt_in_flow#show", as: :opt_in_flow
+  end
+
   # Admin dashboard
   namespace :admin do
     resources :requests, only: [ :index, :show ]
