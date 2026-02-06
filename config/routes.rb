@@ -16,6 +16,8 @@ Rails.application.routes.draw do
   namespace :webhooks do
     post "twilio/inbound", to: "twilio_inbound#create"
     post "twilio/status", to: "twilio_status#create"
+    post "telnyx/inbound", to: "telnyx_inbound#create"
+    post "telnyx/status", to: "telnyx_status#create"
     post "stripe", to: "stripe_webhooks#create"
   end
 

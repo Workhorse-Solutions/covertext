@@ -335,7 +335,7 @@ class ConversationManager
 
     # Send MMS
     body = MessageTemplates::CARD_DELIVERY % { label: policy.label }
-    OutboundMessenger.send_mms!(
+    OutboundMessenger::Telnyx.send_mms!(
       agency: message_log.agency,
       to_phone: message_log.from_phone,
       body: body,
@@ -383,7 +383,7 @@ class ConversationManager
 
     # Send SMS with expiration info
     body = MessageTemplates::EXPIRE_DELIVERY % { label: policy.label, expires_on: formatted_date }
-    OutboundMessenger.send_sms!(
+    OutboundMessenger::Telnyx.send_sms!(
       agency: message_log.agency,
       to_phone: message_log.from_phone,
       body: body,
@@ -506,7 +506,7 @@ class ConversationManager
   end
 
   def send_simple_message(body)
-    OutboundMessenger.send_sms!(
+    OutboundMessenger::Telnyx.send_sms!(
       agency: message_log.agency,
       to_phone: message_log.from_phone,
       body: body
@@ -534,7 +534,7 @@ class ConversationManager
   end
 
   def send_full_menu
-    OutboundMessenger.send_sms!(
+    OutboundMessenger::Telnyx.send_sms!(
       agency: message_log.agency,
       to_phone: message_log.from_phone,
       body: MessageTemplates::GLOBAL_MENU
@@ -543,7 +543,7 @@ class ConversationManager
   end
 
   def send_short_menu
-    OutboundMessenger.send_sms!(
+    OutboundMessenger::Telnyx.send_sms!(
       agency: message_log.agency,
       to_phone: message_log.from_phone,
       body: MessageTemplates::GLOBAL_MENU_SHORT

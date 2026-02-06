@@ -25,6 +25,10 @@ gem "bcrypt", "~> 3.1.7"
 # Twilio SDK for SMS/MMS
 gem "twilio-ruby", "~> 7.3"
 
+# Telnyx SDK for SMS/MMS
+gem "telnyx", "~> 3.0"
+gem "faraday-retry"  # Required by telnyx gem
+
 # Stripe for subscription billing
 gem "stripe", "~> 18.3"
 
