@@ -16,11 +16,11 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 
 ## User Stories
 
-### US-001: Add TelnyxTollFreeVerification model and migration
+### US-001: Add TelnyxTollFreeVerification model and migration ✅ COMPLETED
 **Description:** As a developer, I need a database model to store toll-free verification requests scoped to an agency.
 
 **Acceptance Criteria:**
-- [ ] Create migration for `telnyx_toll_free_verifications` table with columns:
+- [x] Create migration for `telnyx_toll_free_verifications` table with columns:
   - `agency_id` (bigint, not null, foreign key to agencies)
   - `telnyx_number` (string, not null) — the toll-free number being verified (E.164)
   - `telnyx_request_id` (string, nullable) — Telnyx's `id` from response, set after submission
@@ -30,33 +30,33 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
   - `submitted_at` (datetime, nullable)
   - `last_status_at` (datetime, nullable)
   - `created_at`, `updated_at` (timestamps)
-- [ ] Add unique composite index on `[:agency_id, :telnyx_number]`
-- [ ] Add index on `[:status]` for polling queries
-- [ ] Create `TelnyxTollFreeVerification` model with:
+- [x] Add unique composite index on `[:agency_id, :telnyx_number]`
+- [x] Add index on `[:status]` for polling queries
+- [x] Create `TelnyxTollFreeVerification` model with:
   - `belongs_to :agency`
   - Validations: `agency`, `telnyx_number` presence; `status` inclusion in allowed values; `telnyx_number` uniqueness scoped to `agency_id`
   - `STATUSES` constant with all valid statuses
   - Predicate methods: `draft?`, `submitted?`, `approved?`, `rejected?`, `terminal?`
-- [ ] Add `has_many :telnyx_toll_free_verifications, dependent: :destroy` to Agency model
-- [ ] Migration runs cleanly: `bin/rails db:migrate`
-- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
+- [x] Add `has_many :telnyx_toll_free_verifications, dependent: :destroy` to Agency model
+- [x] Migration runs cleanly: `bin/rails db:migrate`
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
 
-### US-002: Telnyx API client for toll-free verification
+### US-002: Telnyx API client for toll-free verification ✅ COMPLETED
 **Description:** As a developer, I need a small HTTP client wrapper to submit and check status of toll-free verification requests via the Telnyx REST API.
 
 **Acceptance Criteria:**
-- [ ] Create `Telnyx::TollFreeVerification` service in `app/services/telnyx/toll_free_verification.rb`
-- [ ] Uses `Net::HTTP` (no heavy gems) — the existing `telnyx` gem does not cover this API endpoint
-- [ ] Reads API key from `Rails.application.credentials.dig(:telnyx, :api_key)` with fallback to `ENV["TELNYX_API_KEY"]`
-- [ ] Implements class method `submit!(verification)`:
+- [x] Create `Telnyx::TollFreeVerification` service in `app/services/telnyx/toll_free_verification.rb`
+- [x] Uses `Net::HTTP` (no heavy gems) — the existing `telnyx` gem does not cover this API endpoint
+- [x] Reads API key from `Rails.application.credentials.dig(:telnyx, :api_key)` with fallback to `ENV["TELNYX_API_KEY"]`
+- [x] Implements class method `submit!(verification)`:
   - POSTs to `https://api.telnyx.com/v2/messaging_tollfree/verification/requests`
   - Sends `Authorization: Bearer <api_key>` header and `Content-Type: application/json`
   - Request body is `verification.payload` (already built as a Hash)
   - On success (HTTP 200/201): updates `verification` with `telnyx_request_id` (from response `id`), sets `status` to `"submitted"`, sets `submitted_at`
   - On failure: sets `last_error` with response body, does NOT change status
   - Returns the updated verification record
-- [ ] Implements class method `fetch_status!(verification)`:
+- [x] Implements class method `fetch_status!(verification)`:
   - GETs `https://api.telnyx.com/v2/messaging_tollfree/verification/requests/{telnyx_request_id}`
   - Maps Telnyx `verificationStatus` values to CoverText statuses:
     - `"In Progress"` / `"Waiting For Telnyx"` / `"Waiting For Vendor"` → `"in_review"`
@@ -66,9 +66,9 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
   - Updates `verification.status` and `last_status_at`
   - If response includes `reason`, saves it to `last_error`
   - Returns the updated verification record
-- [ ] Gracefully handles network errors (timeout, connection refused) by setting `last_error`
-- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
+- [x] Gracefully handles network errors (timeout, connection refused) by setting `last_error`
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
 
 ### US-003: Payload generator service
 **Description:** As a developer, I need a deterministic service that builds the Telnyx API request payload from agency-provided business info and CoverText defaults.
