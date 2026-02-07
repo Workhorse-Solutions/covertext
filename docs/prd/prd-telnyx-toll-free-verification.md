@@ -73,10 +73,12 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 ### US-003: Payload generator service
 **Description:** As a developer, I need a deterministic service that builds the Telnyx API request payload from agency-provided business info and CoverText defaults.
 
+**Note:** Business info is NOT stored in the CoverText database — it's collected from the form and passed directly to Telnyx via the payload.
+
 **Acceptance Criteria:**
 - [ ] Create `Telnyx::TollFreeVerificationPayload` service in `app/services/telnyx/toll_free_verification_payload.rb`
 - [ ] Class method `build(verification, business_info:)` returns a Hash with all required Telnyx fields
-- [ ] `business_info` is a Hash with keys the agency provides: `business_name`, `corporate_website`, `contact_first_name`, `contact_last_name`, `contact_email`, `contact_phone`, `address1`, `address2` (optional), `city`, `state`, `zip`, `country` (default `"US"`), `business_registration_number` (EIN), `business_registration_type` (default `"EIN"`), `entity_type` (default `"PRIVATE_PROFIT"`)
+- [ ] `business_info` is a Hash with keys the agency provides: `business_name`, `corporate_website`, `contact_first_name`, `contact_last_name`, `contact_email`, `contact_phone`, `address1`, `address2` (optional), `city`, `state`, `zip`, `country` (default `"US"`), `business_registration_number` (optional), `business_registration_type` (default `"EIN"`), `entity_type` (default `"PRIVATE_PROFIT"`)
 - [ ] CoverText auto-generates these fields in the payload:
   - `useCase`: `"Insurance Services"`
   - `messageVolume`: `"1,000"` (default)
@@ -144,21 +146,21 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 **Acceptance Criteria:**
 - [ ] Add `new` and `create` actions to `Admin::ComplianceController`
 - [ ] `new` action: renders a form pre-filled with known data (agency name, user name/email)
-- [ ] Form collects only what the agency must provide:
-  - Business name (pre-filled from agency name)
+- [ ] Form collects only what the agency must provide (note: these fields are NOT stored in the CoverText database, only passed to Telnyx):
+  - Business name (pre-filled from agency name, editable)
   - Corporate website (required)
-  - Contact first name (pre-filled from current_user)
-  - Contact last name (pre-filled from current_user)
-  - Contact email (pre-filled from current_user)
+  - Contact first name (pre-filled from current_user, editable)
+  - Contact last name (pre-filled from current_user, editable)
+  - Contact email (pre-filled from current_user, editable)
   - Contact phone (required, E.164)
   - Business address line 1 (required)
   - Business address line 2 (optional)
   - City (required)
   - State (required — full name, not abbreviation)
   - ZIP (required)
-  - Country (default "US", hidden or select)
-  - Business Registration Number / EIN (required as of Feb 2026)
-  - Business Registration Type (default "EIN", select)
+  - Country (hidden field, default "US" for MVP)
+  - Business Registration Number / EIN (optional)
+  - Business Registration Type (select: EIN, TAX_ID, DUNS; default "EIN")
   - Entity Type (select: SOLE_PROPRIETOR, PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT; default PRIVATE_PROFIT)
 - [ ] On submit:
   1. Build payload via `Telnyx::TollFreeVerificationPayload.build`
@@ -169,21 +171,23 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - [ ] Form uses `UI::Form::FieldComponent` for fields where form builder is available
 - [ ] Validation errors display inline per field
 - [ ] Guard: do not allow submission if agency has no `phone_sms`
-- [ ] Guard: do not allow submission if an active (non-rejected, non-draft) verification already exists
-- [ ] All tests pass (`bin/rails test`)
+- [ ] Guard: do not allow submission if an active (non-rejected, non-draft) verification already exists- [ ] Prevent concurrent submissions with UI debouncing (disable submit button on click) and backend idempotency check
+- [ ] After submission, the `payload` field should be immutable (frozen for audit trail)- [ ] All tests pass (`bin/rails test`)
 - [ ] Rubocop clean
 - [ ] Verify in browser using dev server (`bin/dev`)
 
-### US-007: Compliance opt-in flow asset
+### US-007: Compliance opt-in flow asset ✅ COMPLETED
 **Description:** As a developer, I need a publicly accessible opt-in flow image at `/compliance/opt-in-flow.png` for the Telnyx verification payload.
 
+**Status:** Already implemented via `Compliance::OptInFlowController` with SVG/PNG support.
+
 **Acceptance Criteria:**
-- [ ] Place a PNG image at `public/compliance/opt-in-flow.png` (served statically by Rails, no controller needed)
+- [x] Place a PNG image at `public/compliance/opt-in-flow.png` (served statically by Rails, no controller needed)
   - If a real opt-in flow diagram isn't ready, place a placeholder PNG with text: "CoverText Opt-In Flow: Client initiates by texting the toll-free number. No marketing messages."
-- [ ] The existing `Compliance::OptInFlowController` route (`GET /compliance/opt-in-flow.png`) should serve the image, OR redirect to the static file if preferred
-- [ ] Verify `https://covertext.app/compliance/opt-in-flow.png` resolves (in production) or `http://localhost:3000/compliance/opt-in-flow.png` resolves (in dev)
-- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
+- [x] The existing `Compliance::OptInFlowController` route (`GET /compliance/opt-in-flow.png`) should serve the image, OR redirect to the static file if preferred
+- [x] Verify `https://covertext.app/compliance/opt-in-flow.png` resolves (in production) or `http://localhost:3000/compliance/opt-in-flow.png` resolves (in dev)
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
 
 ### US-008: Model and service tests
 **Description:** As a developer, I need test coverage for the verification model, payload generator, and Telnyx API client.
@@ -256,7 +260,7 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - FR-8: The system must not allow submission when the agency has no `phone_sms` assigned
 - FR-9: The system must not allow a new submission when an active (non-draft, non-rejected) verification already exists for the same agency+number
 - FR-10: A publicly accessible opt-in flow image must be available at `/compliance/opt-in-flow.png`
-- FR-11: The payload must include `businessRegistrationNumber`, `businessRegistrationType`, and `businessRegistrationCountry` (required by Telnyx as of Feb 2026)
+- FR-11: The payload should include `businessRegistrationNumber`, `businessRegistrationType`, and `businessRegistrationCountry` when provided by the agency (optional fields)
 - FR-12: All Telnyx API calls must happen in background jobs — never in the request cycle
 
 ## Non-Goals (Out of Scope)
@@ -270,6 +274,9 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - Marketing message support (transactional only)
 - Staff inbox or conversation UI
 - AI/LLM-powered form filling
+- Time-based override for stuck verifications (Phase 2 — surface to CoverText support to investigate)
+- Email/push notifications for verification status changes (Phase 2 — manual refresh for now)
+- Non-US business support (MVP assumes US-based agencies only)
 
 ## Design Considerations
 
@@ -341,8 +348,8 @@ Use `Net::HTTP` directly rather than adding Faraday or another gem. The existing
 
 ## Open Questions
 
-1. Should the opt-in flow image be a real diagram or a placeholder for Phase 1? (Placeholder is acceptable to start, but Telnyx may request a more detailed image during review.)
-2. Should we add a Telnyx webhook endpoint for verification status updates in Phase 1, or is polling sufficient? (Polling is simpler and avoids exposing another webhook.)
-3. Should we support re-submission of rejected verifications with edited business info, or require creating a new record? (New record for Phase 1.)
-4. What `messageVolume` should we default to — `"1,000"` or `"10,000"`? (Start with `"1,000"`, can be adjusted per agency later.)
-5. Do we need the `businessRegistrationCountry` to support non-US agencies in Phase 1? (Default `"US"` for now.)
+1. ~~Should the opt-in flow image be a real diagram or a placeholder for Phase 1?~~ **RESOLVED:** Real diagram already implemented via `Compliance::OptInFlowController`.
+2. ~~Should we add a Telnyx webhook endpoint for verification status updates in Phase 1, or is polling sufficient?~~ **RESOLVED:** Polling is sufficient for Phase 1.
+3. ~~Should we support re-submission of rejected verifications with edited business info, or require creating a new record?~~ **RESOLVED:** New record for Phase 1.
+4. ~~What `messageVolume` should we default to — `"1,000"` or `"10,000"`?~~ **RESOLVED:** Default to `"1,000"`.
+5. ~~Do we need the `businessRegistrationCountry` to support non-US agencies in Phase 1?~~ **RESOLVED:** Default `"US"` for MVP, non-US out of scope.

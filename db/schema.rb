@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_07_225739) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_07_232736) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,6 +176,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_07_225739) do
     t.index ["agency_id"], name: "index_sms_opt_outs_on_agency_id"
   end
 
+  create_table "telnyx_toll_free_verifications", force: :cascade do |t|
+    t.bigint "agency_id", null: false
+    t.datetime "created_at", null: false
+    t.text "last_error"
+    t.datetime "last_status_at"
+    t.jsonb "payload", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.datetime "submitted_at"
+    t.string "telnyx_number", null: false
+    t.string "telnyx_request_id"
+    t.datetime "updated_at", null: false
+    t.index ["agency_id", "telnyx_number"], name: "index_telnyx_tf_verifications_on_agency_and_number", unique: true
+    t.index ["agency_id"], name: "index_telnyx_toll_free_verifications_on_agency_id"
+    t.index ["status"], name: "index_telnyx_toll_free_verifications_on_status"
+  end
+
   create_table "users", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -207,5 +223,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_07_225739) do
   add_foreign_key "requests", "agencies"
   add_foreign_key "requests", "clients"
   add_foreign_key "sms_opt_outs", "agencies"
+  add_foreign_key "telnyx_toll_free_verifications", "agencies"
   add_foreign_key "users", "accounts"
 end

@@ -9,6 +9,7 @@ class Agency < ApplicationRecord
   has_many :message_logs, dependent: :destroy
   has_many :audit_events, dependent: :destroy
   has_many :sms_opt_outs, dependent: :destroy
+  has_many :telnyx_toll_free_verifications, dependent: :destroy
 
   validates :name, presence: true
   validates :phone_sms, uniqueness: true, allow_nil: true
