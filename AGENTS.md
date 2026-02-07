@@ -159,6 +159,27 @@ current_agency    # Returns current_user.account.agencies.where(active: true).fi
   ```
 - Why: Field-level errors provide better UX by showing errors in context
 
+### Heroicon Helper
+- **The `heroicon` helper does NOT accept a `class:` parameter**
+- Wrap heroicon in a span/div with classes instead
+- Correct usage:
+  ```erb
+  <span class="size-4">
+    <%= heroicon "check-circle", variant: :mini %>
+  </span>
+  ```
+- WRONG usage:
+  ```erb
+  <%= heroicon "check-circle", variant: :mini, class: "size-4" %>
+  ```
+- Example from existing code (admin/billing):
+  ```erb
+  <span class="size-6 shrink-0">
+    <%= heroicon "check-circle", variant: :outline %>
+  </span>
+  ```
+- Why: The heroicon gem doesn't support class parameter; passing it causes "unknown keyword: :class" errors
+
 ## Signup & Billing Flow
 
 ### Registration (RegistrationsController)
@@ -305,6 +326,7 @@ Ralph reads AGENTS.md and copilot-instructions.md on every iteration, so updatin
 - When PRD specifies new data model, update test expectations to match
 - Check both seed test files when updating seed expectations
 - Ralph story sizing: one story = one iteration (too big = runs out of context)
+- **Heroicon gem does NOT accept `class:` parameter** - wrap heroicon in `<span class="...">` instead (see View Conventions section)
 
 ## Known Test Issues
 - **Flaky test failures (Updated Feb 2026)**:

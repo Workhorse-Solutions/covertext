@@ -1,0 +1,172 @@
+<% content_for :title, "Messaging Compliance" %>
+
+<div class="container max-w-4xl py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold">Messaging Compliance</h1>
+    <p class="text-base-content/70 mt-2">
+      Verify your toll-free number with carriers to send SMS messages
+    </p>
+  </div>
+
+  <%= render UI::CardComponent.new do %>
+    <h2 class="text-xl font-semibold mb-4">Toll-Free Number Status</h2>
+
+      <% if current_agency.phone_sms.present? %>
+        <div class="mb-6">
+          <div class="label">
+            <span class="label-text text-base font-semibold">Assigned Number</span>
+          </div>
+          <div class="text-lg font-mono">
+            <%= current_agency.phone_sms %>
+          </div>
+        </div>
+
+        <% if @verification %>
+          <!-- Verification exists - show status -->
+          <div class="space-y-4">
+            <div>
+              <div class="label">
+                <span class="label-text text-base font-semibold">Verification Status</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <% if @verification.approved? %>
+                  <span class="badge badge-success gap-2">
+                    <span class="size-4"><%= heroicon "check-circle", variant: :mini %></span>
+                    Approved
+                  </span>
+                <% elsif @verification.rejected? %>
+                  <span class="badge badge-error gap-2">
+                    <span class="size-4"><%= heroicon "x-circle", variant: :mini %></span>
+                    Rejected
+                  </span>
+                <% elsif @verification.waiting_for_customer? %>
+                  <span class="badge badge-warning gap-2">
+                    <span class="size-4"><%= heroicon "exclamation-circle", variant: :mini %></span>
+                    Action Required
+                  </span>
+                <% elsif @verification.in_review? || @verification.submitted? %>
+                  <span class="badge badge-info gap-2">
+                    <span class="size-4"><%= heroicon "clock", variant: :mini %></span>
+                    In Review
+                  </span>
+                <% elsif @verification.draft? %>
+                  <span class="badge badge-ghost gap-2">
+                    <span class="size-4"><%= heroicon "document-text", variant: :mini %></span>
+                    Draft
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <% if @verification.submitted_at %>
+              <div>
+                <div class="label">
+                  <span class="label-text text-base font-semibold">Submitted</span>
+                </div>
+                <div class="text-base-content/70">
+                  <%= @verification.submitted_at.strftime("%B %d, %Y at %I:%M %p") %>
+                </div>
+              </div>
+            <% end %>
+
+            <% if @verification.last_status_at %>
+              <div>
+                <div class="label">
+                  <span class="label-text text-base font-semibold">Last Checked</span>
+                </div>
+                <div class="text-base-content/70">
+                  <%= @verification.last_status_at.strftime("%B %d, %Y at %I:%M %p") %>
+                </div>
+              </div>
+            <% end %>
+
+            <% if (@verification.waiting_for_customer? || @verification.rejected?) && @verification.last_error.present? %>
+              <div class="alert <%= @verification.rejected? ? 'alert-error' : 'alert-warning' %>">
+                <div>
+                  <span class="size-6 shrink-0"><%= heroicon @verification.rejected? ? "x-circle" : "exclamation-triangle", variant: :outline %></span>
+                  <div>
+                    <h3 class="font-bold">
+                      <%= @verification.rejected? ? "Verification Rejected" : "Additional Information Required" %>
+                    </h3>
+                    <div class="text-sm mt-1">
+                      <%= @verification.last_error %>
+                    </div>
+                    <% if @verification.waiting_for_customer? %>
+                      <p class="text-sm mt-2">
+                        Please review the feedback above and submit any additional documentation requested by the carrier.
+                      </p>
+                    <% elsif @verification.rejected? %>
+                      <p class="text-sm mt-2">
+                        You may need to submit a new verification request with corrected information.
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+
+            <% if @verification.approved? %>
+              <div class="alert alert-success">
+                <div>
+                  <span class="size-6 shrink-0"><%= heroicon "check-circle", variant: :outline %></span>
+                  <div>
+                    <h3 class="font-bold">Verification Complete</h3>
+                    <div class="text-sm">
+                      Your toll-free number is verified and ready to send messages.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+
+            <% if @verification.in_review? || @verification.submitted? %>
+              <div class="alert alert-info">
+                <div>
+                  <span class="size-6 shrink-0"><%= heroicon "information-circle", variant: :outline %></span>
+                  <div>
+                    <div class="text-sm">
+                      Your verification is being reviewed by the carrier. This typically takes 1-5 business days.
+                      Check back later for status updates.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <!-- No verification exists -->
+          <div class="alert alert-info">
+            <div>
+              <span class="size-6 shrink-0"><%= heroicon "information-circle", variant: :outline %></span>
+              <div>
+                <h3 class="font-bold">Verification Required</h3>
+                <div class="text-sm">
+                  Before you can send SMS messages, your toll-free number must be verified with carriers.
+                  This is a one-time process required by telecom regulations.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <%= link_to "Submit Verification Request", "#", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+
+      <% else %>
+        <!-- No phone number assigned -->
+        <div class="alert alert-warning">
+          <div>
+            <span class="size-6 shrink-0"><%= heroicon "exclamation-triangle", variant: :outline %></span>
+            <div>
+              <h3 class="font-bold">No Toll-Free Number Assigned</h3>
+              <div class="text-sm">
+                A toll-free number must be assigned to your agency before you can submit a verification request.
+                Please contact support to provision a toll-free number.
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+  <% end %>
+</div>

@@ -41,6 +41,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#show"
     resources :requests, only: [ :index, :show ]
     get "billing", to: "billing#show"
+    get "compliance", to: "compliance#show"
     resource :account, only: [ :show, :update ]
     post "dismiss_grace_period_banner", to: "banners#dismiss_grace_period"
     post "phone_provisioning", to: "phone_provisioning#create"

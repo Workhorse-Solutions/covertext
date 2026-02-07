@@ -118,14 +118,14 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - [ ] All tests pass (`bin/rails test`)
 - [ ] Rubocop clean
 
-### US-005: Admin "Messaging Compliance" page — read-only status view
+### US-005: Admin "Messaging Compliance" page — read-only status view ✅ COMPLETED
 **Description:** As an agency admin, I want to see the toll-free verification status for my agency's number so I know whether we're verified to send messages.
 
 **Acceptance Criteria:**
-- [ ] Create `Admin::ComplianceController` inheriting from `Admin::BaseController`
-- [ ] Action: `show` — loads the agency's most recent `TelnyxTollFreeVerification` (if any)
-- [ ] Add route: `get "compliance", to: "compliance#show"` inside the `admin` namespace
-- [ ] Create view `app/views/admin/compliance/show.html.erb`:
+- [x] Create `Admin::ComplianceController` inheriting from `Admin::BaseController`
+- [x] Action: `show` — loads the agency's most recent `TelnyxTollFreeVerification` (if any)
+- [x] Add route: `get "compliance", to: "compliance#show"` inside the `admin` namespace
+- [x] Create view `app/views/admin/compliance/show.html.erb`:
   - Show the agency's assigned toll-free number (`current_agency.phone_sms`) or "No toll-free number assigned" if nil
   - If a verification record exists, display:
     - Status badge (color-coded: green=approved, yellow=in_review/submitted, red=rejected, gray=draft, orange=waiting_for_customer)
@@ -134,11 +134,11 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
     - When `waiting_for_customer` or `rejected`: display `last_error` text in a warning/error alert box with guidance
   - If no verification exists and `phone_sms` is present: show "Submit Verification Request" button
   - If `phone_sms` is nil: show message that a toll-free number must be assigned first
-- [ ] Add "Messaging Compliance" link to admin sidebar navigation
-- [ ] Uses DaisyUI components (badges, alerts, cards) matching existing admin styling
-- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (`bin/dev`)
+- [x] Add "Messaging Compliance" link to admin sidebar navigation
+- [x] Uses DaisyUI components (badges, alerts, cards) matching existing admin styling
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (`bin/dev`)
 
 ### US-006: Admin verification submission form
 **Description:** As an agency admin, I want to fill in my business details and submit a toll-free verification request so my agency can start sending SMS.

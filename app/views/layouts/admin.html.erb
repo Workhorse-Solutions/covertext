@@ -50,6 +50,10 @@
               <span class="size-5"><%= heroicon "credit-card", variant: :mini %></span>
               <span>Billing</span>
             <% end %></li>
+            <li><%= link_to admin_compliance_path, class: "menu-item" do %>
+              <span class="size-5"><%= heroicon "shield-check", variant: :mini %></span>
+              <span>Messaging Compliance</span>
+            <% end %></li>
             <li><%= link_to admin_account_path, class: "menu-item" do %>
               <span class="size-5"><%= heroicon "cog-6-tooth", variant: :mini %></span>
               <span>Account Settings</span>
@@ -106,6 +110,10 @@
               <li><%= link_to admin_billing_path do %>
                 <span class="size-5"><%= heroicon "credit-card", variant: :mini %></span>
                 <span>Billing</span>
+              <% end %></li>
+              <li><%= link_to admin_compliance_path do %>
+                <span class="size-5"><%= heroicon "shield-check", variant: :mini %></span>
+                <span>Messaging Compliance</span>
               <% end %></li>
               <div class="divider my-1"></div>
               <li><%= link_to logout_path, data: { turbo_method: :delete }, class: "text-error" do %>
