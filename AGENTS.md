@@ -30,7 +30,8 @@ CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text
 ## Data Model Patterns
 
 ### Account Model
-- Handles Stripe billing: `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan_name`
+- Handles Stripe billing: `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan_tier`
+- `plan_tier` is an enum: `starter`, `professional`, `enterprise` (default: `starter`)
 - Validations: stripe IDs are `unique: true, allow_nil: true`
 - subscription_status uses inclusion validation with allowed values
 - Key methods: `subscription_active?`, `has_active_agency?`, `can_access_system?`, `owner`
@@ -178,7 +179,7 @@ Creates Account + Agency + User in transaction:
 - Use `OpenStruct` for mocking Stripe objects in tests
 
 ### Billing Controller
-- Uses `current_account` for subscription info (@account.plan_name, etc.)
+- Uses `current_account` for subscription info (@account.plan_tier, etc.)
 - Uses `current_agency` for agency-specific data (@agency.live_enabled, etc.)
 - Stripe portal session uses `current_account.stripe_customer_id`
 

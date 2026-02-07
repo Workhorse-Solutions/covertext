@@ -338,7 +338,7 @@ module Webhooks
       subscription = OpenStruct.new(
         id: "sub_unknown_123",
         status: "active",
-        metadata: OpenStruct.new(account_id: nil, plan_name: nil),
+        metadata: OpenStruct.new(account_id: nil, plan_tier: nil),
         cancel_at_period_end: false
       )
 
