@@ -3,10 +3,9 @@
 
   <% if !@agency.fully_ready? %>
     <!-- Setup State -->
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-2xl">Get CoverText Ready</h2>
-        <p class="text-base-content/70 mb-6">Complete these steps to start receiving client SMS requests.</p>
+    <%= render UI::CardComponent.new(class_name: "shadow-xl") do %>
+      <h2 class="card-title text-2xl">Get CoverText Ready</h2>
+      <p class="text-base-content/70 mb-6">Complete these steps to start receiving client SMS requests.</p>
 
         <!-- Setup Checklist -->
         <ul class="steps steps-vertical w-full">
@@ -58,72 +57,67 @@
             <% end %>
           </div>
         <% end %>
-      </div>
-    </div>
+      <% end %>
   <% else %>
     <!-- Live State -->
     <div class="grid gap-6 md:grid-cols-2">
       <!-- System Status Card -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">
-            <span class="size-6 text-success"><%= heroicon "check-circle", variant: :solid %></span>
-            System Ready
-          </h2>
-          <div class="divider my-2"></div>
+      <%= render UI::CardComponent.new(class_name: "shadow-xl") do %>
+        <h2 class="card-title">
+          <span class="size-6 text-success"><%= heroicon "check-circle", variant: :solid %></span>
+          System Ready
+        </h2>
+        <div class="divider my-2"></div>
 
-          <div class="space-y-3">
-            <div>
-              <div class="text-sm text-base-content/70">SMS Number</div>
-              <div class="font-mono font-semibold"><%= @agency.phone_sms %></div>
-            </div>
+        <div class="space-y-3">
+          <div>
+            <div class="text-sm text-base-content/70">SMS Number</div>
+            <div class="font-mono font-semibold"><%= @agency.phone_sms %></div>
+          </div>
 
-            <div>
-              <div class="text-sm text-base-content/70">Subscription</div>
-              <div class="font-semibold">
-                <%= @account.plan_name&.titleize || 'Basic' %> Plan
-                <span class="badge badge-success badge-sm ml-2">Active</span>
-              </div>
+          <div>
+            <div class="text-sm text-base-content/70">Subscription</div>
+            <div class="font-semibold">
+              <%= @account.plan_name&.titleize || 'Basic' %> Plan
+              <span class="badge badge-success badge-sm ml-2">Active</span>
             </div>
           </div>
         </div>
-      </div>
+      <% end %>
 
       <!-- Usage Summary Card -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">
-            <span class="size-6"><%= heroicon "chart-bar", variant: :solid %></span>
-            Usage Summary
-          </h2>
-          <div class="divider my-2"></div>
+      <%= render UI::CardComponent.new(class_name: "shadow-xl") do %>
+        <h2 class="card-title">
+          <span class="size-6"><%= heroicon "chart-bar", variant: :solid %></span>
+          Usage Summary
+        </h2>
+        <div class="divider my-2"></div>
 
-          <div class="space-y-3">
-            <div>
-              <div class="text-sm text-base-content/70">Total Requests</div>
-              <div class="text-2xl font-bold"><%= @agency.requests.count %></div>
-            </div>
-
-            <div>
-              <div class="text-sm text-base-content/70">Last Request</div>
-              <div class="font-semibold">
-                <% if @agency.requests.any? %>
-                  <%= time_ago_in_words(@agency.requests.order(created_at: :desc).first.created_at) %> ago
-                <% else %>
-                  No requests yet
-                <% end %>
-              </div>
-            </div>
+        <div class="space-y-3">
+          <div>
+            <div class="text-sm text-base-content/70">Total Requests</div>
+            <div class="text-2xl font-bold"><%= @agency.requests.count %></div>
           </div>
 
-          <div class="card-actions justify-end mt-4">
-            <%= link_to admin_requests_path, class: "btn btn-sm btn-primary" do %>
-              View Requests
-              <span class="size-4"><%= heroicon "arrow-right", variant: :mini %></span>
-            <% end %>
+          <div>
+            <div class="text-sm text-base-content/70">Last Request</div>
+            <div class="font-semibold">
+              <% if @agency.requests.any? %>
+                <%= time_ago_in_words(@agency.requests.order(created_at: :desc).first.created_at) %> ago
+              <% else %>
+                No requests yet
+              <% end %>
+            </div>
           </div>
         </div>
-      </div>
+
+        <div class="card-actions justify-end mt-4">
+          <%= link_to admin_requests_path, class: "btn btn-sm btn-primary" do %>
+            View Requests
+            <span class="size-4"><%= heroicon "arrow-right", variant: :mini %></span>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </div>
