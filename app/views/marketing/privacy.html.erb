@@ -1,0 +1,292 @@
+<% content_for :title, "Privacy Policy - CoverText" %>
+
+<div class="container mx-auto max-w-4xl px-4 py-12">
+  <!-- Header -->
+  <div class="mb-12">
+    <%= link_to root_path, class: "inline-flex items-center text-primary hover:underline mb-6" do %>
+      <span class="w-5 h-5 mr-2"><%= heroicon "arrow-left", variant: :mini %></span>
+      Back to Home
+    <% end %>
+    <h1 class="text-4xl font-bold mb-4">Privacy Policy</h1>
+    <p class="text-base-content/70">Effective Date: <%= Date.today.strftime("%B %d, %Y") %></p>
+  </div>
+
+  <!-- Content -->
+  <div class="prose prose-lg max-w-none">
+    <!-- Introduction -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">1. Introduction</h2>
+      <p class="mb-4">
+        CoverText (operated by Workhorse Solutions, LLC) ("CoverText," "we," "us," or "our") provides an SMS-based client service platform for independent insurance agencies. This Privacy Policy describes how we collect, use, and protect information when you use our services.
+      </p>
+      <p class="mb-4">
+        This policy applies to:
+      </p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li><strong>Insurance agency customers</strong> (the agencies that subscribe to our service)</li>
+        <li><strong>Agency staff</strong> (users who access our admin dashboard)</li>
+        <li><strong>Insurance clients</strong> (individuals who text an agency's dedicated SMS number)</li>
+      </ul>
+    </section>
+
+    <!-- Information We Collect -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">2. Information We Collect</h2>
+
+      <h3 class="text-xl font-semibold mb-3">2.1 Account Information</h3>
+      <p class="mb-4">When an insurance agency signs up for CoverText, we collect:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Agency name and contact information</li>
+        <li>Staff member names and email addresses</li>
+        <li>Billing information (processed by Stripe; we do not store full credit card numbers)</li>
+        <li>Dedicated SMS phone number(s) assigned to your agency</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-3">2.2 Client Information</h3>
+      <p class="mb-4">When insurance clients interact with an agency via SMS, we process:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Phone numbers (to route conversations and deliver responses)</li>
+        <li>Client names and policy information (uploaded by the agency)</li>
+        <li>SMS message content (to fulfill service requests)</li>
+        <li>Message metadata (timestamps, delivery status)</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-3">2.3 Documents and Files</h3>
+      <p class="mb-4">
+        Agencies upload insurance documents (such as auto ID cards) through our platform. These files are stored securely and delivered to clients via MMS when requested.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">2.4 Usage Data</h3>
+      <p class="mb-4">We collect:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Request logs and fulfillment activity</li>
+        <li>Admin dashboard access logs</li>
+        <li>Technical information (IP addresses, browser type, device information)</li>
+        <li>Analytics data to improve service quality</li>
+      </ul>
+    </section>
+
+    <!-- How We Use Information -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">3. How We Use Your Information</h2>
+      <p class="mb-4">We use the information we collect to:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li><strong>Provide the Service:</strong> Route SMS conversations, fulfill client requests (ID cards, policy info), and deliver documents</li>
+        <li><strong>Maintain Security:</strong> Authenticate users, prevent fraud, and protect against unauthorized access</li>
+        <li><strong>Customer Support:</strong> Respond to inquiries and troubleshoot issues</li>
+        <li><strong>Compliance:</strong> Meet legal and regulatory obligations related to SMS messaging and data protection</li>
+        <li><strong>Service Improvement:</strong> Analyze usage patterns to enhance features and reliability</li>
+        <li><strong>Billing:</strong> Process subscription payments and maintain account records</li>
+      </ul>
+      <p class="mb-4">
+        <strong>We do not use client phone numbers or personal information for marketing purposes.</strong>
+      </p>
+    </section>
+
+    <!-- SMS-Specific Section -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">4. SMS Communications and Consent</h2>
+      <p class="mb-4">
+        CoverText facilitates <strong>customer-initiated, transactional SMS conversations</strong> for client service. We do not send marketing messages or promotional campaigns.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">4.1 How SMS Works</h3>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Insurance clients text an agency's dedicated number to request service (e.g., "I need my insurance card")</li>
+        <li>CoverText sends an automated opt-in confirmation message with STOP/HELP instructions</li>
+        <li>After confirming, clients receive their requested information (ID cards, expiration dates, etc.)</li>
+        <li>Clients can opt out at any time by replying STOP</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-3">4.2 Phone Number Usage</h3>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li><strong>We do not sell, rent, or share phone numbers with third parties for marketing</strong></li>
+        <li>Phone numbers are used exclusively to facilitate service conversations between clients and their insurance agency</li>
+        <li>Message and data rates may apply (charged by the client's carrier)</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-3">4.3 Opt-Out Rights</h3>
+      <p class="mb-4">
+        Clients can stop receiving SMS messages at any time by:
+      </p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Replying <strong>STOP</strong> to any message</li>
+        <li>Contacting their insurance agency directly</li>
+        <li>Emailing us at support@covertext.app</li>
+      </ul>
+      <p class="mb-4">
+        Replying <strong>HELP</strong> provides support contact information.
+      </p>
+    </section>
+
+    <!-- Information Sharing -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">5. How We Share Your Information</h2>
+      <p class="mb-4">
+        We do not sell personal information. We share information only as described below:
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">5.1 Service Providers (Subprocessors)</h3>
+      <p class="mb-4">We work with trusted third-party vendors who process data on our behalf:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li><strong>SMS Delivery:</strong> Telnyx (for sending/receiving text messages)</li>
+        <li><strong>Payment Processing:</strong> Stripe (for subscription billing)</li>
+        <li><strong>Cloud Hosting:</strong> Infrastructure providers for application and database hosting</li>
+        <li><strong>Email Services:</strong> For sending account notifications and support communications</li>
+        <li><strong>Monitoring & Logging:</strong> For security, error tracking, and service reliability</li>
+      </ul>
+      <p class="mb-4">
+        These providers are contractually obligated to protect your data and use it only to provide their services to us.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">5.2 Legal and Compliance</h3>
+      <p class="mb-4">We may disclose information when required by law or to:</p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Comply with legal process (subpoenas, court orders)</li>
+        <li>Respond to government requests</li>
+        <li>Enforce our Terms of Service</li>
+        <li>Protect the rights, safety, or property of CoverText, our customers, or others</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-3">5.3 Business Transfers</h3>
+      <p class="mb-4">
+        If CoverText is acquired or merged with another company, customer information may be transferred as part of that transaction. You will be notified of any such change.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">5.4 No Third-Party Marketing</h3>
+      <p class="mb-4">
+        <strong>We do not share client phone numbers or personal information with third parties for their marketing purposes.</strong>
+      </p>
+    </section>
+
+    <!-- Data Retention -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">6. Data Retention</h2>
+      <p class="mb-4">
+        We retain information for as long as necessary to:
+      </p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Provide ongoing service to active accounts</li>
+        <li>Maintain audit trails and compliance records</li>
+        <li>Fulfill legal and regulatory requirements</li>
+        <li>Resolve disputes and enforce agreements</li>
+      </ul>
+      <p class="mb-4">
+        When an agency cancels their subscription, we may retain certain data for a reasonable period to comply with legal obligations (e.g., tax records) and to support potential reactivation.
+      </p>
+      <p class="mb-4">
+        Clients may request deletion of their personal information by contacting their insurance agency or emailing us at support@covertext.app. We will honor such requests subject to our legal and regulatory obligations.
+      </p>
+    </section>
+
+    <!-- Data Security -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">7. Data Security</h2>
+      <p class="mb-4">
+        We implement reasonable technical and organizational measures to protect information against unauthorized access, loss, or disclosure. These measures include:
+      </p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Encrypted data transmission (TLS/SSL)</li>
+        <li>Access controls and authentication</li>
+        <li>Regular security monitoring and logging</li>
+        <li>Secure document storage with signed URLs for time-limited access</li>
+      </ul>
+      <p class="mb-4">
+        However, no system is completely secure. While we strive to protect your information, we cannot guarantee absolute security.
+      </p>
+    </section>
+
+    <!-- Your Choices and Rights -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">8. Your Choices and Rights</h2>
+
+      <h3 class="text-xl font-semibold mb-3">8.1 Access and Update</h3>
+      <p class="mb-4">
+        Agency staff can access and update account information through the admin dashboard. Clients should contact their insurance agency to update personal information.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">8.2 Opt-Out of SMS</h3>
+      <p class="mb-4">
+        Insurance clients can stop receiving SMS messages at any time by replying <strong>STOP</strong> to any message.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">8.3 Data Deletion</h3>
+      <p class="mb-4">
+        You may request deletion of personal information by contacting us at support@covertext.app. We will respond within a reasonable timeframe, subject to legal retention requirements.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">8.4 Marketing Communications</h3>
+      <p class="mb-4">
+        We may send account-related emails (billing notifications, service updates). You can opt out of non-essential emails by following the unsubscribe link in those messages.
+      </p>
+    </section>
+
+    <!-- Children's Privacy -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">9. Children's Privacy</h2>
+      <p class="mb-4">
+        CoverText is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from minors. If we learn that we have inadvertently collected such information, we will take steps to delete it promptly.
+      </p>
+    </section>
+
+    <!-- International Users -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">10. International Users</h2>
+      <p class="mb-4">
+        CoverText operates in the United States. If you access our services from outside the U.S., your information may be transferred to and processed in the United States, where data protection laws may differ from those in your jurisdiction.
+      </p>
+    </section>
+
+    <!-- Changes to This Policy -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">11. Changes to This Privacy Policy</h2>
+      <p class="mb-4">
+        We may update this Privacy Policy from time to time. When we make material changes, we will:
+      </p>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>Update the "Effective Date" at the top of this page</li>
+        <li>Notify agency administrators via email or admin dashboard notice</li>
+        <li>Post the revised policy on our website</li>
+      </ul>
+      <p class="mb-4">
+        Your continued use of CoverText after changes become effective constitutes acceptance of the updated policy.
+      </p>
+    </section>
+
+    <!-- Contact Information -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">12. Contact Us</h2>
+      <p class="mb-4">
+        If you have questions about this Privacy Policy or how we handle your information, please contact us:
+      </p>
+      <div class="bg-base-200 p-6 rounded-lg mb-4">
+        <p class="mb-2"><strong>Email:</strong> <a href="mailto:support@covertext.app" class="link link-primary">support@covertext.app</a></p>
+        <p class="mb-2"><strong>Phone:</strong> (307) 317-9186</p>
+        <p class="mb-2"><strong>Mailing Address:</strong></p>
+        <p class="pl-4">
+          Workhorse Solutions, LLC<br>
+          1621 Central Ave STE 49009<br>
+          Cheyenne, WY 82001
+        </p>
+        <p class="mt-2"><a href="https://workhorsesolutions.llc" class="link link-primary" target="_blank" rel="noopener">workhorsesolutions.llc</a></p>
+      </div>
+    </section>
+
+    <!-- Related Policies -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Related Policies</h2>
+      <div class="flex flex-wrap gap-4">
+        <%= link_to "Terms of Service", terms_path, class: "btn btn-outline" %>
+        <%= link_to "SMS Consent Policy", sms_consent_path, class: "btn btn-outline" %>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="mt-12 pt-8 border-t border-base-300">
+    <%= link_to root_path, class: "inline-flex items-center text-primary hover:underline" do %>
+      <span class="w-5 h-5 mr-2"><%= heroicon "arrow-left", variant: :mini %></span>
+      Back to Home
+    <% end %>
+  </div>
+</div>

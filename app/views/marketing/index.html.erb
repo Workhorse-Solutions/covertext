@@ -292,11 +292,12 @@
     <div>
       <div class="grid grid-flow-col gap-4">
         <a href="mailto:hello@covertext.io" class="link link-hover">Contact</a>
-        <a href="#" class="link link-hover">Privacy Policy</a>
-        <a href="#" class="link link-hover">Terms of Service</a>
+        <%= link_to "Privacy Policy", privacy_path, class: "link link-hover" %>
+        <%= link_to "Terms of Service", terms_path, class: "link link-hover" %>
+        <%= link_to "SMS Consent", sms_consent_path, class: "link link-hover" %>
       </div>
     </div>
     <div>
-      <p>© <%= Time.current.year %> CoverText. All rights reserved.</p>
+      <p>© <%= Time.current.year %> Workhorse Solutions, LLC. All rights reserved.</p>
     </div>
   </footer>

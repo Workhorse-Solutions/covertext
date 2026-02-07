@@ -12,6 +12,11 @@ Rails.application.routes.draw do
   get "signup/success", to: "registrations#success", as: :signup_success
   post "signup/complete", to: "registrations#complete", as: :signup_complete
 
+  # Static pages
+  get "privacy", to: "marketing#privacy"
+  get "terms", to: "marketing#terms"
+  get "sms-consent", to: "marketing#sms_consent"
+
   # Twilio webhooks
   namespace :webhooks do
     post "twilio/inbound", to: "twilio_inbound#create"

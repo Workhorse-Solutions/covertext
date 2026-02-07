@@ -1,0 +1,54 @@
+<% content_for :title, "SMS Consent Policy - CoverText" %>
+
+<div class="container mx-auto max-w-4xl px-4 py-12">
+  <!-- Header -->
+  <div class="mb-12">
+    <%= link_to root_path, class: "inline-flex items-center text-primary hover:underline mb-6" do %>
+      <span class="w-5 h-5 mr-2"><%= heroicon "arrow-left", variant: :mini %></span>
+      Back to Home
+    <% end %>
+    <h1 class="text-4xl font-bold mb-4">SMS Consent Policy</h1>
+    <p class="text-base-content/70">Effective Date: <%= Date.today.strftime("%B %d, %Y") %></p>
+  </div>
+
+  <!-- Placeholder Content -->
+  <div class="prose prose-lg max-w-none">
+    <div class="alert alert-info mb-8">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>This SMS Consent Policy page is under construction. Please contact us for current information.</span>
+    </div>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Coming Soon</h2>
+      <p class="mb-4">
+        We are currently finalizing our SMS Consent Policy. In the meantime, if you have questions about SMS messaging with CoverText (operated by Workhorse Solutions, LLC), please contact us at <a href="mailto:support@covertext.app" class="link link-primary">support@covertext.app</a> or (307) 317-9186.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-3">Key Information</h3>
+      <ul class="list-disc pl-6 mb-4 space-y-2">
+        <li>CoverText provides customer-initiated, transactional SMS conversations only</li>
+        <li>We do not send marketing or promotional messages</li>
+        <li>Reply STOP at any time to opt out of SMS messages</li>
+        <li>Reply HELP for support information</li>
+        <li>Message and data rates may apply</li>
+      </ul>
+    </section>
+
+    <!-- Related Policies -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Related Policies</h2>
+      <div class="flex flex-wrap gap-4">
+        <%= link_to "Privacy Policy", privacy_path, class: "btn btn-outline" %>
+        <%= link_to "Terms of Service", terms_path, class: "btn btn-outline" %>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="mt-12 pt-8 border-t border-base-300">
+    <%= link_to root_path, class: "inline-flex items-center text-primary hover:underline" do %>
+      <span class="w-5 h-5 mr-2"><%= heroicon "arrow-left", variant: :mini %></span>
+      Back to Home
+    <% end %>
+  </div>
+</div>
