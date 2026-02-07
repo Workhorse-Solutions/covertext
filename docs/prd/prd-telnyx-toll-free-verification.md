@@ -70,16 +70,16 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - [x] All tests pass (`bin/rails test`)
 - [x] Rubocop clean
 
-### US-003: Payload generator service
+### US-003: Payload generator service ✅ COMPLETED
 **Description:** As a developer, I need a deterministic service that builds the Telnyx API request payload from agency-provided business info and CoverText defaults.
 
 **Note:** Business info is NOT stored in the CoverText database — it's collected from the form and passed directly to Telnyx via the payload.
 
 **Acceptance Criteria:**
-- [ ] Create `Telnyx::TollFreeVerificationPayload` service in `app/services/telnyx/toll_free_verification_payload.rb`
-- [ ] Class method `build(verification, business_info:)` returns a Hash with all required Telnyx fields
-- [ ] `business_info` is a Hash with keys the agency provides: `business_name`, `corporate_website`, `contact_first_name`, `contact_last_name`, `contact_email`, `contact_phone`, `address1`, `address2` (optional), `city`, `state`, `zip`, `country` (default `"US"`), `business_registration_number` (optional), `business_registration_type` (default `"EIN"`), `entity_type` (default `"PRIVATE_PROFIT"`)
-- [ ] CoverText auto-generates these fields in the payload:
+- [x] Create `Telnyx::TollFreeVerificationPayload` service in `app/services/telnyx/toll_free_verification_payload.rb`
+- [x] Class method `build(verification, business_info:)` returns a Hash with all required Telnyx fields
+- [x] `business_info` is a Hash with keys the agency provides: `business_name`, `corporate_website`, `contact_first_name`, `contact_last_name`, `contact_email`, `contact_phone`, `address1`, `address2` (optional), `city`, `state`, `zip`, `country` (default `"US"`), `business_registration_number` (optional), `business_registration_type` (default `"EIN"`), `entity_type` (default `"PRIVATE_PROFIT"`)
+- [x] CoverText auto-generates these fields in the payload:
   - `useCase`: `"Insurance Services"`
   - `messageVolume`: `"1,000"` (default)
   - `useCaseSummary`: A deterministic string describing customer-initiated insurance support (e.g., "Clients of {business_name} text their agency's toll-free number to request proof of insurance, ID cards, policy information, and expiration reminders. All messaging is customer-initiated and transactional.")
@@ -94,9 +94,9 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
   - `businessRegistrationType`: from business_info (default `"EIN"`)
   - `businessRegistrationCountry`: from business_info country (default `"US"`)
   - `entityType`: from business_info (default `"PRIVATE_PROFIT"`)
-- [ ] Payload Hash uses camelCase keys matching Telnyx API field names
-- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
+- [x] Payload Hash uses camelCase keys matching Telnyx API field names
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
 
 ### US-004: Background jobs for submission and status polling
 **Description:** As a developer, I need background jobs to submit verification requests to Telnyx and poll for status updates asynchronously.
