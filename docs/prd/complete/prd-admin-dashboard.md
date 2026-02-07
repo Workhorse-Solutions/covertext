@@ -21,181 +21,181 @@ This feature introduces an Admin Dashboard as the primary post-login landing pag
 **Description:** As a developer, I need a dashboard controller and route so admins have a dedicated landing page.
 
 **Acceptance Criteria:**
-- [ ] Create `Admin::DashboardController` with `show` action
-- [ ] Add route `get "dashboard", to: "dashboard#show"` in admin namespace
-- [ ] Dashboard inherits from `Admin::BaseController` (gets `current_agency`, `current_account`)
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Create `Admin::DashboardController` with `show` action
+- [x] Add route `get "dashboard", to: "dashboard#show"` in admin namespace
+- [x] Dashboard inherits from `Admin::BaseController` (gets `current_agency`, `current_account`)
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-002: Redirect Login to Dashboard
 **Description:** As an admin, I want to land on the Dashboard after login so I see system status immediately.
 
 **Acceptance Criteria:**
-- [ ] Update `SessionsController#create` to redirect to `admin_dashboard_path` instead of `admin_requests_path`
-- [ ] Update any existing redirects that point to requests as the default landing page
-- [ ] Existing tests updated to expect new redirect target
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Update `SessionsController#create` to redirect to `admin_dashboard_path` instead of `admin_requests_path`
+- [x] Update any existing redirects that point to requests as the default landing page
+- [x] Existing tests updated to expect new redirect target
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-003: Create Agency Readiness Concern
 **Description:** As a developer, I need a concern that calculates agency readiness state so the dashboard can display status.
 
 **Acceptance Criteria:**
-- [ ] Create `Agency::Readiness` concern included in Agency model
-- [ ] Expose methods: `subscription_ready?`, `phone_ready?`, `fully_ready?`
-- [ ] `subscription_ready?` returns `account.subscription_active?`
-- [ ] `phone_ready?` returns `phone_sms.present?`
-- [ ] `fully_ready?` returns true only when subscription_ready? AND phone_ready?
-- [ ] Note: Webhook configuration is handled at Telnyx Messaging Profile level (already configured)
-- [ ] Unit tests for all readiness states
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Create `Agency::Readiness` concern included in Agency model
+- [x] Expose methods: `subscription_ready?`, `phone_ready?`, `fully_ready?`
+- [x] `subscription_ready?` returns `account.subscription_active?`
+- [x] `phone_ready?` returns `phone_sms.present?`
+- [x] `fully_ready?` returns true only when subscription_ready? AND phone_ready?
+- [x] Note: Webhook configuration is handled at Telnyx Messaging Profile level (already configured)
+- [x] Unit tests for all readiness states
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-004: Dashboard Setup State View
 **Description:** As an admin whose agency is not ready, I want to see a clear setup checklist so I know what steps remain.
 
 **Acceptance Criteria:**
-- [ ] Dashboard shows "Get CoverText Ready" heading when `!@agency.fully_ready?`
-- [ ] Displays checklist with status indicators for each step:
+- [x] Dashboard shows "Get CoverText Ready" heading when `!@agency.fully_ready?`
+- [x] Displays checklist with status indicators for each step:
   - Subscription: ✓ Active / ✗ Inactive
   - Dedicated SMS Number: ✓ Provisioned / ✗ Not Provisioned
-- [ ] Uses DaisyUI steps or cards component for visual presentation
-- [ ] Primary CTA button: "Provision Phone Number" (disabled if subscription inactive)
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (bin/dev)
+- [x] Uses DaisyUI steps or cards component for visual presentation
+- [x] Primary CTA button: "Provision Phone Number" (disabled if subscription inactive)
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (bin/dev)
 
 ### US-005: Dashboard Live State View
 **Description:** As an admin whose agency is ready, I want to see system status and basic metrics so I can monitor operations.
 
 **Acceptance Criteria:**
-- [ ] Dashboard shows agency phone number (E.164 formatted) when `@agency.phone_ready?`
-- [ ] Shows subscription plan name (`@account.plan_name`) and status
-- [ ] Shows basic usage summary: total requests count, last request timestamp (or "No requests yet")
-- [ ] Shows link to Requests page
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (bin/dev)
+- [x] Dashboard shows agency phone number (E.164 formatted) when `@agency.phone_ready?`
+- [x] Shows subscription plan name (`@account.plan_name`) and status
+- [x] Shows basic usage summary: total requests count, last request timestamp (or "No requests yet")
+- [x] Shows link to Requests page
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (bin/dev)
 
 ### US-006: Gate Requests Page Access
 **Description:** As the system, I need to prevent access to Requests when phone is not provisioned so admins don't see broken/empty states.
 
 **Acceptance Criteria:**
-- [ ] Add `before_action :require_phone_provisioned` to `Admin::RequestsController`
-- [ ] `require_phone_provisioned` redirects to `admin_dashboard_path` with flash if `!current_agency.phone_ready?`
-- [ ] Flash message: "Please provision a phone number before accessing Requests"
-- [ ] Tests verify redirect behavior for both provisioned and non-provisioned agencies
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Add `before_action :require_phone_provisioned` to `Admin::RequestsController`
+- [x] `require_phone_provisioned` redirects to `admin_dashboard_path` with flash if `!current_agency.phone_ready?`
+- [x] Flash message: "Please provision a phone number before accessing Requests"
+- [x] Tests verify redirect behavior for both provisioned and non-provisioned agencies
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-007: Update Navigation for Dashboard
 **Description:** As an admin, I want the navigation to reflect Dashboard as primary and Requests as secondary.
 
 **Acceptance Criteria:**
-- [ ] Update [app/views/layouts/admin.html.erb](app/views/layouts/admin.html.erb) sidebar navigation
-- [ ] Dashboard link appears first in admin navigation (before Requests)
-- [ ] Requests link appears after Dashboard
-- [ ] Requests link is visually disabled/grayed when phone not provisioned (use DaisyUI disabled state)
-- [ ] Active state correctly highlights current page
-- [ ] Update CoverText brand link to point to `admin_dashboard_path` instead of `admin_requests_path`
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (bin/dev)
+- [x] Update [app/views/layouts/admin.html.erb](app/views/layouts/admin.html.erb) sidebar navigation
+- [x] Dashboard link appears first in admin navigation (before Requests)
+- [x] Requests link appears after Dashboard
+- [x] Requests link is visually disabled/grayed when phone not provisioned (use DaisyUI disabled state)
+- [x] Active state correctly highlights current page
+- [x] Update CoverText brand link to point to `admin_dashboard_path` instead of `admin_requests_path`
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (bin/dev)
 
 ### US-008: Telnyx Phone Number Provisioning Service
 **Description:** As a developer, I need a service to purchase and configure Telnyx phone numbers so agencies can receive SMS.
 
 **Acceptance Criteria:**
-- [ ] Create `Telnyx::PhoneProvisioningService` in `app/services/telnyx/`
-- [ ] Service accepts an `Agency` and provisions a number:
+- [x] Create `Telnyx::PhoneProvisioningService` in `app/services/telnyx/`
+- [x] Service accepts an `Agency` and provisions a number:
   - **Idempotency:** Check performed in service - return success immediately if agency already has `phone_sms` present
   - Searches for available toll-free numbers in US (following existing Telnyx patterns)
   - Purchases the first available number
   - Adds purchased number to existing Telnyx Messaging Profile (webhooks configured at profile level)
-- [ ] On success: updates `agency.phone_sms` with E.164 number, sets `agency.live_enabled = true`
-- [ ] On failure: returns error result with descriptive message
-- [ ] Raises clear error if Telnyx credentials are missing
-- [ ] Unit tests with Telnyx API mocked using WebMock (following test_helper.rb patterns)
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] On success: updates `agency.phone_sms` with E.164 number, sets `agency.live_enabled = true`
+- [x] On failure: returns error result with descriptive message
+- [x] Raises clear error if Telnyx credentials are missing
+- [x] Unit tests with Telnyx API mocked using WebMock (following test_helper.rb patterns)
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-009: Phone Provisioning Controller Action
 **Description:** As an admin, I want to click "Provision Phone Number" and have the system automatically set up my SMS number.
 
 **Acceptance Criteria:**
-- [ ] Add `Admin::PhoneProvisioningController` with `create` action
-- [ ] Route: `post "phone_provisioning", to: "phone_provisioning#create"` in admin namespace
-- [ ] Action calls `Telnyx::PhoneProvisioningService.new(current_agency).call`
-- [ ] On success: redirect to dashboard with flash success "Phone number provisioned successfully!"
-- [ ] On failure: redirect to dashboard with flash error containing failure reason
-- [ ] Action requires active subscription (rejects if `!current_account.subscription_active?`)
-- [ ] Action requires owner role (rejects if `current_user.role != 'owner'`)
-- [ ] Tests with mocked Telnyx service
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Add `Admin::PhoneProvisioningController` with `create` action
+- [x] Route: `post "phone_provisioning", to: "phone_provisioning#create"` in admin namespace
+- [x] Action calls `Telnyx::PhoneProvisioningService.new(current_agency).call`
+- [x] On success: redirect to dashboard with flash success "Phone number provisioned successfully!"
+- [x] On failure: redirect to dashboard with flash error containing failure reason
+- [x] Action requires active subscription (rejects if `!current_account.subscription_active?`)
+- [x] Action requires owner role (rejects if `current_user.role != 'owner'`)
+- [x] Tests with mocked Telnyx service
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 elnyx Provisioning Error Recovery
 **Description:** As a developer, I need the system to handle partial provisioning failures gracefully so agencies don't end up in broken states.
 
 **Acceptance Criteria:**
-- [ ] If phone purchase succeeds but messaging profile addition fails:
+- [x] If phone purchase succeeds but messaging profile addition fails:
   - Log error with purchased phone number details
   - Return failure result (do not update agency)
   - Error message: "Phone number purchased but configuration failed. Please contact support with error code: [error_details]"
-- [ ] If any Telnyxtions in error message for manual cleanup
-- [ ] If any Twilio API call fails, do not update `agency.phone_sms` or `agency.live_enabled`
-- [ ] All database updates happen in a transaction (wrap in `ActiveRecord::Base.transaction`)
-- [ ] Service returns structured result object with success/failure status and message
-- [ ] Unit tests cover partial failure scenarios
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] If any Telnyxtions in error message for manual cleanup
+- [x] If any Twilio API call fails, do not update `agency.phone_sms` or `agency.live_enabled`
+- [x] All database updates happen in a transaction (wrap in `ActiveRecord::Base.transaction`)
+- [x] Service returns structured result object with success/failure status and message
+- [x] Unit tests cover partial failure scenarios
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-011: Provision Button Integration
 **Description:** As an admin, I want the "Provision Phone Number" button to trigger provisioning and show me the result.
 
 **Acceptance Criteria:**
-- [ ] Setup state view includes form with button posting to `admin_phone_provisioning_path`
-- [ ] Button is disabled with tooltip when subscription is inactive
-- [ ] Button shows loading state during submission (use Turbo data-turbo-submits-with)
-- [ ] After success, dashboard automatically shows Live state
-- [ ] After failure, error message displayed via flash
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (bin/dev)
+- [x] Setup state view includes form with button posting to `admin_phone_provisioning_path`
+- [x] Button is disabled with tooltip when subscription is inactive
+- [x] Button shows loading state during submission (use Turbo data-turbo-submits-with)
+- [x] After success, dashboard automatically shows Live state
+- [x] After failure, error message displayed via flash
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (bin/dev)
 
 ### US-012: Add Telnyx Credentials Documentation
 **Description:** As a developer, I need Telnyx credentials documented so the provisioning service can be configured.
 
 **Acceptance Criteria:**
-- [ ] Update [docs/CREDENTIALS_SETUP.md](docs/CREDENTIALS_SETUP.md) with required Telnyx credentials for provisioning:
+- [x] Update [docs/CREDENTIALS_SETUP.md](docs/CREDENTIALS_SETUP.md) with required Telnyx credentials for provisioning:
   - `telnyx.api_key` (already documented for messaging)
   - `telnyx.messaging_profile_id` (for adding numbers to profile)
-- [ ] Document ENV var fallbacks: `TELNYX_API_KEY`, `TELNYX_MESSAGING_PROFILE_ID`
-- [ ] Note: Inbound SMS webhooks configured at messaging profile level (point to `/webhooks/telnyx/inbound`)
-- [ ] Service checks credentials and raises descriptive error if missing
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Document ENV var fallbacks: `TELNYX_API_KEY`, `TELNYX_MESSAGING_PROFILE_ID`
+- [x] Note: Inbound SMS webhooks configured at messaging profile level (point to `/webhooks/telnyx/inbound`)
+- [x] Service checks credentials and raises descriptive error if missing
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-013: Update Seed Data for Testing
 **Description:** As a developer, I need seed data that includes an agency without phone_sms so I can test the provisioning flow.
 
 **Acceptance Criteria:**
-- [ ] Update [db/seeds.rb](db/seeds.rb) to create third agency without `phone_sms` and with `live_enabled: false`
-- [ ] Update [test/models/seed_test.rb](test/models/seed_test.rb) expectations to match (3 agencies total)
-- [ ] Test seed data: `env RAILS_ENV=test bin/rails db:seed:replant`
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Update [db/seeds.rb](db/seeds.rb) to create third agency without `phone_sms` and with `live_enabled: false`
+- [x] Update [test/models/seed_test.rb](test/models/seed_test.rb) expectations to match (3 agencies total)
+- [x] Test seed data: `env RAILS_ENV=test bin/rails db:seed:replant`
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ### US-014: Integration Test for Full Provisioning Flow
 **Description:** As a developer, I need an integration test covering the complete provisioning flow to ensure reliability.
 
 **Acceptance Criteria:**
-- [ ] Test: Admin logs in → sees setup state → clicks provision → sees live state
-- [ ] Test: Admin with inactive subscription sees disabled provision button
-- [ ] Test: Provisioning failure displays error, dashboard stays in setup state
-- [ ] Test: After provisioning, Requests page is accessible (no redirect)
-- [ ] Test: Attempting to provision when phone already exists returns success without API calls
-- [ ] All tests pass (bin/rails test)
-- [ ] Rubocop clean
+- [x] Test: Admin logs in → sees setup state → clicks provision → sees live state
+- [x] Test: Admin with inactive subscription sees disabled provision button
+- [x] Test: Provisioning failure displays error, dashboard stays in setup state
+- [x] Test: After provisioning, Requests page is accessible (no redirect)
+- [x] Test: Attempting to provision when phone already exists returns success without API calls
+- [x] All tests pass (bin/rails test)
+- [x] Rubocop clean
 
 ## Functional Requirements
 

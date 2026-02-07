@@ -39,7 +39,7 @@
               <span>Dashboard</span>
             <% end %></li>
             <li class="<%= 'disabled' unless current_agency&.phone_ready? %>">
-              <%= link_to admin_requests_path, 
+              <%= link_to admin_requests_path,
                   class: "menu-item #{current_page?(admin_requests_path) ? 'active' : ''} #{current_agency&.phone_ready? ? '' : 'opacity-50 cursor-not-allowed'}",
                   onclick: (current_agency&.phone_ready? ? nil : 'return false;') do %>
                 <span class="size-5"><%= heroicon "inbox", variant: :mini %></span>
