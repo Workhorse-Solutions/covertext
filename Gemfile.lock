@@ -133,7 +133,7 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
-    faraday (2.14.0)
+    faraday (2.14.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
@@ -179,7 +179,7 @@ GEM
     jbuilder (2.14.1)
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
-    json (2.18.0)
+    json (2.18.1)
     jwt (3.1.2)
       base64
     kamal (2.10.1)
@@ -428,7 +428,7 @@ GEM
     turbo-rails (2.0.23)
       actionpack (>= 7.1.0)
       railties (>= 7.1.0)
-    twilio-ruby (7.10.0)
+    twilio-ruby (7.10.1)
       faraday (>= 0.9, < 3.0)
       jwt (>= 1.5, < 4.0)
       nokogiri (>= 1.6, < 2.0)
@@ -503,7 +503,7 @@ DEPENDENCIES
   telnyx (~> 3.0)
   thruster
   turbo-rails
-  twilio-ruby (~> 7.3)
+  twilio-ruby (~> 7.10)
   tzinfo-data
   view_component
   web-console
