@@ -166,4 +166,156 @@ class Admin::ComplianceControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_billing_path
   end
+
+  # New action tests
+  test "new renders form when phone_sms is present and no active verification" do
+    get admin_new_compliance_verification_path
+
+    assert_response :success
+    assert_select "h1", text: "Submit Toll-Free Verification"
+    assert_select "form[action=?]", admin_compliance_verifications_path
+  end
+
+  test "new redirects when no phone_sms" do
+    @agency.update!(phone_sms: nil)
+
+    get admin_new_compliance_verification_path
+
+    assert_redirected_to admin_compliance_path
+    assert_equal "A toll-free number must be assigned before submitting verification.", flash[:alert]
+  end
+
+  test "new redirects when active verification already exists" do
+    TelnyxTollFreeVerification.create!(
+      agency: @agency,
+      telnyx_number: @agency.phone_sms,
+      status: "submitted"
+    )
+
+    get admin_new_compliance_verification_path
+
+    assert_redirected_to admin_compliance_path
+    assert_equal "A verification request is already in progress.", flash[:alert]
+  end
+
+  test "new allows new submission when previous verification was rejected" do
+    TelnyxTollFreeVerification.create!(
+      agency: @agency,
+      telnyx_number: @agency.phone_sms,
+      status: "rejected"
+    )
+
+    get admin_new_compliance_verification_path
+
+    assert_response :success
+  end
+
+  # Create action tests
+  test "create submits verification and enqueues job" do
+    assert_difference "TelnyxTollFreeVerification.count", 1 do
+      assert_enqueued_with(job: SubmitTelnyxTollFreeVerificationJob) do
+        post admin_compliance_verifications_path, params: {
+          telnyx_toll_free_verification: {
+            business_name: "Reliable Insurance",
+            corporate_website: "https://reliableinsurance.example",
+            contact_first_name: "John",
+            contact_last_name: "Doe",
+            contact_email: "john@example.com",
+            contact_phone: "+18005551234",
+            address1: "123 Main St",
+            address2: "",
+            city: "Denver",
+            state: "Colorado",
+            zip: "80202",
+            country: "US",
+            business_registration_number: "12-3456789",
+            business_registration_type: "EIN",
+            entity_type: "PRIVATE_PROFIT"
+          }
+        }
+      end
+    end
+
+    assert_redirected_to admin_compliance_path
+    assert_equal "Verification request submitted successfully. Status will update shortly.", flash[:notice]
+
+    verification = TelnyxTollFreeVerification.last
+    assert_equal @agency, verification.agency
+    assert_equal @agency.phone_sms, verification.telnyx_number
+    assert_equal "draft", verification.status
+    assert verification.payload.present?
+  end
+
+  test "create redirects when no phone_sms" do
+    @agency.update!(phone_sms: nil)
+
+    assert_no_difference "TelnyxTollFreeVerification.count" do
+      post admin_compliance_verifications_path, params: {
+        telnyx_toll_free_verification: { business_name: "Test" }
+      }
+    end
+
+    assert_redirected_to admin_compliance_path
+    assert_equal "A toll-free number must be assigned before submitting verification.", flash[:alert]
+  end
+
+  test "create prevents duplicate submissions (idempotency)" do
+    TelnyxTollFreeVerification.create!(
+      agency: @agency,
+      telnyx_number: @agency.phone_sms,
+      status: "submitted"
+    )
+
+    assert_no_difference "TelnyxTollFreeVerification.count" do
+      post admin_compliance_verifications_path, params: {
+        telnyx_toll_free_verification: {
+          business_name: "Reliable Insurance",
+          corporate_website: "https://example.com",
+          contact_first_name: "John",
+          contact_last_name: "Doe",
+          contact_email: "john@example.com",
+          contact_phone: "+18005551234",
+          address1: "123 Main St",
+          city: "Denver",
+          state: "Colorado",
+          zip: "80202"
+        }
+      }
+    end
+
+    assert_redirected_to admin_compliance_path
+    assert_equal "A verification request is already in progress.", flash[:alert]
+  end
+
+  test "create allows resubmission after rejection" do
+    rejected_verification = TelnyxTollFreeVerification.create!(
+      agency: @agency,
+      telnyx_number: @agency.phone_sms,
+      status: "rejected"
+    )
+
+    # Old rejected verification is replaced, so count stays the same
+    assert_no_difference "TelnyxTollFreeVerification.count" do
+      post admin_compliance_verifications_path, params: {
+        telnyx_toll_free_verification: {
+          business_name: "Reliable Insurance",
+          corporate_website: "https://reliableinsurance.example",
+          contact_first_name: "John",
+          contact_last_name: "Doe",
+          contact_email: "john@example.com",
+          contact_phone: "+18005551234",
+          address1: "123 Main St",
+          city: "Denver",
+          state: "Colorado",
+          zip: "80202"
+        }
+      }
+    end
+
+    assert_redirected_to admin_compliance_path
+
+    # Verify the old rejected verification was replaced
+    assert_not TelnyxTollFreeVerification.exists?(rejected_verification.id)
+    assert_equal "draft", @agency.telnyx_toll_free_verifications.last.status
+  end
 end

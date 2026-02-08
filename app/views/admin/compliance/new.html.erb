@@ -1,0 +1,214 @@
+<% content_for :title, "Submit Toll-Free Verification" %>
+
+<div class="container max-w-4xl py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold">Submit Toll-Free Verification</h1>
+    <p class="text-base-content/70 mt-2">
+      Complete this form to verify your toll-free number <%= current_agency.phone_sms %> with carriers.
+      This is required before you can send SMS messages.
+    </p>
+  </div>
+
+  <%= render UI::CardComponent.new do %>
+    <%= form_with model: @verification, url: admin_compliance_verifications_path, method: :post do |f| %>
+      <h2 class="text-xl font-semibold mb-6">Business Information</h2>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :business_name, label: "Business Name", hint: "Official legal name of your business") do |field| %>
+        <%= field.with_input do %>
+          <%= text_field_tag "telnyx_toll_free_verification[business_name]",
+                current_agency.name,
+                class: "input input-bordered w-full",
+                required: true,
+                maxlength: 500,
+                autocomplete: "organization" %>
+        <% end %>
+      <% end %>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :corporate_website, label: "Corporate Website", hint: "Full URL including http:// or https://") do |field| %>
+        <%= field.with_input do %>
+          <%= url_field_tag "telnyx_toll_free_verification[corporate_website]",
+                nil,
+                class: "input input-bordered w-full",
+                required: true,
+                maxlength: 500,
+                placeholder: "https://example.com",
+                autocomplete: "url" %>
+        <% end %>
+      <% end %>
+
+      <h2 class="text-xl font-semibold mb-6 mt-8">Contact Information</h2>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :contact_first_name, label: "First Name") do |field| %>
+          <%= field.with_input do %>
+            <%= text_field_tag "telnyx_toll_free_verification[contact_first_name]",
+                  current_user.first_name,
+                  class: "input input-bordered w-full",
+                  required: true,
+                  maxlength: 500,
+                  autocomplete: "given-name" %>
+          <% end %>
+        <% end %>
+
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :contact_last_name, label: "Last Name") do |field| %>
+          <%= field.with_input do %>
+            <%= text_field_tag "telnyx_toll_free_verification[contact_last_name]",
+                  current_user.last_name,
+                  class: "input input-bordered w-full",
+                  required: true,
+                  maxlength: 500,
+                  autocomplete: "family-name" %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :contact_email, label: "Contact Email") do |field| %>
+        <%= field.with_input do %>
+          <%= email_field_tag "telnyx_toll_free_verification[contact_email]",
+                current_user.email,
+                class: "input input-bordered w-full",
+                required: true,
+                maxlength: 500,
+                autocomplete: "email" %>
+        <% end %>
+      <% end %>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :contact_phone, label: "Contact Phone", hint: "Must be in E.164 format (e.g., +18005551234)") do |field| %>
+        <%= field.with_input do %>
+          <%= telephone_field_tag "telnyx_toll_free_verification[contact_phone]",
+                nil,
+                class: "input input-bordered w-full",
+                required: true,
+                maxlength: 500,
+                placeholder: "+18005551234",
+                pattern: "\\+[0-9]{10,15}",
+                autocomplete: "tel" %>
+        <% end %>
+      <% end %>
+
+      <h2 class="text-xl font-semibold mb-6 mt-8">Business Address</h2>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :address1, label: "Address Line 1") do |field| %>
+        <%= field.with_input do %>
+          <%= text_field_tag "telnyx_toll_free_verification[address1]",
+                nil,
+                class: "input input-bordered w-full",
+                required: true,
+                maxlength: 500,
+                autocomplete: "address-line1" %>
+        <% end %>
+      <% end %>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :address2, label: "Address Line 2 (Optional)", hint: "Suite, floor, unit, etc.") do |field| %>
+        <%= field.with_input do %>
+          <%= text_field_tag "telnyx_toll_free_verification[address2]",
+                nil,
+                class: "input input-bordered w-full",
+                maxlength: 500,
+                autocomplete: "address-line2" %>
+        <% end %>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :city, label: "City") do |field| %>
+          <%= field.with_input do %>
+            <%= text_field_tag "telnyx_toll_free_verification[city]",
+                  nil,
+                  class: "input input-bordered w-full",
+                  required: true,
+                  maxlength: 500,
+                  autocomplete: "address-level2" %>
+          <% end %>
+        <% end %>
+
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :state, label: "State", hint: "Full name (e.g., Texas)") do |field| %>
+          <%= field.with_input do %>
+            <%= text_field_tag "telnyx_toll_free_verification[state]",
+                  nil,
+                  class: "input input-bordered w-full",
+                  required: true,
+                  maxlength: 500,
+                  placeholder: "Texas",
+                  autocomplete: "address-level1" %>
+          <% end %>
+        <% end %>
+
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :zip, label: "ZIP Code") do |field| %>
+          <%= field.with_input do %>
+            <%= text_field_tag "telnyx_toll_free_verification[zip]",
+                  nil,
+                  class: "input input-bordered w-full",
+                  required: true,
+                  maxlength: 500,
+                  autocomplete: "postal-code" %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%= hidden_field_tag "telnyx_toll_free_verification[country]", "US" %>
+
+      <h2 class="text-xl font-semibold mb-6 mt-8">Business Registration (Optional but Recommended)</h2>
+
+      <div class="alert alert-info mb-6">
+        <div>
+          <span class="size-6 shrink-0"><%= heroicon "information-circle", variant: :outline %></span>
+          <div class="text-sm">
+            While optional, providing your EIN or business registration number can speed up the verification process.
+          </div>
+        </div>
+      </div>
+
+      <%= render UI::Form::FieldComponent.new(form: f, attribute: :business_registration_number, label: "Business Registration Number (Optional)", hint: "EIN, Tax ID, or DUNS number") do |field| %>
+        <%= field.with_input do %>
+          <%= text_field_tag "telnyx_toll_free_verification[business_registration_number]",
+                nil,
+                class: "input input-bordered w-full",
+                maxlength: 500,
+                placeholder: "12-3456789",
+                autocomplete: "off" %>
+        <% end %>
+      <% end %>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :business_registration_type, label: "Registration Type") do |field| %>
+          <%= field.with_input do %>
+            <%= select_tag "telnyx_toll_free_verification[business_registration_type]",
+                  options_for_select([
+                    ["EIN (Employer Identification Number)", "EIN"],
+                    ["Tax ID", "TAX_ID"],
+                    ["DUNS Number", "DUNS"]
+                  ], "EIN"),
+                  class: "select select-bordered w-full",
+                  autocomplete: "off" %>
+          <% end %>
+        <% end %>
+
+        <%= render UI::Form::FieldComponent.new(form: f, attribute: :entity_type, label: "Business Entity Type") do |field| %>
+          <%= field.with_input do %>
+            <%= select_tag "telnyx_toll_free_verification[entity_type]",
+                  options_for_select([
+                    ["Private For-Profit Corporation", "PRIVATE_PROFIT"],
+                    ["Sole Proprietor", "SOLE_PROPRIETOR"],
+                    ["Public For-Profit Corporation", "PUBLIC_PROFIT"],
+                    ["Non-Profit Organization", "NON_PROFIT"],
+                    ["Government Entity", "GOVERNMENT"]
+                  ], "PRIVATE_PROFIT"),
+                  class: "select select-bordered w-full",
+                  autocomplete: "off" %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="divider my-8"></div>
+
+      <div class="flex items-center justify-between gap-4">
+        <%= link_to "Cancel", admin_compliance_path, class: "btn btn-ghost" %>
+        <%= f.button type: "submit",
+              class: "btn btn-primary",
+              data: { turbo_submits_with: "Submitting...", action: "click->this#disabled" } do %>
+          Submit Verification Request
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

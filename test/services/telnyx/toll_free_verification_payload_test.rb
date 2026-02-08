@@ -32,17 +32,16 @@ class Telnyx::TollFreeVerificationPayloadTest < ActiveSupport::TestCase
 
     # Business identity fields
     assert_equal "Reliable Insurance Agency", payload[:businessName]
-    assert_equal "https://reliableinsurance.example", payload[:businessWebsite]
+    assert_equal "https://reliableinsurance.example", payload[:corporateWebsite]
     assert_equal "John", payload[:businessContactFirstName]
     assert_equal "Smith", payload[:businessContactLastName]
     assert_equal "john@reliableinsurance.example", payload[:businessContactEmail]
     assert_equal "+15551234567", payload[:businessContactPhone]
-    assert_equal "123 Main Street", payload[:businessAddress]
-    assert_equal "Suite 100", payload[:businessAddress2]
+    assert_equal "123 Main Street", payload[:businessAddr1]
+    assert_equal "Suite 100", payload[:businessAddr2]
     assert_equal "Denver", payload[:businessCity]
     assert_equal "Colorado", payload[:businessState]
     assert_equal "80202", payload[:businessZip]
-    assert_equal "US", payload[:businessCountry]
 
     # Business registration
     assert_equal "12-3456789", payload[:businessRegistrationNumber]
@@ -65,17 +64,16 @@ class Telnyx::TollFreeVerificationPayloadTest < ActiveSupport::TestCase
 
     # Check that keys are camelCase, not snake_case
     assert payload.key?(:businessName)
-    assert payload.key?(:businessWebsite)
+    assert payload.key?(:corporateWebsite)
     assert payload.key?(:businessContactFirstName)
     assert payload.key?(:businessContactLastName)
     assert payload.key?(:businessContactEmail)
     assert payload.key?(:businessContactPhone)
-    assert payload.key?(:businessAddress)
-    assert payload.key?(:businessAddress2)
+    assert payload.key?(:businessAddr1)
+    assert payload.key?(:businessAddr2)
     assert payload.key?(:businessCity)
     assert payload.key?(:businessState)
     assert payload.key?(:businessZip)
-    assert payload.key?(:businessCountry)
     assert payload.key?(:businessRegistrationNumber)
     assert payload.key?(:businessRegistrationType)
     assert payload.key?(:businessRegistrationCountry)
@@ -168,7 +166,6 @@ class Telnyx::TollFreeVerificationPayloadTest < ActiveSupport::TestCase
 
     payload = Telnyx::TollFreeVerificationPayload.build(@verification, business_info: @business_info)
 
-    assert_equal "US", payload[:businessCountry]
     assert_equal "US", payload[:businessRegistrationCountry]
   end
 

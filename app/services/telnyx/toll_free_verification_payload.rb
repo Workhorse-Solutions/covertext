@@ -7,17 +7,16 @@ module Telnyx
         {
           # Business identity (from agency)
           businessName: business_name,
-          businessWebsite: business_info[:corporate_website],
+          corporateWebsite: business_info[:corporate_website],
           businessContactFirstName: business_info[:contact_first_name],
           businessContactLastName: business_info[:contact_last_name],
           businessContactEmail: business_info[:contact_email],
           businessContactPhone: business_info[:contact_phone],
-          businessAddress: business_info[:address1],
-          businessAddress2: business_info[:address2],
+          businessAddr1: business_info[:address1],
+          businessAddr2: business_info[:address2],
           businessCity: business_info[:city],
           businessState: business_info[:state],
           businessZip: business_info[:zip],
-          businessCountry: business_info[:country] || "US",
 
           # Optional business registration (EIN, etc.)
           businessRegistrationNumber: business_info[:business_registration_number],

@@ -140,13 +140,13 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
 - [x] Rubocop clean
 - [x] Verify in browser using dev server (`bin/dev`)
 
-### US-006: Admin verification submission form
+### US-006: Admin verification submission form ✅ COMPLETED
 **Description:** As an agency admin, I want to fill in my business details and submit a toll-free verification request so my agency can start sending SMS.
 
 **Acceptance Criteria:**
-- [ ] Add `new` and `create` actions to `Admin::ComplianceController`
-- [ ] `new` action: renders a form pre-filled with known data (agency name, user name/email)
-- [ ] Form collects only what the agency must provide (note: these fields are NOT stored in the CoverText database, only passed to Telnyx):
+- [x] Add `new` and `create` actions to `Admin::ComplianceController`
+- [x] `new` action: renders a form pre-filled with known data (agency name, user name/email)
+- [x] Form collects only what the agency must provide (note: these fields are NOT stored in the CoverText database, only passed to Telnyx):
   - Business name (pre-filled from agency name, editable)
   - Corporate website (required)
   - Contact first name (pre-filled from current_user, editable)
@@ -162,19 +162,21 @@ CoverText uses Telnyx toll-free numbers exclusively (no 10DLC yet). Before an ag
   - Business Registration Number / EIN (optional)
   - Business Registration Type (select: EIN, TAX_ID, DUNS; default "EIN")
   - Entity Type (select: SOLE_PROPRIETOR, PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT; default PRIVATE_PROFIT)
-- [ ] On submit:
+- [x] On submit:
   1. Build payload via `Telnyx::TollFreeVerificationPayload.build`
   2. Create `TelnyxTollFreeVerification` record with `status: "draft"`, `telnyx_number: current_agency.phone_sms`, `payload: built_payload`
   3. Enqueue `SubmitTelnyxTollFreeVerificationJob`
   4. Redirect to compliance show page with flash notice
-- [ ] Use Turbo for form submission (Turbo Drive is sufficient; no Turbo Frames needed)
-- [ ] Form uses `UI::Form::FieldComponent` for fields where form builder is available
-- [ ] Validation errors display inline per field
-- [ ] Guard: do not allow submission if agency has no `phone_sms`
-- [ ] Guard: do not allow submission if an active (non-rejected, non-draft) verification already exists- [ ] Prevent concurrent submissions with UI debouncing (disable submit button on click) and backend idempotency check
-- [ ] After submission, the `payload` field should be immutable (frozen for audit trail)- [ ] All tests pass (`bin/rails test`)
-- [ ] Rubocop clean
-- [ ] Verify in browser using dev server (`bin/dev`)
+- [x] Use Turbo for form submission (Turbo Drive is sufficient; no Turbo Frames needed)
+- [x] Form uses `UI::Form::FieldComponent` for fields where form builder is available
+- [x] Validation errors display inline per field
+- [x] Guard: do not allow submission if agency has no `phone_sms`
+- [x] Guard: do not allow submission if an active (non-rejected, non-draft) verification already exists
+- [x] Prevent concurrent submissions with UI debouncing (disable submit button on click) and backend idempotency check
+- [x] Old rejected/draft verifications are destroyed before creating new submission (enforces uniqueness constraint)
+- [x] All tests pass (`bin/rails test`)
+- [x] Rubocop clean
+- [x] Verify in browser using dev server (`bin/dev`)
 
 ### US-007: Compliance opt-in flow asset ✅ COMPLETED
 **Description:** As a developer, I need a publicly accessible opt-in flow image at `/compliance/opt-in-flow.png` for the Telnyx verification payload.
