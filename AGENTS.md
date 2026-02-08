@@ -160,25 +160,29 @@ current_agency    # Returns current_user.account.agencies.where(active: true).fi
 - Why: Field-level errors provide better UX by showing errors in context
 
 ### Heroicon Helper
-- **The `heroicon` helper does NOT accept a `class:` parameter**
-- Wrap heroicon in a span/div with classes instead
-- Correct usage:
-  ```erb
-  <span class="size-4">
-    <%= heroicon "check-circle", variant: :mini %>
-  </span>
-  ```
+- **The `heroicon` helper does NOT accept a direct `class:` parameter**
+- Two correct approaches:
+  1. **Wrap in a span/div** (preferred in existing code):
+     ```erb
+     <span class="size-4">
+       <%= heroicon "check-circle", variant: :mini %>
+     </span>
+     ```
+  2. **Use options hash**:
+     ```erb
+     <%= heroicon "trash", variant: :outline, options: { class: "w-4 h-4 text-error" } %>
+     ```
 - WRONG usage:
   ```erb
   <%= heroicon "check-circle", variant: :mini, class: "size-4" %>
   ```
-- Example from existing code (admin/billing):
+- Example from existing code (admin layouts):
   ```erb
   <span class="size-6 shrink-0">
     <%= heroicon "check-circle", variant: :outline %>
   </span>
   ```
-- Why: The heroicon gem doesn't support class parameter; passing it causes "unknown keyword: :class" errors
+- Why: The heroicon gem requires class to be nested inside `options:` hash; passing it directly causes "unknown keyword: :class" errors
 
 ## Signup & Billing Flow
 
