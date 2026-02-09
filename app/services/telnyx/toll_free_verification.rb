@@ -4,9 +4,8 @@ module Telnyx
       include ::Telnyx::Configuration
 
       def submit!(verification)
-        configure_telnyx_gem!
-
-        response = ::Telnyx::MessagingTollfreeVerification.create(verification.payload)
+        client = telnyx_client
+        response = client.messaging_tollfree.verification.requests.create(verification.payload)
 
         verification.update!(
           telnyx_request_id: response.id,
@@ -27,18 +26,14 @@ module Telnyx
           return verification
         end
 
-        configure_telnyx_gem!
-
-        response = ::Telnyx::MessagingTollfreeVerification.retrieve(verification.telnyx_request_id)
-
-        telnyx_status = response.respond_to?(:verification_status) ? response.verification_status : response["verificationStatus"]
-        reason = response.respond_to?(:reason) ? response.reason : response["reason"]
+        client = telnyx_client
+        response = client.messaging_tollfree.verification.requests.retrieve(verification.telnyx_request_id)
 
         updates = {
-          status: map_telnyx_status(telnyx_status),
+          status: map_telnyx_status(response.verification_status),
           last_status_at: Time.current
         }
-        updates[:last_error] = reason if reason.present?
+        updates[:last_error] = response.reason if response.reason.present?
 
         verification.update!(updates)
         verification
@@ -51,7 +46,7 @@ module Telnyx
       private
 
       def map_telnyx_status(telnyx_status)
-        case telnyx_status
+        case telnyx_status.to_s
         when "In Progress", "Waiting For Telnyx", "Waiting For Vendor"
           "in_review"
         when "Waiting For Customer"

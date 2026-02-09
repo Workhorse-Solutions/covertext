@@ -4,49 +4,29 @@ module OutboundMessenger
       include ::Telnyx::Configuration
 
       def send_sms!(agency:, to_phone:, body:, request: nil)
-        configure_telnyx_gem!
-
-        response = ::Telnyx::Message.create(
-          from: agency.phone_sms,
-          to: to_phone,
-          text: body
-        )
-
+        client = telnyx_client
+        response = client.messages.send_(from: agency.phone_sms, to: to_phone, text: body)
         log_message(agency: agency, request: request, to_phone: to_phone, body: body,
-                    provider_message_id: response.id, media_count: 0)
+                    provider_message_id: response.data&.id, media_count: 0)
       rescue => e
         Rails.logger.error "[OutboundMessenger::Telnyx] SMS send failed: #{e.message}"
-
         log_message(agency: agency, request: request, to_phone: to_phone, body: body,
                     provider_message_id: nil, media_count: 0)
-
         raise e
       end
 
       def send_mms!(agency:, to_phone:, body:, media_url:, request: nil)
-        configure_telnyx_gem!
-
-        response = ::Telnyx::Message.create(
-          from: agency.phone_sms,
-          to: to_phone,
-          text: body,
-          media_urls: [ media_url ]
-        )
-
+        client = telnyx_client
+        response = client.messages.send_(from: agency.phone_sms, to: to_phone, text: body, media_urls: [ media_url ])
         message_log = log_message(agency: agency, request: request, to_phone: to_phone, body: body,
-                                  provider_message_id: response.id, media_count: 1)
-
+                                  provider_message_id: response.data&.id, media_count: 1)
         Delivery.create!(request: request, method: "mms", status: "queued")
-
         message_log
       rescue => e
         Rails.logger.error "[OutboundMessenger::Telnyx] MMS send failed: #{e.message}"
-
         log_message(agency: agency, request: request, to_phone: to_phone, body: body,
                     provider_message_id: nil, media_count: 1)
-
         Delivery.create!(request: request, method: "mms", status: "failed")
-
         raise e
       end
 

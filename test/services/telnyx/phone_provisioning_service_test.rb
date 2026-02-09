@@ -10,20 +10,12 @@ module Telnyx
       # Set test-specific ENV vars
       ENV["TELNYX_API_KEY"] = "test_key_123"
       ENV["TELNYX_MESSAGING_PROFILE_ID"] = "test_profile_123"
-      # Configure Telnyx gem with test credentials
-      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
-      # Reset Telnyx client's thread-local connection cache to prevent stale state
-      Thread.current[:telnyx_client] = nil
-      Thread.current[:telnyx_client_default_client] = nil
-      Thread.current[:telnyx_client_default_conn] = nil
     end
 
     teardown do
       # Restore original ENV values to prevent pollution
       ENV["TELNYX_API_KEY"] = @original_api_key
       ENV["TELNYX_MESSAGING_PROFILE_ID"] = @original_profile_id
-      # Reset Telnyx gem configuration
-      ::Telnyx.api_key = @original_api_key
     end
 
     # --- search_available_numbers ---
@@ -43,29 +35,9 @@ module Telnyx
         )
 
       service = PhoneProvisioningService.new(@agency)
-      $stderr.puts "[DEBUG-TEST] service.class=#{service.class}"
-      $stderr.puts "[DEBUG-TEST] service.class.instance_method(:search_available_numbers).source_location=#{service.class.instance_method(:search_available_numbers).source_location.inspect}"
       result = service.search_available_numbers
 
-      unless result.success?
-        $stderr.puts "[DEBUG] result.success?=#{result.success?} message=#{result.message}"
-        # Call list directly and inspect response structure
-        begin
-          raw = ::Telnyx::AvailablePhoneNumber.list(filter: { phone_number_type: "toll_free", country_code: "US", features: "sms", limit: 2 })
-          $stderr.puts "[DEBUG] raw.data.size=#{raw.data.size}"
-          if raw.data.size > 0
-            n = raw.data[0]
-            $stderr.puts "[DEBUG] n.class=#{n.class}"
-            $stderr.puts "[DEBUG] n['phone_number']=#{n['phone_number'].inspect}"
-            $stderr.puts "[DEBUG] n[:phone_number]=#{n[:phone_number].inspect}"
-            $stderr.puts "[DEBUG] n.phone_number=#{n.phone_number.inspect rescue 'N/A'}"
-            $stderr.puts "[DEBUG] n.values=#{n.instance_variable_get(:@values).inspect}"
-          end
-        rescue => e
-          $stderr.puts "[DEBUG] error: #{e.class}: #{e.message}"
-        end
-      end
-      assert result.success?
+      assert result.success?, "Expected success but got failure: #{result.message}"
       assert_equal [ "+18005551234", "+18775559876" ], result.data[:phone_numbers]
     end
 
@@ -85,66 +57,26 @@ module Telnyx
       assert_includes result.message, "No toll-free numbers"
     end
 
-
-
-    # --- error-handling tests ---
-    # TODO: These tests use method manipulation that causes test pollution.
-    # Skipping for now until we can implement proper mocking strategy.
-
     test "search_available_numbers handles API errors" do
-      skip "Test causes pollution - needs refactoring"
-      # Save the original method using alias
-      klass = Telnyx::AvailablePhoneNumber.singleton_class
-      klass.alias_method :__original_list_backup, :list if klass.method_defined?(:list)
+      stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
+        .with(query: hash_including({}))
+        .to_return(status: 500, body: { errors: [ { detail: "Internal server error" } ] }.to_json)
 
-      begin
-        Telnyx::AvailablePhoneNumber.define_singleton_method(:list) do |*_args|
-          raise StandardError, "API connection failed"
-        end
+      service = PhoneProvisioningService.new(@agency)
+      result = service.search_available_numbers
 
-        service = PhoneProvisioningService.new(@agency)
-        result = service.search_available_numbers
-
-        assert_not result.success?
-        assert_includes result.message, "contact support"
-      ensure
-        # Restore the original method using alias
-        if klass.method_defined?(:__original_list_backup)
-          klass.alias_method :list, :__original_list_backup
-          klass.remove_method :__original_list_backup
-        end
-      end
+      assert_not result.success?
+      assert_includes result.message, "contact support"
     end
 
     test "search_available_numbers checks for required credentials" do
-      skip "Test causes pollution - needs refactoring"
-      original_key = ENV.delete("TELNYX_API_KEY")
-      original_gem_key = ::Telnyx.api_key
-      ::Telnyx.api_key = nil
+      ENV.delete("TELNYX_API_KEY")
 
-      # Save the original method using alias
-      klass = Telnyx::AvailablePhoneNumber.singleton_class
-      klass.alias_method :__original_list_backup, :list if klass.method_defined?(:list)
+      service = PhoneProvisioningService.new(@agency)
+      result = service.search_available_numbers
 
-      begin
-        Telnyx::AvailablePhoneNumber.define_singleton_method(:list) do |*_args|
-          raise StandardError, "API key is missing"
-        end
-
-        service = PhoneProvisioningService.new(@agency)
-        result = service.search_available_numbers
-
-        assert_not result.success?
-        assert_includes result.message, "contact support"
-      ensure
-        ENV["TELNYX_API_KEY"] = original_key if original_key
-        ::Telnyx.api_key = original_gem_key
-        # Restore the original method using alias
-        if klass.method_defined?(:__original_list_backup)
-          klass.alias_method :list, :__original_list_backup
-          klass.remove_method :__original_list_backup
-        end
-      end
+      assert_not result.success?
+      assert_includes result.message, "contact support"
     end
 
     # --- provision ---
@@ -206,9 +138,6 @@ module Telnyx
     test "provision checks for required credentials" do
       original_key = ENV.delete("TELNYX_API_KEY")
       original_profile = ENV.delete("TELNYX_MESSAGING_PROFILE_ID")
-      original_gem_key = ::Telnyx.api_key
-      ::Telnyx.api_key = nil
-
       begin
         service = PhoneProvisioningService.new(@agency)
         result = service.provision("+18005551234")
@@ -219,7 +148,6 @@ module Telnyx
       ensure
         ENV["TELNYX_API_KEY"] = original_key if original_key
         ENV["TELNYX_MESSAGING_PROFILE_ID"] = original_profile if original_profile
-        ::Telnyx.api_key = original_gem_key
       end
     end
   end

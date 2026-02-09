@@ -8,6 +8,7 @@ ENV["TELNYX_API_KEY"] ||= "test_telnyx_api_key"
 require_relative "../config/environment"
 require "rails/test_help"
 require "webmock/minitest"
+require "minitest/mock"
 
 # Configure WebMock
 WebMock.disable_net_connect!(allow_localhost: true)
@@ -22,15 +23,13 @@ module ActiveSupport
     fixtures :all
 
     setup do
+      # Ensure Telnyx API key is always available (guards against test pollution)
+      ENV["TELNYX_API_KEY"] ||= "test_telnyx_api_key"
       # Stub Stripe API calls by default
       stub_stripe_api_calls
-      # Set Telnyx API key for tests
-      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
     end
 
     teardown do
-      # Reset Telnyx state to prevent test pollution
-      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
     end
 
     # Add more helper methods to be used by all tests here...
@@ -60,24 +59,23 @@ module ActiveSupport
         headers: { "Content-Type" => "application/json" }
       )
 
-      # Stub Telnyx API calls (Message.create) - WebMock handles HTTP requests
-      stub_request(:post, "https://api.telnyx.com/v2/messages")
-        .to_return(
-          status: 200,
-          body: {
-            data: {
-              id: "test_message_id_#{SecureRandom.hex(4)}",
-              record_type: "message",
-              direction: "outbound",
-              type: "SMS",
-              from: { phone_number: "+15551234567" },
-              to: [ { phone_number: "+15559876543", status: "queued" } ],
-              text: "Test message",
-              cost: { amount: "0.0040", currency: "USD" }
-            }
-          }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
+      # Stub all Telnyx API calls (any endpoint)
+      stub_request(:any, /api\.telnyx\.com/).to_return do |request|
+        # Return a JSON body that matches the expected Telnyx SDK response structure
+        body = {
+          data: {
+            id: "test_message_id_#{SecureRandom.hex(4)}",
+            record_type: "message",
+            direction: "outbound",
+            type: "SMS",
+            from: { phone_number: "+15551234567" },
+            to: [ { phone_number: "+15559876543", status: "queued" } ],
+            text: "Test message",
+            cost: { amount: "0.0040", currency: "USD" }
+          }
+        }
+        { status: 200, body: body.to_json, headers: { "Content-Type" => "application/json" } }
+      end
     end
   end
 end

@@ -24,7 +24,7 @@ gem "bcrypt", "~> 3.1.7"
 
 
 # Telnyx SDK for SMS/MMS
-gem "telnyx", "~> 3.0"
+gem "telnyx", "~> 5.13"
 gem "faraday-retry"  # Required by telnyx gem
 
 # Stripe for subscription billing
@@ -58,6 +58,8 @@ gem "image_processing", "~> 1.2"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+  gem "minitest"
+  gem "minitest-mock"
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
   # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)

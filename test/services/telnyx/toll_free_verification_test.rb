@@ -1,5 +1,6 @@
 require "ostruct"
 require "test_helper"
+require "minitest/mock"
 
 class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
   setup do
@@ -13,35 +14,36 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
       }
     )
 
-    # Save original methods to restore in teardown
-    @original_create = ::Telnyx::MessagingTollfreeVerification.method(:create)
-    @original_retrieve = ::Telnyx::MessagingTollfreeVerification.method(:retrieve)
+    # Save original method to restore in teardown
+    @original_client = Telnyx::TollFreeVerification.method(:telnyx_client)
   end
 
   teardown do
-    # Restore original methods (which are the test_helper stubs)
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create, @original_create)
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve, @original_retrieve)
+    # Restore original telnyx_client method
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client, @original_client)
   end
 
   # --- submit! ---
 
   test "submit! successfully creates verification request" do
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create) do |payload = {}|
-      OpenStruct.new(id: "test-request-id-123", verification_status: "In Progress")
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:create, OpenStruct.new(id: "test-request-id-123", verification_status: "In Progress")) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.submit!(@verification)
 
     assert_equal "submitted", result.status
     assert_equal "test-request-id-123", result.telnyx_request_id
     assert_not_nil result.submitted_at
+    fake_requests.verify
   end
 
   test "submit! handles API errors" do
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create) do |payload = {}|
-      raise ::Telnyx::APIError.new("Invalid phone number", http_status: 422)
-    end
+    fake_requests = Object.new
+    fake_requests.define_singleton_method(:create) { |*| raise StandardError, "Invalid phone number" }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.submit!(@verification)
 
@@ -52,9 +54,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
   end
 
   test "submit! handles network errors" do
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create) do |payload = {}|
-      raise Faraday::TimeoutError, "execution expired"
-    end
+    fake_requests = Object.new
+    fake_requests.define_singleton_method(:create) { |*| raise Faraday::TimeoutError, "execution expired" }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.submit!(@verification)
 
@@ -64,50 +67,34 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
   end
 
   test "submit! records error if API key not configured" do
-    original_key = ENV["TELNYX_API_KEY"]
-    original_gem_key = ::Telnyx.api_key
-    ENV["TELNYX_API_KEY"] = nil
-    ::Telnyx.api_key = nil
-
-    # Temporarily override Configuration to not use test fallback
-    Telnyx::TollFreeVerification.singleton_class.send(:define_method, :telnyx_api_key) do
-      key = Rails.application.credentials.dig(:telnyx, :api_key) || ENV["TELNYX_API_KEY"]
-      raise "Telnyx API key not configured. Please set it in Rails credentials or ENV." unless key
-      key
-    end
-
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { raise "Telnyx API key not configured. Please set it in Rails credentials or ENV." }
     result = Telnyx::TollFreeVerification.submit!(@verification)
-
     assert_not_nil result.last_error
     assert_includes result.last_error, "API key not configured"
-  ensure
-    ENV["TELNYX_API_KEY"] = original_key
-    ::Telnyx.api_key = original_gem_key
-    # Restore the module method
-    Telnyx::TollFreeVerification.singleton_class.send(:remove_method, :telnyx_api_key)
   end
 
   # --- fetch_status! ---
 
   test "fetch_status! maps 'In Progress' to in_review" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "In Progress", reason: nil)
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "In Progress", reason: nil)) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
     assert_equal "in_review", result.status
     assert_not_nil result.last_status_at
+    fake_requests.verify
   end
 
   test "fetch_status! maps 'Waiting For Telnyx' to in_review" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Waiting For Telnyx", reason: nil)
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Waiting For Telnyx", reason: nil)) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -116,10 +103,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! maps 'Waiting For Vendor' to in_review" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Waiting For Vendor", reason: nil)
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Waiting For Vendor", reason: nil)) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -128,10 +115,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! maps 'Waiting For Customer' to waiting_for_customer" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Waiting For Customer", reason: nil)
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Waiting For Customer", reason: nil)) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -140,10 +127,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! maps 'Verified' to approved" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Verified", reason: nil)
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Verified", reason: nil)) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -152,10 +139,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! maps 'Rejected' to rejected" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Rejected", reason: "Invalid business information")
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Rejected", reason: "Invalid business information")) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -165,10 +152,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! stores reason in last_error when present" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      OpenStruct.new(verification_status: "Waiting For Customer", reason: "Additional documentation required")
-    end
+    fake_requests = Minitest::Mock.new
+    fake_requests.expect(:retrieve, OpenStruct.new(verification_status: "Waiting For Customer", reason: "Additional documentation required")) { true }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -178,10 +165,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! handles API errors" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      raise ::Telnyx::APIError.new("Verification not found", http_status: 404)
-    end
+    fake_requests = Object.new
+    fake_requests.define_singleton_method(:retrieve) { |*| raise StandardError, "Verification not found" }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -191,10 +178,10 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! handles network errors" do
     @verification.update!(telnyx_request_id: "test-request-id")
-
-    ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-      raise Faraday::TimeoutError, "execution expired"
-    end
+    fake_requests = Object.new
+    fake_requests.define_singleton_method(:retrieve) { |*| raise Faraday::TimeoutError, "execution expired" }
+    fake_client = build_fake_client(fake_requests)
+    Telnyx::TollFreeVerification.define_singleton_method(:telnyx_client) { fake_client }
 
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
 
@@ -204,10 +191,18 @@ class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
 
   test "fetch_status! handles missing telnyx_request_id" do
     @verification.update!(telnyx_request_id: nil)
-
     result = Telnyx::TollFreeVerification.fetch_status!(@verification)
-
     assert_not_nil result.last_error
     assert_includes result.last_error, "telnyx_request_id is missing"
+  end
+
+  private
+
+  # Builds a fake client with the 3-level chain:
+  # client.messaging_tollfree.verification.requests
+  def build_fake_client(fake_requests)
+    fake_verification = OpenStruct.new(requests: fake_requests)
+    fake_messaging_tollfree = OpenStruct.new(verification: fake_verification)
+    OpenStruct.new(messaging_tollfree: fake_messaging_tollfree)
   end
 end

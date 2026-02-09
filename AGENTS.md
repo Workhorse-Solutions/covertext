@@ -27,6 +27,9 @@ CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text
 - Minitest only (no RSpec).
 - ViewComponent + Heroicon for reusable UI.
 
+## Gem Version Policy
+- **Always add the latest stable version of a gem** unless there is a documented compatibility or API-breaking reason. If an older version is required, document the reason in the commit message and AGENTS.md.
+
 ## Data Model Patterns
 
 ### Account Model

@@ -1,6 +1,5 @@
 module Telnyx
   class PhoneProvisioningService
-    $stderr.puts "[DEBUG-CLASSLOAD] PhoneProvisioningService loaded from #{__FILE__}:#{__LINE__}"
     include Telnyx::Configuration
 
     def initialize(agency)
@@ -10,22 +9,15 @@ module Telnyx
     # Search for available toll-free numbers. Returns a Result with
     # data: { phone_numbers: ["+18005551234", ...] } on success.
     def search_available_numbers(limit: 10)
-      configure_telnyx_gem!
-
-      response = ::Telnyx::AvailablePhoneNumber.list(
-        filter: {
-          phone_number_type: "toll_free",
-          country_code: "US",
-          features: "sms",
-          limit: limit
-        }
+      client = telnyx_client
+      response = client.available_phone_numbers.list(
+        "filter[phone_number_type]" => "toll_free",
+        "filter[country_code]" => "US",
+        "filter[features]" => "sms",
+        "filter[limit]" => limit
       )
 
-      if Rails.env.test?
-        File.write("/tmp/telnyx_debug.log", "response.class=#{response.class}\nresponse.data.class=#{response.data.class}\nresponse.data.size=#{response.data.size rescue 'N/A'}\nresponse.data=#{response.data.inspect[0..500]}\n", mode: "a")
-      end
-
-      numbers = response.data.map { |n| n["phone_number"] || n[:phone_number] }
+      numbers = response.data.map(&:phone_number)
 
       if numbers.empty?
         Result.failure("No toll-free numbers are currently available. Please try again later.")
@@ -46,7 +38,6 @@ module Telnyx
         )
       end
 
-      configure_telnyx_gem!
       purchase_and_assign(phone_number)
     rescue => e
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Error: #{e.message}"
@@ -85,11 +76,11 @@ module Telnyx
     end
 
     def purchase_number(phone_number)
-      order = ::Telnyx::NumberOrder.create(
+      client = telnyx_client
+      order = client.number_orders.create(
         phone_numbers: [ { phone_number: phone_number } ],
         messaging_profile_id: telnyx_messaging_profile_id
       )
-
       order.data.phone_numbers.first.phone_number
     rescue => e
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Purchase failed: #{e.message}"
