@@ -48,10 +48,10 @@ module Admin
       # Use a simple approach: override the service method
       service_instance = Telnyx::PhoneProvisioningService.new(@agency)
       service_instance.define_singleton_method(:call) do
-        Telnyx::PhoneProvisioningService::Result.new(
+        Telnyx::Result.new(
           success: true,
           message: "Phone number provisioned successfully",
-          phone_number: "+18001234567"
+          data: { phone_number: "+18001234567" }
         )
       end
 
@@ -71,7 +71,7 @@ module Admin
       # Use a simple approach: override the service method
       service_instance = Telnyx::PhoneProvisioningService.new(@agency)
       service_instance.define_singleton_method(:call) do
-        Telnyx::PhoneProvisioningService::Result.new(
+        Telnyx::Result.new(
           success: false,
           message: "Provisioning failed: API error"
         )

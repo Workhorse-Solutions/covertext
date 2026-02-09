@@ -87,6 +87,16 @@ module ActiveSupport
       ::Telnyx::Message.define_singleton_method(:create) do |**args|
         OpenStruct.new(id: "test_msg_#{SecureRandom.hex(4)}")
       end
+
+      # Stub Telnyx::MessagingTollfreeVerification.create to return a mock response
+      ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create) do |payload = {}|
+        OpenStruct.new(id: "test_verification_#{SecureRandom.hex(4)}", verification_status: "In Progress")
+      end
+
+      # Stub Telnyx::MessagingTollfreeVerification.retrieve to return a mock response
+      ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
+        OpenStruct.new(id: id, verification_status: "In Progress", reason: nil)
+      end
     end
   end
 end

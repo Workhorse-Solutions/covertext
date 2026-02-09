@@ -21,9 +21,11 @@ module Telnyx
     end
 
     test "checks for required credentials" do
-      # Remove ENV vars temporarily
+      # Remove ENV vars and gem key temporarily
       original_key = ENV.delete("TELNYX_API_KEY")
       original_profile = ENV.delete("TELNYX_MESSAGING_PROFILE_ID")
+      original_gem_key = ::Telnyx.api_key
+      ::Telnyx.api_key = nil
 
       begin
         service = PhoneProvisioningService.new(@agency)
@@ -36,6 +38,7 @@ module Telnyx
       ensure
         ENV["TELNYX_API_KEY"] = original_key if original_key
         ENV["TELNYX_MESSAGING_PROFILE_ID"] = original_profile if original_profile
+        ::Telnyx.api_key = original_gem_key
       end
     end
 

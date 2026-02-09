@@ -1,34 +1,18 @@
-require "net/http"
-require "json"
-
 module Telnyx
   class TollFreeVerification
-    BASE_URL = "https://api.telnyx.com/v2/messaging_tollfree/verification/requests"
-
     class << self
+      include ::Telnyx::Configuration
+
       def submit!(verification)
-        api_key = fetch_api_key
-        uri = URI(BASE_URL)
+        configure_telnyx_gem!
 
-        request = Net::HTTP::Post.new(uri)
-        request["Authorization"] = "Bearer #{api_key}"
-        request["Content-Type"] = "application/json"
-        request.body = verification.payload.to_json
+        response = ::Telnyx::MessagingTollfreeVerification.create(verification.payload)
 
-        response = perform_request(uri, request)
-
-        if response.is_a?(Net::HTTPSuccess)
-          response_body = JSON.parse(response.body)
-          verification.update!(
-            telnyx_request_id: response_body.dig("data", "id"),
-            status: "submitted",
-            submitted_at: Time.current
-          )
-        else
-          verification.update!(
-            last_error: "HTTP #{response.code}: #{response.body}"
-          )
-        end
+        verification.update!(
+          telnyx_request_id: response.id,
+          status: "submitted",
+          submitted_at: Time.current
+        )
 
         verification
       rescue StandardError => e
@@ -43,34 +27,20 @@ module Telnyx
           return verification
         end
 
-        api_key = fetch_api_key
-        uri = URI("#{BASE_URL}/#{verification.telnyx_request_id}")
+        configure_telnyx_gem!
 
-        request = Net::HTTP::Get.new(uri)
-        request["Authorization"] = "Bearer #{api_key}"
+        response = ::Telnyx::MessagingTollfreeVerification.retrieve(verification.telnyx_request_id)
 
-        response = perform_request(uri, request)
+        telnyx_status = response.respond_to?(:verification_status) ? response.verification_status : response["verificationStatus"]
+        reason = response.respond_to?(:reason) ? response.reason : response["reason"]
 
-        if response.is_a?(Net::HTTPSuccess)
-          response_body = JSON.parse(response.body)
-          telnyx_status = response_body.dig("data", "verificationStatus")
-          reason = response_body.dig("data", "reason")
+        updates = {
+          status: map_telnyx_status(telnyx_status),
+          last_status_at: Time.current
+        }
+        updates[:last_error] = reason if reason.present?
 
-          covertext_status = map_telnyx_status(telnyx_status)
-
-          updates = {
-            status: covertext_status,
-            last_status_at: Time.current
-          }
-          updates[:last_error] = reason if reason.present?
-
-          verification.update!(updates)
-        else
-          verification.update!(
-            last_error: "HTTP #{response.code}: #{response.body}"
-          )
-        end
-
+        verification.update!(updates)
         verification
       rescue StandardError => e
         Rails.logger.error "[Telnyx::TollFreeVerification] Fetch status error: #{e.message}"
@@ -79,25 +49,6 @@ module Telnyx
       end
 
       private
-
-      def fetch_api_key
-        api_key = begin
-          Rails.application.credentials.dig(:telnyx, :api_key)
-        rescue StandardError
-          nil
-        end
-        api_key ||= ENV["TELNYX_API_KEY"]
-
-        raise "Telnyx API key not configured" unless api_key
-
-        api_key
-      end
-
-      def perform_request(uri, request)
-        Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, read_timeout: 30, open_timeout: 30) do |http|
-          http.request(request)
-        end
-      end
 
       def map_telnyx_status(telnyx_status)
         case telnyx_status
@@ -110,7 +61,7 @@ module Telnyx
         when "Rejected"
           "rejected"
         else
-          "in_review" # Default fallback
+          "in_review"
         end
       end
     end
