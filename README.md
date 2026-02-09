@@ -47,7 +47,7 @@ Phase 0 – Data Model Foundation
 - Minitest coverage for validations + uniqueness
 - NO webhooks, NO jobs, NO conversation logic
 
-Phase 1 – Twilio plumbing (inbound/outbound skeleton)
+Phase 1 – SMS plumbing (inbound/outbound skeleton)
 Phase 2 – Conversation session state machine
 Phase 3 – Intent routing + menu fallback
 Phase 4 – Insurance card fulfillment (MMS)

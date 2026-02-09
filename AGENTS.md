@@ -41,8 +41,8 @@ CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text
 - Represents insurance agency tenant
 - Belongs to Account: `belongs_to :account`
 - Has operational data: `has_many :clients`, `has_many :policies`, `has_many :requests`
-- Key fields: `phone_sms` (Twilio number), `active` (boolean)
-- **phone_sms is optional:** NOT collected during signup; agencies provision Twilio numbers later via admin panel
+- Key fields: `phone_sms` (SMS number), `active` (boolean)
+- **phone_sms is optional:** NOT collected during signup; agencies provision SMS numbers later via admin panel
 - Validation: `validates :phone_sms, uniqueness: true, allow_nil: true` (allows creation without phone number)
 - Key methods: `can_go_live?`, `activate!`, `deactivate!`
 - Does NOT have `has_many :users` (users belong to Account)
@@ -60,7 +60,7 @@ CoverText is a Rails 8 B2B SaaS for SMS-based insurance client service. The text
 ### Naming Conventions
 - Use "Client" not "Contact" for insurance clients
 - Use `phone_mobile` for client phone numbers
-- Use `phone_sms` for agency Twilio numbers
+- Use `phone_sms` for agency SMS numbers
 
 ## FormObject Pattern
 

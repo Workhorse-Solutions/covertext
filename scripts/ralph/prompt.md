@@ -91,7 +91,7 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 
 ### Multi-Tenant Architecture
 - **Account** → billing entity (Stripe subscription)
-- **Agency** → operational tenant (Twilio number, clients)
+- **Agency** → operational tenant (SMS number, clients)
 - **User** → belongs to Account (NOT Agency), roles: 'owner' or 'admin'
 - Always use `current_account` and `current_agency` helpers
 

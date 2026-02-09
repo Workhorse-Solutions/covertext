@@ -2,6 +2,6 @@
 #
 # Usage:
 #   OutboundMessenger::Telnyx.send_sms!(agency:, to_phone:, body:)
-#   OutboundMessenger::Twilio.send_sms!(agency:, to_phone:, body:) # Future
+#   # Twilio support removed; use Telnyx for all outbound SMS
 module OutboundMessenger
 end

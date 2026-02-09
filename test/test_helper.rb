@@ -1,8 +1,6 @@
 ENV["RAILS_ENV"] ||= "test"
 
 # Set test credentials before loading environment
-ENV["TWILIO_ACCOUNT_SID"] ||= "test_account_sid"
-ENV["TWILIO_AUTH_TOKEN"] ||= "test_auth_token"
 ENV["STRIPE_SECRET_KEY"] ||= "sk_test_mock_key_for_testing"
 ENV["STRIPE_PUBLISHABLE_KEY"] ||= "pk_test_mock_key_for_testing"
 ENV["TELNYX_API_KEY"] ||= "test_telnyx_api_key"
@@ -23,12 +21,15 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Reset Twilio client before each test to ensure clean stubbed state
     setup do
-      TwilioClient.reset!
       # Stub Stripe API calls by default
       stub_stripe_api_calls
       # Set Telnyx API key for tests
+      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
+    end
+
+    teardown do
+      # Reset Telnyx state to prevent test pollution
       ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
     end
 

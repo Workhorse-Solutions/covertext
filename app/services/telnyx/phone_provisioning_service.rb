@@ -1,5 +1,6 @@
 module Telnyx
   class PhoneProvisioningService
+    $stderr.puts "[DEBUG-CLASSLOAD] PhoneProvisioningService loaded from #{__FILE__}:#{__LINE__}"
     include Telnyx::Configuration
 
     def initialize(agency)
@@ -19,6 +20,10 @@ module Telnyx
           limit: limit
         }
       )
+
+      if Rails.env.test?
+        File.write("/tmp/telnyx_debug.log", "response.class=#{response.class}\nresponse.data.class=#{response.data.class}\nresponse.data.size=#{response.data.size rescue 'N/A'}\nresponse.data=#{response.data.inspect[0..500]}\n", mode: "a")
+      end
 
       numbers = response.data.map { |n| n["phone_number"] || n[:phone_number] }
 

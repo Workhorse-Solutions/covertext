@@ -17,10 +17,8 @@ Rails.application.routes.draw do
   get "terms", to: "marketing#terms"
   get "sms-consent", to: "marketing#sms_consent"
 
-  # Twilio webhooks
+  # Telnyx and Stripe webhooks
   namespace :webhooks do
-    post "twilio/inbound", to: "twilio_inbound#create"
-    post "twilio/status", to: "twilio_status#create"
     post "telnyx/inbound", to: "telnyx_inbound#create"
     post "telnyx/status", to: "telnyx_status#create"
     post "stripe", to: "stripe_webhooks#create"
