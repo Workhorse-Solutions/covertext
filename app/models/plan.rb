@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 # Plan represents subscription tier information for CoverText
 # This is not an ActiveRecord model - it's a simple value object for plan metadata

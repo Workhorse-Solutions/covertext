@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 class UI::FeatureItemComponent < ViewComponent::Base
   DEFAULT_CLASSES = "flex items-start".freeze

@@ -1,4 +1,4 @@
-require 'ostruct'
+require "ostruct"
 require "test_helper"
 
 module Webhooks

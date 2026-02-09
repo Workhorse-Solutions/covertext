@@ -1,0 +1,3 @@
+# This file disables the Style/FrozenStringLiteralComment cop
+Style/FrozenStringLiteralComment:
+  Enabled: false

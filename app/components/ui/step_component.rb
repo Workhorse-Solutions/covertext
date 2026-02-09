@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 class UI::StepComponent < ViewComponent::Base
   DEFAULT_CLASSES = "text-center".freeze

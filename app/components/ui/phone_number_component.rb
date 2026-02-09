@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 class UI::PhoneNumberComponent < ViewComponent::Base
   # Renders a formatted US phone number for display.

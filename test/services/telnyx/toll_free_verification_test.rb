@@ -1,4 +1,4 @@
-require 'ostruct'
+require "ostruct"
 require "test_helper"
 
 class Telnyx::TollFreeVerificationTest < ActiveSupport::TestCase
