@@ -9,10 +9,10 @@
 
         <!-- Setup Checklist -->
         <ul class="steps steps-vertical w-full">
-          <!-- Subscription Step -->
-          <li class="step <%= @agency.subscription_ready? ? 'step-primary' : '' %>" data-content="<%= @agency.subscription_ready? ? '✓' : '✗' %>">
+          <!-- Step 1: Subscription -->
+          <li class="step <%= @agency.subscription_ready? ? 'step-primary' : '' %>" data-content="<%= @agency.subscription_ready? ? '✓' : '1' %>">
             <div class="text-left w-full pl-4">
-              <div class="font-semibold">Active Subscription</div>
+              <div class="font-semibold">Activate Subscription</div>
               <div class="text-sm text-base-content/70">
                 <% if @agency.subscription_ready? %>
                   <%= @account.plan_tier.titleize %> Plan Active
@@ -23,41 +23,60 @@
             </div>
           </li>
 
-          <!-- Phone Number Step -->
-          <li class="step <%= @agency.phone_ready? ? 'step-primary' : '' %>" data-content="<%= @agency.phone_ready? ? '✓' : '✗' %>">
+          <!-- Step 2: SMS Number -->
+          <li class="step <%= @agency.phone_ready? ? 'step-primary' : '' %>" data-content="<%= @agency.phone_ready? ? '✓' : '2' %>">
             <div class="text-left w-full pl-4">
-              <div class="font-semibold">Dedicated SMS Number</div>
+              <div class="font-semibold">Select SMS Number</div>
               <div class="text-sm text-base-content/70">
                 <% if @agency.phone_ready? %>
-                  <%= @agency.phone_sms %>
+                  <%= render UI::PhoneNumberComponent.new(number: @agency.phone_sms, class_name: "font-mono") %>
+                <% elsif @agency.subscription_ready? %>
+                  <button type="button"
+                          class="link link-hover link-primary"
+                          onclick="phone_provisioning_modal.showModal()">
+                    Choose a toll-free number for your agency
+                  </button>
                 <% else %>
-                  A toll-free number will be provisioned for your agency
+                  Complete step 1 first
+                <% end %>
+              </div>
+            </div>
+          </li>
+
+          <!-- Step 3: Verification -->
+          <li class="step <%= @agency.verification_ready? ? 'step-primary' : '' %>" data-content="<%= @agency.verification_ready? ? '✓' : '3' %>">
+            <div class="text-left w-full pl-4">
+              <div class="font-semibold">Submit Verification</div>
+              <div class="text-sm text-base-content/70">
+                <% if @agency.verification_ready? %>
+                  Toll-free verification submitted
+                <% elsif @agency.phone_ready? %>
+                  <%= link_to "Submit toll-free verification", admin_compliance_path, class: "link link-hover link-primary" %> to enable messaging
+                <% else %>
+                  Complete step 2 first
                 <% end %>
               </div>
             </div>
           </li>
         </ul>
-
-        <!-- Provision Button -->
-        <% if !@agency.phone_ready? %>
-          <div class="card-actions justify-end mt-6">
-            <%= form_with url: admin_phone_provisioning_path, method: :post, class: "w-full sm:w-auto" do |f| %>
-              <%= f.button type: "submit",
-                    class: "btn btn-primary w-full sm:w-auto #{'btn-disabled' unless @agency.subscription_ready?}",
-                    disabled: !@agency.subscription_ready?,
-                    data: { turbo_submits_with: "Provisioning..." } do %>
-                <span class="w-5 h-5"><%= heroicon "phone", variant: :mini %></span>
-                Provision Phone Number
-              <% end %>
-            <% end %>
-            <% unless @agency.subscription_ready? %>
-              <p class="text-sm text-base-content/60 mt-2">
-                An active subscription is required to provision a phone number
-              </p>
-            <% end %>
-          </div>
-        <% end %>
       <% end %>
+
+    <!-- Phone Number Selection Modal -->
+    <% if @agency.subscription_ready? && !@agency.phone_ready? %>
+      <dialog id="phone_provisioning_modal" class="modal">
+        <div class="modal-box max-w-md">
+          <h3 class="text-lg font-bold mb-2">Select SMS Number</h3>
+          <%= turbo_frame_tag "phone_number_selection", src: admin_new_phone_provisioning_path, loading: :lazy do %>
+            <div class="flex justify-center py-8">
+              <span class="loading loading-spinner loading-lg text-primary"></span>
+            </div>
+          <% end %>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    <% end %>
   <% else %>
     <!-- Live State -->
     <div class="grid gap-6 md:grid-cols-2">
@@ -72,7 +91,7 @@
         <div class="space-y-3">
           <div>
             <div class="text-sm text-base-content/70">SMS Number</div>
-            <div class="font-mono font-semibold"><%= @agency.phone_sms %></div>
+            <div class="font-mono font-semibold"><%= render UI::PhoneNumberComponent.new(number: @agency.phone_sms) %></div>
           </div>
 
           <div>

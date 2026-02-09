@@ -6,8 +6,34 @@ module Telnyx
       @agency = agency
     end
 
-    def call
-      # Idempotency check
+    # Search for available toll-free numbers. Returns a Result with
+    # data: { phone_numbers: ["+18005551234", ...] } on success.
+    def search_available_numbers(limit: 10)
+      configure_telnyx_gem!
+
+      response = ::Telnyx::AvailablePhoneNumber.list(
+        filter: {
+          phone_number_type: "toll_free",
+          country_code: "US",
+          features: "sms",
+          limit: limit
+        }
+      )
+
+      numbers = response.data.map { |n| n["phone_number"] || n[:phone_number] }
+
+      if numbers.empty?
+        Result.failure("No toll-free numbers are currently available. Please try again later.")
+      else
+        Result.success("Found #{numbers.size} available numbers", data: { phone_numbers: numbers })
+      end
+    rescue => e
+      Rails.logger.error "[Telnyx::PhoneProvisioningService] Search failed: #{e.message}"
+      Result.failure(user_friendly_message(e))
+    end
+
+    # Provision a specific phone number chosen by the user.
+    def provision(phone_number)
       if @agency.phone_sms.present?
         return Result.success(
           "Phone number already provisioned",
@@ -16,64 +42,41 @@ module Telnyx
       end
 
       configure_telnyx_gem!
-      provision_number
+      purchase_and_assign(phone_number)
     rescue => e
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Error: #{e.message}"
-
       Result.failure(user_friendly_message(e))
     end
 
     private
 
-    def provision_number
-      phone_number = nil
+    def purchase_and_assign(phone_number)
+      purchased_number = nil
 
       ActiveRecord::Base.transaction do
-        available_numbers = search_toll_free_numbers
-
-        if available_numbers.empty?
-          raise "No toll-free numbers available in your area"
-        end
-
-        phone_number = purchase_number(available_numbers.first["phone_number"])
+        purchased_number = purchase_number(phone_number)
 
         @agency.update!(
-          phone_sms: phone_number,
+          phone_sms: purchased_number,
           live_enabled: true
         )
       end
 
       Result.success(
         "Phone number provisioned successfully",
-        data: { phone_number: phone_number }
+        data: { phone_number: purchased_number }
       )
     rescue => e
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Provisioning failed: #{e.message}"
-      Rails.logger.error "[Telnyx::PhoneProvisioningService] Purchased number (if any): #{phone_number}"
+      Rails.logger.error "[Telnyx::PhoneProvisioningService] Purchased number (if any): #{purchased_number}"
 
-      message = if phone_number.present?
+      message = if purchased_number.present?
         "Phone number was reserved but setup is incomplete. Please contact support to complete provisioning."
       else
         "Unable to provision phone number. Please contact support."
       end
 
       Result.failure(message)
-    end
-
-    def search_toll_free_numbers
-      response = ::Telnyx::AvailablePhoneNumber.list(
-        filter: {
-          phone_number_type: "toll_free",
-          country_code: "US",
-          features: "sms",
-          limit: 5
-        }
-      )
-
-      response.data
-    rescue => e
-      Rails.logger.error "[Telnyx::PhoneProvisioningService] Search failed: #{e.message}"
-      raise "Failed to search for available numbers: #{e.message}"
     end
 
     def purchase_number(phone_number)

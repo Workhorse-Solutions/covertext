@@ -46,6 +46,7 @@ Rails.application.routes.draw do
     post "compliance", to: "compliance#create", as: :compliance_verifications
     resource :account, only: [ :show, :update ]
     post "dismiss_grace_period_banner", to: "banners#dismiss_grace_period"
+    get "phone_provisioning/new", to: "phone_provisioning#new", as: :new_phone_provisioning
     post "phone_provisioning", to: "phone_provisioning#create"
   end
 

@@ -1,0 +1,49 @@
+<%= turbo_frame_tag "phone_number_selection" do %>
+  <div data-controller="phone-number-selection">
+    <% if @error.present? %>
+      <div class="alert alert-error mb-4">
+        <span class="size-5 shrink-0"><%= heroicon "exclamation-circle", variant: :mini %></span>
+        <span><%= @error %></span>
+      </div>
+    <% elsif @phone_numbers.any? %>
+      <%= form_with url: admin_phone_provisioning_path, method: :post do |f| %>
+        <p class="text-base-content/70 mb-4">Select a toll-free number for your agency's SMS line.</p>
+
+        <div class="space-y-2 max-h-80 overflow-y-auto">
+          <% @phone_numbers.each_with_index do |number, index| %>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-base-300 cursor-pointer hover:bg-base-200 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input type="radio"
+                     name="phone_number"
+                     value="<%= number %>"
+                     class="radio radio-primary radio-sm"
+                     data-action="change->phone-number-selection#select"
+                     autocomplete="off">
+              <%= render UI::PhoneNumberComponent.new(number: number, class_name: "font-mono text-lg") %>
+            </label>
+          <% end %>
+        </div>
+
+        <div class="modal-action">
+          <button type="button" class="btn" onclick="phone_provisioning_modal.close()">Cancel</button>
+          <button type="submit"
+                  class="btn btn-primary"
+                  data-phone-number-selection-target="submitButton"
+                  disabled
+                  data-turbo-submits-with="Provisioning...">
+            <span class="size-5"><%= heroicon "phone", variant: :mini %></span>
+            Provision SMS Number
+          </button>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-6">
+        <span class="size-12 mx-auto text-base-content/30"><%= heroicon "phone-x-mark", variant: :outline %></span>
+        <p class="mt-2 text-base-content/70">No toll-free numbers are currently available.</p>
+        <p class="text-sm text-base-content/50">Please try again later.</p>
+        <div class="modal-action">
+          <button type="button" class="btn" onclick="phone_provisioning_modal.close()">Close</button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
