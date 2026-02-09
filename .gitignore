@@ -40,6 +40,9 @@ db/*sqlite3_*
 # Allow test.key since it only contains mock credentials for CI
 !/config/credentials/test.key
 
+# Ignore local Claude Code settings (user-specific)
+.claude/settings.local.json
+
 # Ignore Kamal secrets
 /.kamal/secrets
 
