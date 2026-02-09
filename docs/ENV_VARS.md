@@ -39,6 +39,37 @@ twilio:
 
 ⚠️ **Note:** The application checks Rails credentials first, then falls back to ENV vars. Using credentials is strongly recommended for security.
 
+### Telnyx (SMS Provider & Phone Provisioning)
+**Primary Method: Rails Encrypted Credentials**
+
+Telnyx credentials MUST be configured in Rails encrypted credentials:
+
+```bash
+# For production
+bin/rails credentials:edit --environment production
+
+# For development/test
+bin/rails credentials:edit
+```
+
+Add:
+```yaml
+telnyx:
+  api_key: KEY01234567890ABCDEFGH_yourapikey
+  messaging_profile_id: 12345678-1234-1234-1234-123456789abc
+```
+
+**Fallback: Environment Variables (Development Only)**
+- `TELNYX_API_KEY` - Telnyx API key (fallback only)
+- `TELNYX_MESSAGING_PROFILE_ID` - Telnyx messaging profile UUID (fallback only)
+
+⚠️ **Note:** The messaging profile ID is required for phone number provisioning. When you create a number order, it automatically associates the purchased number with this messaging profile.
+
+**To get your Telnyx credentials:**
+1. Log in to [Telnyx Portal](https://portal.telnyx.com/)
+2. API Keys: Navigate to "API Keys" in sidebar → Create new key
+3. Messaging Profile: Navigate to "Messaging" → "Profiles" → Copy the Profile ID UUID
+
 ### Background Jobs
 - `SOLID_QUEUE_IN_PUMA` - Set to "true" to run jobs in Puma process (default for single server)
 - `JOB_CONCURRENCY` - Number of job worker threads (default: 1)

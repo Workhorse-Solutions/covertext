@@ -253,6 +253,64 @@ export DATABASE_URL="postgres://jward@localhost/covertext_test"
 - Staff inboxes or manual approval workflows.
 - Complex permission systems or over-engineered abstractions.
 
+## Service Object Patterns
+
+### Telnyx Service Objects
+Services that interact with Telnyx API follow these conventions:
+
+**API Key Configuration:**
+```ruby
+def configure_telnyx!
+  api_key = Rails.application.credentials.dig(:telnyx, :api_key) || ENV["TELNYX_API_KEY"]
+  
+  unless api_key
+    raise "Telnyx API key not configured. Please set it in Rails credentials or ENV."
+  end
+  
+  # CRITICAL: Must set API key on Telnyx module before making API calls
+  ::Telnyx.api_key = api_key
+end
+```
+
+**Error Handling:**
+- Log technical errors for debugging: `Rails.logger.error "[ServiceName] Error: #{e.message}"`
+- Return user-friendly messages via Result object
+- Never expose technical details (API errors, stack traces) to users
+- Use case statements to map error types to friendly messages:
+  ```ruby
+  user_message = case e.message
+  when /API key/i
+    "Service configuration issue. Please contact support."
+  when /specific error pattern/i
+    "User-friendly explanation. Please contact support."
+  else
+    "Unable to complete action. Please contact support."
+  end
+  ```
+
+**Result Object Pattern:**
+```ruby
+class Result
+  attr_reader :success, :message, :data
+  
+  def initialize(success:, message:, data: nil)
+    @success = success
+    @message = message
+    @data = data
+  end
+  
+  def success?
+    @success
+  end
+end
+```
+
+**Example:** See `app/services/telnyx/phone_provisioning_service.rb`
+- Configures Telnyx gem before making API calls
+- Maps technical errors to user-friendly messages
+- Logs full error details for debugging
+- Returns Result object with success/failure state
+
 ## Local Development
 ```bash
 bin/setup

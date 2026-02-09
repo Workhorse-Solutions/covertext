@@ -4,13 +4,12 @@ module Telnyx
   class PhoneProvisioningServiceTest < ActiveSupport::TestCase
     setup do
       @agency = agencies(:not_ready)
-      # Ensure ENV vars are set for tests that need them
+      # Ensure ENV vars are set for tests
       ENV["TELNYX_API_KEY"] = "test_key_123"
       ENV["TELNYX_MESSAGING_PROFILE_ID"] = "test_profile_123"
     end
 
     test "returns success if phone already provisioned" do
-      skip "TODO: Fix in Telnyx provisioning PRD implementation"
       @agency.update!(phone_sms: "+18001234567")
       service = PhoneProvisioningService.new(@agency)
 
@@ -22,8 +21,7 @@ module Telnyx
     end
 
     test "checks for required credentials" do
-      skip "TODO: Fix in Telnyx provisioning PRD implementation"
-      # Test that service validates credentials by temporarily removing ENV vars
+      # Remove ENV vars temporarily
       original_key = ENV.delete("TELNYX_API_KEY")
       original_profile = ENV.delete("TELNYX_MESSAGING_PROFILE_ID")
 
@@ -32,55 +30,120 @@ module Telnyx
         result = service.call
 
         assert_not result.success?
-        # Service wraps errors, so check for the wrapped message
-        assert_match /Provisioning failed|not configured/, result.message
+        # Should get user-friendly message, not technical error
+        assert_includes result.message, "contact support"
+        assert_not_includes result.message, "ENV" # Should not expose technical details
       ensure
         ENV["TELNYX_API_KEY"] = original_key if original_key
         ENV["TELNYX_MESSAGING_PROFILE_ID"] = original_profile if original_profile
       end
     end
 
-    test "service returns stub error for no toll-free numbers" do
-      skip "TODO: Fix in Telnyx provisioning PRD implementation"
-      # The service's search_toll_free_numbers method returns empty array as stub
-      # In production, this would come from Telnyx API
-      # Since methods are private, we test the happy path knowing stubs exist
-      service = PhoneProvisioningService.new(@agency)
+    test "successfully provisions toll-free number" do
+      # Stub Telnyx API search endpoint
+      stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
+        .with(query: hash_including({}))
+        .to_return(
+          status: 200,
+          body: {
+            data: [
+              { phone_number: "+18005551234", record_type: "available_phone_number" }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
 
-      # Note: search_toll_free_numbers is stubbed to return [] in the service
-      # This test verifies the service handles empty results gracefully
+      # Stub Telnyx API number order endpoint
+      stub_request(:post, "https://api.telnyx.com/v2/number_orders")
+        .with(body: hash_including({ messaging_profile_id: "test_profile_123" }))
+        .to_return(
+          status: 200,
+          body: {
+            data: {
+              id: "order_123",
+              phone_numbers: [
+                { phone_number: "+18005551234", status: "success" }
+              ]
+            }
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      service = PhoneProvisioningService.new(@agency)
       result = service.call
 
-      # With current stub implementation returning [], service will fail gracefully
-      assert_not result.success?
-      assert_match /Provisioning failed|No toll-free numbers/, result.message
+      assert result.success?
+      assert_equal "Phone number provisioned successfully", result.message
+      assert_equal "+18005551234", result.phone_number
+
+      # Verify agency was updated
+      @agency.reload
+      assert_equal "+18005551234", @agency.phone_sms
+      assert @agency.live_enabled?
     end
 
-    test "service provision_number method returns phone as stub" do
-      skip "TODO: Fix in Telnyx provisioning PRD implementation"
-      # The service's provision_number is stubbed to return the phone_number
-      # In production, this would call Telnyx API to purchase
-      # Since it returns the input as output (stub behavior), we verify this works
-      service = PhoneProvisioningService.new(@agency)
+    test "handles no available toll-free numbers" do
+      # Stub Telnyx API to return empty results
+      stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
+        .with(query: hash_including({}))
+        .to_return(
+          status: 200,
+          body: { data: [] }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
 
-      # Call the service - it will go through the flow with stubbed methods
+      service = PhoneProvisioningService.new(@agency)
       result = service.call
 
-      # With stubs, search returns [], so provisioning fails gracefully
       assert_not result.success?
+      # Should get user-friendly message
+      assert_includes result.message, "contact support"
     end
 
-    test "service handles API errors gracefully" do
-      skip "TODO: Fix in Telnyx provisioning PRD implementation"
-      # Test that service's rescue block wraps errors properly
-      service = PhoneProvisioningService.new(@agency)
+    test "handles API errors gracefully" do
+      # Stub Telnyx API to return error
+      stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
+        .with(query: hash_including({}))
+        .to_return(status: 500, body: "Internal Server Error")
 
-      # Since all methods are stubbed and return safe values,
-      # and search_toll_free_numbers returns [], we expect graceful failure
+      service = PhoneProvisioningService.new(@agency)
       result = service.call
 
       assert_not result.success?
-      assert_match /Provisioning failed|No toll-free numbers available/, result.message
+      # Should get user-friendly message
+      assert_includes result.message, "contact support"
+      assert_not_includes result.message, "Internal Server Error" # Should not expose API errors
+    end
+
+    test "rolls back transaction on configuration failure" do
+      # Stub search to succeed
+      stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
+        .with(query: hash_including({}))
+        .to_return(
+          status: 200,
+          body: {
+            data: [
+              { phone_number: "+18005551234", record_type: "available_phone_number" }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      # Stub order to fail
+      stub_request(:post, "https://api.telnyx.com/v2/number_orders")
+        .to_return(status: 422, body: { errors: [ { detail: "Purchase failed" } ] }.to_json)
+
+      service = PhoneProvisioningService.new(@agency)
+      result = service.call
+
+      assert_not result.success?
+      # Should get user-friendly message
+      assert_includes result.message, "contact support"
+
+      # Verify agency was NOT updated due to transaction rollback
+      @agency.reload
+      assert_nil @agency.phone_sms
+      assert_not @agency.live_enabled?
     end
   end
 end

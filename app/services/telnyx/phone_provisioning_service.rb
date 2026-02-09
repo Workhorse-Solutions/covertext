@@ -28,16 +28,31 @@ module Telnyx
         )
       end
 
-      # Ensure credentials are present
-      ensure_credentials!
+      # Configure Telnyx gem with credentials
+      configure_telnyx!
 
       # Purchase and configure number
       provision_number
     rescue => e
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Error: #{e.message}"
+
+      # Return user-friendly error message
+      user_message = case e.message
+      when /API key/i
+        "Phone number provisioning requires Telnyx API credentials. Please contact support."
+      when /messaging profile/i
+        "Phone number configuration is incomplete. Please contact support."
+      when /No toll-free numbers/i
+        "No toll-free numbers are currently available. Please try again later or contact support."
+      when /available in your area/i
+        "No toll-free numbers are currently available. Please try again later or contact support."
+      else
+        "Unable to provision phone number. Please contact support."
+      end
+
       Result.new(
         success: false,
-        message: "Provisioning failed: #{e.message}"
+        message: user_message
       )
     end
 
@@ -51,10 +66,7 @@ module Telnyx
         available_numbers = search_toll_free_numbers
 
         if available_numbers.empty?
-          return Result.new(
-            success: false,
-            message: "No toll-free numbers available in your area"
-          )
+          raise "No toll-free numbers available in your area"
         end
 
         # Purchase the first available number
@@ -79,43 +91,44 @@ module Telnyx
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Provisioning failed: #{e.message}"
       Rails.logger.error "[Telnyx::PhoneProvisioningService] Purchased number (if any): #{phone_number}"
 
+      # Log full error for debugging but return user-friendly message
+      user_message = if phone_number.present?
+        "Phone number was reserved but setup is incomplete. Please contact support to complete provisioning."
+      else
+        "Unable to provision phone number. Please contact support."
+      end
+
       Result.new(
         success: false,
-        message: "Phone number purchased but configuration failed. Please contact support with error code: #{e.message}"
+        message: user_message
       )
     end
 
     def search_toll_free_numbers
       # Search for available toll-free numbers in US
-      # Using Telnyx API: GET /v2/available_phone_numbers
-      # For now, this is a stub that will be implemented with actual Telnyx API calls
-      # Reference: https://developers.telnyx.com/docs/api/v2/numbers/Number-Search
+      # API: GET /v2/available_phone_numbers
+      # Docs: https://developers.telnyx.com/api-reference/phone-number-search/list-available-phone-numbers
 
-      api_key = Rails.application.credentials.dig(:telnyx, :api_key) || ENV["TELNYX_API_KEY"]
+      response = ::Telnyx::AvailablePhoneNumber.list(
+        filter: {
+          phone_number_type: "toll_free",
+          country_code: "US",
+          features: "sms",
+          limit: 5
+        }
+      )
 
-      # Stub for testing - in production this would call Telnyx API
-      # Telnyx::AvailablePhoneNumber.list(
-      #   filter: {
-      #     phone_number_type: "toll_free",
-      #     country_code: "US",
-      #     limit: 1
-      #   }
-      # )
-
-      # Return stub data for testing
-      []
+      response.data
+    rescue => e
+      Rails.logger.error "[Telnyx::PhoneProvisioningService] Search failed: #{e.message}"
+      raise "Failed to search for available numbers: #{e.message}"
     end
 
     def purchase_number(phone_number)
-      # Purchase the number via Telnyx API
-      # POST /v2/number_orders
-      # Stub for testing
-      phone_number
-    end
+      # Purchase number and assign to messaging profile in one API call
+      # API: POST /v2/number_orders
+      # Docs: https://developers.telnyx.com/api-reference/phone-number-orders/create-a-number-order
 
-    def add_to_messaging_profile(phone_number)
-      # Add purchased number to messaging profile
-      # PATCH /v2/messaging_profiles/:id/phone_numbers
       messaging_profile_id = Rails.application.credentials.dig(:telnyx, :messaging_profile_id) ||
                              ENV["TELNYX_MESSAGING_PROFILE_ID"]
 
@@ -123,11 +136,26 @@ module Telnyx
         raise "Telnyx messaging profile ID not configured"
       end
 
-      # Stub for testing - in production this would call Telnyx API
+      order = ::Telnyx::NumberOrder.create(
+        phone_numbers: [ { phone_number: phone_number } ],
+        messaging_profile_id: messaging_profile_id
+      )
+
+      # Return the purchased phone number
+      order.data.phone_numbers.first.phone_number
+    rescue => e
+      Rails.logger.error "[Telnyx::PhoneProvisioningService] Purchase failed: #{e.message}"
+      raise "Failed to purchase number: #{e.message}"
+    end
+
+    def add_to_messaging_profile(phone_number)
+      # No longer needed - number is associated with messaging profile during purchase
+      # The messaging_profile_id is passed in the NumberOrder.create call
       true
     end
 
-    def ensure_credentials!
+    def configure_telnyx!
+      # Get API key from credentials or ENV
       api_key = Rails.application.credentials.dig(:telnyx, :api_key) || ENV["TELNYX_API_KEY"]
       messaging_profile_id = Rails.application.credentials.dig(:telnyx, :messaging_profile_id) ||
                              ENV["TELNYX_MESSAGING_PROFILE_ID"]
@@ -139,6 +167,9 @@ module Telnyx
       unless messaging_profile_id
         raise "Telnyx messaging profile ID not configured. Please set it in Rails credentials or ENV."
       end
+
+      # Configure Telnyx gem
+      ::Telnyx.api_key = api_key
     end
   end
 end
