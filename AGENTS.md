@@ -224,10 +224,6 @@ Creates Account + Agency + User in transaction:
 - Use `OpenStruct.new(id: '...', status: '...')` for Stripe object mocks
 - Use `.exists?(condition)` for efficient existence checks
 
-### Seed Tests
-- Located at: `test/models/seed_test.rb`
-- Current expectations: 1 Account, 2 Agencies, 1 User (owner), 4 Clients, 10 Policies, 10 Documents
-
 ## Database & Environment
 
 ### Local Development
@@ -262,11 +258,11 @@ Services that interact with Telnyx API follow these conventions:
 ```ruby
 def configure_telnyx!
   api_key = Rails.application.credentials.dig(:telnyx, :api_key) || ENV["TELNYX_API_KEY"]
-  
+
   unless api_key
     raise "Telnyx API key not configured. Please set it in Rails credentials or ENV."
   end
-  
+
   # CRITICAL: Must set API key on Telnyx module before making API calls
   ::Telnyx.api_key = api_key
 end
@@ -292,13 +288,13 @@ end
 ```ruby
 class Result
   attr_reader :success, :message, :data
-  
+
   def initialize(success:, message:, data: nil)
     @success = success
     @message = message
     @data = data
   end
-  
+
   def success?
     @success
   end
@@ -321,7 +317,7 @@ bin/dev
 ```bash
 bin/rails test              # Run all tests
 bin/rails test:system       # Run system tests
-bin/ci                      # Full CI suite (style, security, tests, seeds)
+bin/ci                      # Full CI suite (style, security, tests)
 ```
 
 ### CI Pipeline
@@ -331,9 +327,9 @@ The `bin/ci` command runs:
    - `bin/rubocop` - Ruby code style
    - `bundle exec erb_lint --lint-all` - ERB template linting (autocomplete attributes, closing tags, etc.)
 3. **Security audits:** bundler-audit, importmap audit, Brakeman
-4. **Tests:** Rails tests + seed replant verification
+4. **Tests:** Rails tests
 
-**Important:** `bin/ci` no longer destroys development data (fixed Feb 2026). It only touches the test environment.
+**Important:** `bin/ci` does not run seeds. Seeds are dev convenience data only.
 
 ### ERB Linting
 - Configuration: `.erb_lint.yml`
@@ -346,8 +342,7 @@ The `bin/ci` command runs:
 - GitHub Actions: CI → Publish Docker → Deploy (sequential)
 - Security tools: Brakeman, bundler-audit, importmap audit must pass.
 - Style checks: Rubocop + ERB Lint must pass.
-- All tests must pass (currently 361 tests).
-- **Known issue:** Some tests fail when run after db:seed in full suite but pass individually (see Known Test Issues below).
+- All tests must pass (currently 473 tests).
 
 ## Deployment
 - Kamal to production (see docs/DEPLOYMENT.md)
@@ -386,29 +381,18 @@ Ralph reads AGENTS.md and copilot-instructions.md on every iteration, so updatin
 - BillingController must skip subscription check so users can fix billing issues
 - Helper methods exist for a reason - use them instead of duplicating query logic
 - When PRD specifies new data model, update test expectations to match
-- Check both seed test files when updating seed expectations
 - Ralph story sizing: one story = one iteration (too big = runs out of context)
 - **Heroicon gem does NOT accept `class:` parameter** - wrap heroicon in `<span class="...">` instead (see View Conventions section)
+- **Use ViewComponents for view logic** - don't add helper methods for formatting/display; create a `UI::` component instead (e.g., `UI::PhoneNumberComponent`)
 
 ## Known Test Issues
-- **Flaky test failures (Updated Feb 2026)**:
-  - When running full test suite: 361 runs, 1167 assertions, ~6 failures (varies by run)
-  - When running individually: All affected tests PASS
-  - Root cause: Test pollution or env var issues when tests run after db:seed
-  - Affected test files:
-    - Forms::RegistrationTest (Stripe::AuthenticationError)
-    - Registrations controller tests (422/302 responses)
-    - Signup flow tests (422/302 responses)
-    - Admin::PhoneProvisioningController tests (ENV var pollution)
-  - Core functionality verified working in browser UI ✅
-  - Affected tests pass individually, fail in full suite
-  - This is a test infrastructure issue, not a code issue
-  - Workaround: Run problematic tests individually to verify they pass
+- **Resolved (Feb 2026):** Previously had flaky test failures caused by `db:seed:replant` running
+  in CI and polluting WebMock stubs / ENV vars. Fixed by removing the seed CI step.
+  All 473 tests now pass consistently.
 
 - **Test environment notes**:
   - WebMock stubs for Stripe API configured in test_helper.rb
   - ENV vars set before Rails loads in test_helper.rb
-  - Some tests run after db:seed experience ENV vars becoming nil or overridden
   - Tests disabled: parallelize(workers: 1) due to historical WebMock issues
 
 ## Rails Credentials & Test Environment
