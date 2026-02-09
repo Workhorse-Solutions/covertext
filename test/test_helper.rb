@@ -28,8 +28,8 @@ module ActiveSupport
       TwilioClient.reset!
       # Stub Stripe API calls by default
       stub_stripe_api_calls
-      # Stub Telnyx gem methods
-      stub_telnyx_gem
+      # Set Telnyx API key for tests
+      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
     end
 
     # Add more helper methods to be used by all tests here...
@@ -59,7 +59,7 @@ module ActiveSupport
         headers: { "Content-Type" => "application/json" }
       )
 
-      # Stub Telnyx API calls (Message.create)
+      # Stub Telnyx API calls (Message.create) - WebMock handles HTTP requests
       stub_request(:post, "https://api.telnyx.com/v2/messages")
         .to_return(
           status: 200,
@@ -77,26 +77,6 @@ module ActiveSupport
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
-    end
-
-    def stub_telnyx_gem
-      # Set Telnyx API key for tests
-      ::Telnyx.api_key = ENV["TELNYX_API_KEY"]
-
-      # Stub Telnyx::Message.create to return a mock response
-      ::Telnyx::Message.define_singleton_method(:create) do |**args|
-        OpenStruct.new(id: "test_msg_#{SecureRandom.hex(4)}")
-      end
-
-      # Stub Telnyx::MessagingTollfreeVerification.create to return a mock response
-      ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:create) do |payload = {}|
-        OpenStruct.new(id: "test_verification_#{SecureRandom.hex(4)}", verification_status: "In Progress")
-      end
-
-      # Stub Telnyx::MessagingTollfreeVerification.retrieve to return a mock response
-      ::Telnyx::MessagingTollfreeVerification.define_singleton_method(:retrieve) do |id|
-        OpenStruct.new(id: id, verification_status: "In Progress", reason: nil)
-      end
     end
   end
 end

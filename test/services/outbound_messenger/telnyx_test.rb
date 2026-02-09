@@ -48,24 +48,39 @@ module OutboundMessenger
     end
 
     test "send_sms! creates MessageLog even on send failure" do
+      # Save original method if it exists
+      klass = ::Telnyx::Message.singleton_class
+      if klass.method_defined?(:create)
+        klass.alias_method :__original_create_for_test, :create
+      end
+
       # Override the stub to raise an error
       ::Telnyx::Message.define_singleton_method(:create) do |**_args|
         raise "API connection failed"
       end
 
-      assert_difference "MessageLog.count", 1 do
-        assert_raises(RuntimeError, "API connection failed") do
-          OutboundMessenger::Telnyx.send_sms!(
-            agency: @agency,
-            to_phone: @client.phone_mobile,
-            body: "Test message"
-          )
+      begin
+        assert_difference "MessageLog.count", 1 do
+          assert_raises(RuntimeError, "API connection failed") do
+            OutboundMessenger::Telnyx.send_sms!(
+              agency: @agency,
+              to_phone: @client.phone_mobile,
+              body: "Test message"
+            )
+          end
+        end
+
+        log = MessageLog.last
+        assert_nil log.provider_message_id
+        assert_equal "outbound", log.direction
+      ensure
+        # Restore original method
+        if klass.method_defined?(:__original_create_for_test)
+          klass.remove_method :create if klass.method_defined?(:create)
+          klass.alias_method :create, :__original_create_for_test
+          klass.remove_method :__original_create_for_test
         end
       end
-
-      log = MessageLog.last
-      assert_nil log.provider_message_id
-      assert_equal "outbound", log.direction
     end
 
     # --- send_mms! ---
@@ -107,27 +122,42 @@ module OutboundMessenger
         status: "pending"
       )
 
+      # Save original method if it exists
+      klass = ::Telnyx::Message.singleton_class
+      if klass.method_defined?(:create)
+        klass.alias_method :__original_create_for_test, :create
+      end
+
       ::Telnyx::Message.define_singleton_method(:create) do |**_args|
         raise "MMS send failed"
       end
 
-      assert_difference [ "MessageLog.count", "Delivery.count" ], 1 do
-        assert_raises(RuntimeError, "MMS send failed") do
-          OutboundMessenger::Telnyx.send_mms!(
-            agency: @agency,
-            to_phone: @client.phone_mobile,
-            body: "Your card",
-            media_url: "https://example.com/card.pdf",
+      begin
+        assert_difference [ "MessageLog.count", "Delivery.count" ], 1 do
+          assert_raises(RuntimeError, "MMS send failed") do
+            OutboundMessenger::Telnyx.send_mms!(
+              agency: @agency,
+              to_phone: @client.phone_mobile,
+              body: "Your card",
+              media_url: "https://example.com/card.pdf",
             request: request
           )
         end
       end
 
-      log = MessageLog.last
-      assert_nil log.provider_message_id
+        log = MessageLog.last
+        assert_nil log.provider_message_id
 
-      delivery = Delivery.last
-      assert_equal "failed", delivery.status
+        delivery = Delivery.last
+        assert_equal "failed", delivery.status
+      ensure
+        # Restore original method
+        if klass.method_defined?(:__original_create_for_test)
+          klass.remove_method :create if klass.method_defined?(:create)
+          klass.alias_method :create, :__original_create_for_test
+          klass.remove_method :__original_create_for_test
+        end
+      end
     end
 
     test "send_mms! returns the MessageLog record" do
