@@ -48,7 +48,18 @@ module Telnyx
       assert_includes result.message, "No toll-free numbers"
     end
 
+
+
+    # --- error-handling tests (must run last to avoid polluting stubs) ---
+
+
     test "search_available_numbers handles API errors" do
+      # Save and remove the original method
+      klass = Telnyx::AvailablePhoneNumber.singleton_class
+      if klass.method_defined?(:list)
+        klass.alias_method :__original_list, :list
+        klass.remove_method :list
+      end
       stub_request(:get, "https://api.telnyx.com/v2/available_phone_numbers")
         .with(query: hash_including({}))
         .to_return(status: 500, body: "Internal Server Error")
@@ -58,9 +69,22 @@ module Telnyx
 
       assert_not result.success?
       assert_includes result.message, "contact support"
+    ensure
+      # Restore original method if it existed
+      if klass.method_defined?(:__original_list)
+        klass.alias_method :list, :__original_list
+        klass.remove_method :__original_list
+      end
     end
 
+
     test "search_available_numbers checks for required credentials" do
+      # Save and remove the original method
+      klass = Telnyx::AvailablePhoneNumber.singleton_class
+      if klass.method_defined?(:list)
+        klass.alias_method :__original_list, :list
+        klass.remove_method :list
+      end
       original_key = ENV.delete("TELNYX_API_KEY")
       original_gem_key = ::Telnyx.api_key
       ::Telnyx.api_key = nil
@@ -74,6 +98,11 @@ module Telnyx
       ensure
         ENV["TELNYX_API_KEY"] = original_key if original_key
         ::Telnyx.api_key = original_gem_key
+        # Restore original method if it existed
+        if klass.method_defined?(:__original_list)
+          klass.alias_method :list, :__original_list
+          klass.remove_method :__original_list
+        end
       end
     end
 
