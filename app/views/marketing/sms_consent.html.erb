@@ -11,6 +11,28 @@
     <p class="text-base-content/70">Effective Date: <%= Date.today.strftime("%B %d, %Y") %></p>
   </div>
 
+  <!-- SMS Opt-In Instructions (Carrier Compliance Block) -->
+  <section class="mb-10">
+    <div class="border-2 border-primary bg-base-100 rounded-xl shadow-sm p-6 md:p-8 flex flex-col gap-4">
+      <h2 class="text-2xl font-bold text-primary mb-2">SMS Opt-In Instructions</h2>
+      <ul class="list-none p-0 m-0 space-y-2 text-base md:text-lg">
+        <li><span class="font-semibold">Text <span class="bg-base-200 px-2 py-1 rounded">START</span> to <span class="bg-base-200 px-2 py-1 rounded">+1 833 706 1707</span></span></li>
+        <li><span class="font-semibold">Reply <span class="bg-base-200 px-2 py-1 rounded">STOP</span> at any time to unsubscribe</span></li>
+        <li><span class="font-semibold">Reply <span class="bg-base-200 px-2 py-1 rounded">HELP</span> for help</span></li>
+        <li>Message &amp; data rates may apply</li>
+        <li>Message frequency varies</li>
+      </ul>
+      <div class="flex flex-wrap gap-4 mt-2">
+        <a href="https://covertext.app/privacy" class="link link-primary underline">Privacy Policy</a>
+        <a href="https://covertext.app/terms" class="link link-primary underline">Terms of Service</a>
+      </div>
+      <div class="mt-4 text-sm text-base-content/70">
+        <p>CoverText is a software provider to independent insurance agencies. Messages are for service and transactional purposes only. No marketing or promotional content is sent.</p>
+        <p class="mt-2">Agencies may also present these instructions via printed materials or QR codes that link to this page.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Content -->
   <div class="prose prose-lg max-w-none">
     <!-- Introduction -->
