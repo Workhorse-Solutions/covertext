@@ -403,7 +403,7 @@ GEM
     tailwindcss-ruby (4.1.18-x86_64-darwin)
     tailwindcss-ruby (4.1.18-x86_64-linux-gnu)
     tailwindcss-ruby (4.1.18-x86_64-linux-musl)
-    telnyx (5.13.0)
+    telnyx (5.24.0)
       cgi
       connection_pool
     thor (1.5.0)
@@ -487,7 +487,7 @@ DEPENDENCIES
   stimulus-rails
   stripe (~> 18.3)
   tailwindcss-rails
-  telnyx (~> 5.13)
+  telnyx (~> 5.24)
   thruster
   turbo-rails
   tzinfo-data

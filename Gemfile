@@ -24,7 +24,7 @@ gem "bcrypt", "~> 3.1.7"
 
 
 # Telnyx SDK for SMS/MMS
-gem "telnyx", "~> 5.13"
+gem "telnyx", "~> 5.24"
 gem "faraday-retry"  # Required by telnyx gem
 
 # Stripe for subscription billing
