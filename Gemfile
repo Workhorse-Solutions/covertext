@@ -28,7 +28,7 @@ gem "telnyx", "~> 5.13"
 gem "faraday-retry"  # Required by telnyx gem
 
 # Stripe for subscription billing
-gem "stripe", "~> 18.3"
+gem "stripe", "~> 18.4"
 
 gem "heroicon"
 gem "view_component"
